@@ -1022,10 +1022,12 @@ var playMaker = {
         
         //show return of kick (if any), but only for kicks that allow for returns
         if (!self.isFieldGoal() && !self.isExtraPointKick()) {
+            let _returnPlayText = 'Kickoff Return';
+
             //Handle new spot of ball
             if (isTouchback || isPenalty) {
                 if (isTouchback) {
-                    _kickoffResultText += ' - TOUCHBACK';
+                    _returnPlayText += ' - TOUCHBACK';
                     //set ball at 20 yard line when a touchback occurs
                     _yards = 20;
                 }
@@ -1052,7 +1054,7 @@ var playMaker = {
             //TODO: Handle return for Touchdown 
 
             //create a play result and record it in the play history
-            let returnResult = { yards: _returnYards, playResultText: 'Kickoff Return' };
+            let returnResult = { yards: _returnYards, playResultText: _returnPlayText };
             self.currentTeamWithBall(receivingTeam); //set back to receiving team for proper team in play history
             playMaker.recordPlay(returnResult);
         }
