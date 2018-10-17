@@ -863,6 +863,7 @@ var playMaker = {
         let _returnYards = 0;
         let _kickoffResultText = titleCase(kickoffType);
         let ballKickOffSpot = 35; //set ball Spot Start at 35 yard line
+        let totalMaxKickWithoutTouchback = 100 - ballKickOffSpot; //variable used in calculations below for determining max return yards etc.
         let isTouchback = false; //flag to determine when touchback occurs
         let isPenalty = false; //flag to determine when there is a penalty on the kickoff
         
@@ -919,7 +920,7 @@ var playMaker = {
             else {
                 //unsuccessful onside kick, receiving team gets ball, either because ball didn't travel far enough (penalty) or they fielded the ball and returned it
                 if (kickoffPower < 25) {
-                    _yards = 30; //mark spot at opposing teams 35 for penalty (65 yards to touchdown), so kickoff would essentially be 30 yards.
+                    _yards = 35; //mark spot at opposing teams 35 for penalty
                     _kickoffResultText += ' Unsuccessful - Ball did not travel proper distance.';
                     isPenalty = true;
                 }
@@ -928,7 +929,7 @@ var playMaker = {
                     _kickoffResultText += ' Unsuccessful - Receiving team made a return.';
                 }
                 else {
-                    _yards = 30; //mark spot at opposing teams 35 for penalty (65 yards to touchdown), so kickoff would essentially be 30 yards.
+                    _yards = 35; //mark spot at opposing teams 35 for penalty
                     _kickoffResultText += ' Unsuccessful - Ball went out of bounds.';
                     isPenalty = true;
                 }
@@ -938,7 +939,7 @@ var playMaker = {
             //normal kick
             //if angle is extreme, no matter what the power is, the ball will go out of bounds:
             if (kickoffAngle <= 20 || kickoffAngle >= 80) {
-                _yards = 30; //mark spot at opposing teams 35 for penalty (65 yards to touchdown), so kickoff would essentially be 30 yards.
+                _yards = 35; //mark spot at opposing teams 35 for penalty
                 _kickoffResultText += ' Penalty - Ball kicked out of bounds.';
                 isPenalty = true;
             }
@@ -947,18 +948,18 @@ var playMaker = {
             }
             else {
                 //get random int to determine if team runs it out of end zone
-                if (_yards >= 65 && getRandomInt(1, 100) >= 85) {
+                if (_yards >= totalMaxKickWithoutTouchback && getRandomInt(1, 100) >= 85) {
                     //chance of big return
                     if (getRandomInt(1, 100) >= 90) {
                         //receiving team will at least run the ball out of the end-zone if they "decide" to return (yards kicked - 65 (total max kick for goal line reception)
-                        _returnYards = getRandomInt(_yards - 65, _yards + ballKickOffSpot); //There is a small chance the ball will be returned, but most likely result will be a touchback
+                        _returnYards = getRandomInt(_yards - totalMaxKickWithoutTouchback, _yards + ballKickOffSpot); //There is a small chance the ball will be returned, but most likely result will be a touchback
                     }
                     else {
-                        _returnYards = getRandomInt(_yards - 65, 40); //more likely chance only allows for return of 40 yards
+                        _returnYards = getRandomInt(_yards - totalMaxKickWithoutTouchback, 40); //more likely chance only allows for return of 40 yards
                     }
                     
                 }
-                else if (_yards >= 65) {                    
+                else if (_yards >= totalMaxKickWithoutTouchback) {                    
                     isTouchback = true;
                 }
                 else
