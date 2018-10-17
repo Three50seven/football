@@ -162,11 +162,13 @@
     </p>
     <div id="kickoffPlays" data-bind="visible:kickoffNeeded() && gameStarted" align="center">
         <br>
-        Choose a kickoff play (click sliders to select power and angle of kick): <br>
+        Click sliders or buttons to select power and angle of kick: <br>
         <br />
-        <label><input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked"> Kickoff</label>
-        <label><input type="radio" name="selectKickoffPlay" value="onside"> On-Side Kick</label>
-        <br /><br />
+        <div data-bind="visible: isKickoff">
+            <label><input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked"> Kickoff</label>
+            <label><input type="radio" name="selectKickoffPlay" value="onside"> On-Side Kick</label>
+            <br /><br />
+        </div>        
         <div class="slidecontainer">
             Power:
             <button type="button" id="powerStopper" class="btn-default" data-bind="click: GetKickoffPower">
@@ -184,13 +186,16 @@
             <span class="smaller">(select center for a normal kick-off, select left or right for on-side kick)</span>
             <br />
             <p>
-                Kick-Off Power: <span id="kickoffPowerSelected"></span>
+                Kick Power: <span id="kickoffPowerSelected"></span>
                 <br />
-                Kick-Off Angle: <span id="kickoffAngleSelected"></span>
+                Kick Angle: <span id="kickoffAngleSelected"></span>
             </p>
         </div>
-        <button type="button" id="diceRoller" class="btn-default" data-bind="click: Kickoff">
-            Kickoff
+        <button type="button" class="btn-default" data-bind="click: Kickoff">
+            <span data-bind="visible: isKickoff"> Kickoff</span>
+            <span data-bind="visible: isPunt"> Punt</span>
+            <span data-bind="visible: isFieldGoal"> Field Goal</span>
+            <span data-bind="visible: isExtraPointKick"> Kick Extra Point</span>
         </button>
     </div>
     <div id="mainPlaySelection" data-bind="visible:!kickoffNeeded()" align="center">

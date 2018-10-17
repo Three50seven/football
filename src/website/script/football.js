@@ -20,7 +20,7 @@ $(function () {
             return getNumberWithEnding(self.currentQuarter());
         });
         self.currentDown = ko.observable(1);
-        self.ballSpotStart = ko.observable(35);
+        self.ballSpotStart = ko.observable(35); //set initial ball spot on home kickoff spot
         self.yardsTraveled = ko.observable(0);
         self.yardsToFirst = ko.observable(10);        
         self.yardsToTouchdown = ko.computed(function () {
@@ -38,8 +38,7 @@ $(function () {
         self.currentTeamWithBall = ko.observable(0);
         self.teamPlayHistory = ko.observableArray();
         self.boxScore = ko.observableArray(); //TODO: Populate with data for table: boxScore
-        self.teamStats = ko.observableArray(); //TODO: Populate with data for table: gameStats 
-        self.pointAttemptAfterTouchDown = ko.observable(false); //determines when extra point or 2 point conversion is needed
+        self.teamStats = ko.observableArray(); //TODO: Populate with data for table: gameStats        
         self.needCoinToss = ko.observable(true); //determines when coin toss is needed
 
         //HOME TEAM VARIABLES:        
@@ -302,9 +301,14 @@ $(function () {
             //console.log('top Percentage:' + topPercentage + ' away team name length:' + teamNameLength);
             return topPercentage;
         };
-        //KICKOFF AND COINT TOSS VARIABLES/FUNCTIONS
+        //KICKOFF AND COIN TOSS VARIABLES/FUNCTIONS
+        self.pointAttemptAfterTouchDown = ko.observable(false); //determines when extra point or 2 point conversion is needed
         self.kickoffNeeded = ko.observable(true); //determines when kickoff is needed
+        self.isKickoff = ko.observable(false); //determines when kick is a normal or onside kickoff
         self.isSafety = ko.observable(false); //determines when kickoff is a safety kick
+        self.isPunt = ko.observable(false); //determines when kick is a punt
+        self.isFieldGoal = ko.observable(false); //determines when kick is a field goal
+        self.isExtraPointKick = ko.observable(false); //determines when kick is an extra point attempt
         self.coinTossValue = ko.observable(0).extend({ throttle: 4000 }); //delay updating coin toss value until after 5 seconds (to allow coin animation to finish)
         self.coinTossWinner = ko.observable(0); //stores team id of coin toss winner
         self.coinTossLoser = ko.observable(0); //stores team id of coin toss loser
@@ -398,16 +402,19 @@ $(function () {
         self.Kickoff = function () {
             console.log('kickoffPowerSelected: %s kickoffAngleSelected: %s', self.kickoffPower, self.kickoffAngle);
             if (self.kickoffPower >= 0 && self.kickoffAngle >= 0) {
-                //reset kickoffNeeded and isSafety flags to false
-                self.kickoffNeeded(false);
-                self.isSafety(false);
-                
                 //handle kickoff
                 playMaker.kickoff(kickoffPower, kickoffAngle);
+
+                //reset kickoffNeeded and other kick flags to false
+                self.kickoffNeeded(false);   
+                self.isKickoff(false);
+                self.isSafety(false);
+                self.isPunt(false);
+                self.isFieldGoal(false);
             }
             else {
-                alert('Select kick-off power and angle');
-            }            
+                alert('Select kick power and angle');
+            }
         };
         self.SetupKickoff = function () {
             let min = 0;
@@ -420,6 +427,8 @@ $(function () {
             $("#kickoffAngle").prop('disabled', false);  
             self.kickoffPower = -1;
             self.kickoffAngle = -1;
+            $("#kickoffAngleSelected").text('select angle');
+            $("#kickoffPowerSelected").text('select power');
 
             //setup power slider movement
             self.kickoffPowerSliderIntervalId = window.setInterval(function () {
@@ -438,7 +447,7 @@ $(function () {
                 if (i === min)
                     reverse = 1;
             }, _kickoffSliderDifficulty);
-        };
+        };      
         //END KICKOFF VARIABLES/FUNCTIONS
         self.SelectTeam = function () {
             let teamIdSelected = parseInt($('input[name=selectTeam]:checked').val(), 10);
@@ -456,9 +465,11 @@ $(function () {
             }            
         };
         self.StartGame = function () {
+            self.currentTeamWithBall(self.teamReceivingInitialKickoff());
             self.pointAttemptAfterTouchDown(false);
             self.SetupField();
             self.kickoffNeeded(true);
+            self.isKickoff(true);
             self.SetupKickoff();
             self.gameStarted(true);
         };
@@ -687,6 +698,7 @@ var playMaker = {
             self.pointAttemptAfterTouchDown(false); //reset flag after extra point attempt
             turnover = true; //always change possession after extra point attempts
             self.kickoffNeeded(true);
+            self.isExtraPointKick(true);
             self.SetupKickoff();
 
             //EXTRA POINT
@@ -698,8 +710,9 @@ var playMaker = {
                     _playResultText = _playResultText + ' GOOD';
                     playMaker.addScore('extrapoint');
                 }
-                else
+                else {
                     _playResultText = _playResultText + ' NO GOOD';
+                }
             }
             else if (playSelected === 'extraPoint') {
                 _yards = 0;
@@ -728,19 +741,22 @@ var playMaker = {
             turnover = true;
 
         //HANDLE PUNT
-        if (playSelected === 'punt' && _diceSumTotal >= 4) {
-            _yards = getRandomInt(1, self.yardsToTouchdown() + 10); //account for touchback
-            if (_yards >= self.yardsToTouchdown()) {
-                _playResultText = _playResultText + ' - Touchback';
-                _yards = self.yardsToTouchdown() - 20; //set on 20 yard line
+        if (playSelected === 'punt') {
+            self.kickoffNeeded(true);
+            self.isPunt(true);
+            if (_diceSumTotal >= 4) {
+                _yards = getRandomInt(1, self.yardsToTouchdown() + 10); //account for touchback
+                if (_yards >= self.yardsToTouchdown()) {
+                    _playResultText = _playResultText + ' - Touchback';
+                    _yards = self.yardsToTouchdown() - 20; //set on 20 yard line
+                }
+                else
+                    _playResultText = _playResultText;
+            } else {
+                _yards = 0;
+                _playResultText = _playResultText + ' Blocked';
             }
-            else
-                _playResultText = _playResultText;
-        }
-        else if (playSelected === 'punt') {
-            _yards = 0;
-            _playResultText = _playResultText + ' Blocked';
-        }
+        }        
 
         //HANDLE FIELD GOAL
         if (playSelected === 'fieldGoal' && _diceSumTotal >= 4) {
@@ -760,6 +776,7 @@ var playMaker = {
                 _playResultText = _playResultText + ' GOOD';
                 playMaker.addScore('fieldgoal');
                 self.kickoffNeeded(true);
+                self.isKickoff(true);
                 self.SetupKickoff();
             } else {
                 _yards = self.yardsToTouchdown();
@@ -812,6 +829,7 @@ var playMaker = {
             _playResultText = 'SAFETY';
             playMaker.addScore('safety');
             self.kickoffNeeded(true);
+            self.isKickoff(true);
             self.SetupKickoff();
         }  
 
@@ -862,12 +880,22 @@ var playMaker = {
         let _yards = convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle);
         let _returnYards = 0;
         let _kickoffResultText = titleCase(kickoffType);
-        let ballKickOffSpot = 35; //set ball Spot Start at 35 yard line
-        let totalMaxKickWithoutTouchback = 100 - ballKickOffSpot; //variable used in calculations below for determining max return yards etc.
+        let ballKickOffSpot = 35; //set ball Spot Start at 35 yard line        
         let isTouchback = false; //flag to determine when touchback occurs
-        let isPenalty = false; //flag to determine when there is a penalty on the kickoff
+        let isPenalty = false; //flag to determine when there is a penalty on the kickoff                
         
         console.log('kickoffPower: %s, kickoffAngle: %s', kickoffPower, kickoffAngle);
+
+        //determine spot of kick off
+        if (self.isPunt() || self.isFieldGoal()) {
+            ballKickOffSpot = self.currentBallSpot();
+        }
+        if (self.isSafety()) {
+            ballKickOffSpot = 20;
+        }
+
+        let totalMaxKickWithoutTouchback = 100 - ballKickOffSpot; //variable used in calculations below for determining max return yards etc.
+        console.log('BEGINNING Kickoff Yards: %s, totalMaxKickWithoutTouchback: %s, BALL KICK OFF SPOT: %s', _yards, totalMaxKickWithoutTouchback, ballKickOffSpot);
 
         //if it's the first quarter, the team receiving should be set to the currentTeam with the ball
         let receivingTeam = self.awayTeamID();
@@ -878,7 +906,11 @@ var playMaker = {
             kickingTeam = self.awayTeamID();
         }
 
-        //set to false after kickoff
+        //when kicking from away side, subtract from 100 so ball spot start is right side of field
+        if (kickingTeam === awayTeamID())
+            ballKickOffSpot = 100 - ballKickOffSpot;
+
+        //set to false after kickoff TODO: reset to true when 2nd quarter begins
         self.isBeginningOfHalf = false;
 
         //normal change of possession after kickoff
@@ -905,7 +937,7 @@ var playMaker = {
                 _yards = getRandomInt(10, 20); //ball at least has to travel 10 yards, but has a chance of traveling 20
 
                 //now determine if kicking team gets the ball or the return team gets it. TODO: is this 20%?
-                if (getRandomInt(1, 100) <= 20) {                    
+                if (getRandomInt(1, 100) <= 20) {
                     receivingTeam = kickingTeam; //essentially a turnover
                 }
                 else {
@@ -914,7 +946,7 @@ var playMaker = {
                         _returnYards = getRandomInt(1, 10); //small chance of returning for 1-10 yards
                     }
                     else
-                        _returnYards = 0;                    
+                        _returnYards = 0;
                 }
             }
             else {
@@ -935,8 +967,9 @@ var playMaker = {
                 }
             }
         }
-        else { 
+        else {
             //normal kick
+            console.log('NORMAL KICKOFF');
             //if angle is extreme, no matter what the power is, the ball will go out of bounds:
             if (kickoffAngle <= 20 || kickoffAngle >= 80) {
                 _yards = 35; //mark spot at opposing teams 35 for penalty
@@ -944,68 +977,88 @@ var playMaker = {
                 isPenalty = true;
             }
             else if (_yards >= 76) {
-                isTouchback = true;
+                isTouchback = true; //ball is kicked out of bounds behind end zone, so no chance of return
             }
             else {
                 //get random int to determine if team runs it out of end zone
-                if (_yards >= totalMaxKickWithoutTouchback && getRandomInt(1, 100) >= 85) {
-                    //chance of big return
-                    if (getRandomInt(1, 100) >= 90) {
-                        //receiving team will at least run the ball out of the end-zone if they "decide" to return (yards kicked - 65 (total max kick for goal line reception)
-                        _returnYards = getRandomInt(_yards - totalMaxKickWithoutTouchback, _yards + ballKickOffSpot); //There is a small chance the ball will be returned, but most likely result will be a touchback
+                console.log('Kickoff Yards: %s, totalMaxKickWithoutTouchback: %s', _yards, totalMaxKickWithoutTouchback);
+                if (_yards >= totalMaxKickWithoutTouchback) {
+                    if (getRandomInt(1, 100) >= 85) {
+                        let minYards = _yards - totalMaxKickWithoutTouchback;
+                        let maxYards = 40;
+                        let chanceOfBigReturn = getRandomInt(1, 100);
+                        console.log('Chance of big return: %s, Minimum Return Yards: %s, Maximum Return Yards: %s', chanceOfBigReturn, minYards, maxYards);
+
+                        //chance of big return; There is a small chance the ball will be returned, but most likely result will be a touchback
+                        if (chanceOfBigReturn >= 90) {
+                            maxYards = _yards + ballKickOffSpot;
+                            //receiving team will at least run the ball out of the end-zone if they "decide" to return (yards kicked - 65 (total max kick for goal line reception)
+                            _returnYards = getRandomInt(minYards, maxYards);
+                        }
+                        else { //bigger chance of just a 40yd return.
+                            _returnYards = getRandomInt(minYards, maxYards); //more likely chance only allows for return of 40 yards
+                        }
+                    } else {
+                        isTouchback = true;
                     }
-                    else {
-                        _returnYards = getRandomInt(_yards - totalMaxKickWithoutTouchback, 40); //more likely chance only allows for return of 40 yards
-                    }
-                    
                 }
-                else if (_yards >= totalMaxKickWithoutTouchback) {                    
-                    isTouchback = true;
-                }
-                else
+                else {
+                    console.log('Chance of normal return, Minimum Return Yards: %s, Maximum Return Yards: %s', 1, _yards + ballKickOffSpot);
                     _returnYards = getRandomInt(1, _yards + ballKickOffSpot); //ball is most likely going to be returned on a normal kickoff under 65 yards
-            }                
+                }
+            }
         }
 
         self.currentTeamWithBall(receivingTeam); //this will be the team running or getting a touchback.
-
-        if (isTouchback || isPenalty) {
-            if (isTouchback) {
-                _kickoffResultText += ' - TOUCHBACK';
-                //home is left end-zone, away is right
-                //set ball at 20 yard line when a touchback occurs
-                if (self.currentTeamWithBall() === self.awayTeamID())
-                    self.ballSpotStart(80);
-                else
-                    self.ballSpotStart(20);
-            }
-            if (isPenalty) { //HANDLE PENALTY
-                if (self.currentTeamWithBall() === self.awayTeamID())
-                    self.ballSpotStart(_yards);
-                else
-                    self.ballSpotStart(100 - _yards);
-            }
-        }
-        else {
-            if (self.currentTeamWithBall() === self.awayTeamID())
-                self.ballSpotStart(100 - ballKickOffSpot + _yards - _returnYards); //add the yards kicked, and subtract the yards returned from the ball kickoff spot to get new ball start.
-            else
-                self.ballSpotStart(ballKickOffSpot + _yards - _returnYards);
-        }
-
-        //TODO: Handle return for Touchdown
-
-        //set the new position of the ball
-        self.SetBallPosition();
-
-        console.log('Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s',_yards, _returnYards, receivingTeam);
+        
+        console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
 
         //create a play result and record it in the play history
-        let returnResult = { yards: _returnYards, playResultText: 'Kickoff Return' };
-        let kickoffResult = { yards: _yards, playResultText: _kickoffResultText };
+        let kickoffResult = { yards: _yards, playResultText: _kickoffResultText };        
 
+        //record/show play results       
+        self.currentTeamWithBall(kickingTeam); //set current team with ball to kickoff team briefly to record the correct team name in the history
         playMaker.recordPlay(kickoffResult);
-        playMaker.recordPlay(returnResult);
+        
+        //show return of kick (if any), but only for kicks that allow for returns
+        if (!self.isFieldGoal() && !self.isExtraPointKick()) {
+            //Handle new spot of ball
+            if (isTouchback || isPenalty) {
+                if (isTouchback) {
+                    _kickoffResultText += ' - TOUCHBACK';
+                    //set ball at 20 yard line when a touchback occurs
+                    _yards = 20;
+                }
+
+                //home is left end-zone, away is right
+                if (self.currentTeamWithBall() === self.awayTeamID()) {
+                    self.ballSpotStart(100 - _yards);
+                }
+                else {
+                    self.ballSpotStart(_yards);
+                }
+            }
+            else {
+                let ballSpotTotal = ballKickOffSpot + _yards - _returnYards;
+                console.log('BALL SPOT TOTAL: %s', ballSpotTotal);
+
+                if (self.currentTeamWithBall() === self.awayTeamID()) {
+                    self.ballSpotStart(100 - ballSpotTotal); //add the yards kicked, and subtract the yards returned from the ball kickoff spot to get new ball start.
+                }
+                else {
+                    self.ballSpotStart(ballSpotTotal);
+                }
+            }
+            //TODO: Handle return for Touchdown 
+
+            //create a play result and record it in the play history
+            let returnResult = { yards: _returnYards, playResultText: 'Kickoff Return' };
+            self.currentTeamWithBall(receivingTeam); //set back to receiving team for proper team in play history
+            playMaker.recordPlay(returnResult);
+        }
+
+        //set the new position of the ball
+        self.SetBallPosition();        
     },
 
     recordPlay: function (thisPlaysResult) {
