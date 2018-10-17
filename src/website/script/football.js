@@ -162,10 +162,10 @@ $(function () {
         });
         self.AddPlayHistory = function (playHistory) {
             self.teamPlayHistory.push(playHistory);
-            self.teamPlayHistory.reverse();
-            //self.teamPlayHistory.sort(function (left, right) {
-            //    return right.playId === left.playId ? 0 : right.playId < left.playId ? -1 : 1;
-            //});
+            //self.teamPlayHistory.reverse();
+            self.teamPlayHistory.sort(function (left, right) {
+                return right.playId === left.playId ? 0 : right.playId < left.playId ? -1 : 1;
+            });
         };
         self.AddBoxScore = function () {
 
@@ -184,8 +184,7 @@ $(function () {
             gameStorage.getSavedData();
         };
         self.MakePlay = function () {
-            playMaker.init();
-            self.hasRolled(false); //reset flag so player has to roll before making next play
+            playMaker.init();            
             $('input[name=selectPlay][value=pass]').prop('checked', 'checked');//reset play selector to default
         };
         self.SetupField = function () {
@@ -310,6 +309,7 @@ $(function () {
         self.coinTossWinner = ko.observable(0); //stores team id of coin toss winner
         self.coinTossLoser = ko.observable(0); //stores team id of coin toss loser
         self.teamReceivingInitialKickoff = ko.observable(0); //stores value of team receiving ball at start of game
+        self.isBeginningOfHalf = true; //flag to indicate when the beginning of a half occurs
         self.coinTossWinningOption = ko.observable('receive'); //stores value of the option chosen by the coin-toss winning team
         self.coinTossResultText = ko.computed(function () {
             if (self.coinTossValue() === 1)
@@ -486,7 +486,8 @@ $(function () {
 
 //object constructor for a new play history record, stored in array, self.teamPlayHistory()
 function PlayHistory(teamId, teamName, down, playCount, playYards, playResult, ballSpot) {
-    this.playId = _totalPlayCount;
+    this.playId = self.teamPlayHistory().length + 1;
+    this.totalPlayCount = _totalPlayCount;
     this.teamId = teamId;
     this.teamName = teamName;
     this.down = down;
@@ -716,7 +717,7 @@ var playMaker = {
                     _playResultText = _playResultText + ' FAILED';
                 }
             }
-            else {
+            else if (playSelected === 'twoPointConversion') {
                 _playResultText = _playResultText + ' FAILED';
             }
                 
@@ -729,8 +730,10 @@ var playMaker = {
         //HANDLE PUNT
         if (playSelected === 'punt' && _diceSumTotal >= 4) {
             _yards = getRandomInt(1, self.yardsToTouchdown() + 10); //account for touchback
-            if (_yards >= self.yardsToTouchdown())
+            if (_yards >= self.yardsToTouchdown()) {
                 _playResultText = _playResultText + ' - Touchback';
+                _yards = self.yardsToTouchdown() - 20; //set on 20 yard line
+            }
             else
                 _playResultText = _playResultText;
         }
@@ -745,11 +748,11 @@ var playMaker = {
             //Chance of field goal does down for every 5 yards over 30 away from goal line
             if (self.yardsToTouchdown() >= 50)
                 fieldGoalSuccess = false; //automatically miss if the team is not past the 50 yard line
-            if (self.yardsToTouchdown() >= 45 && getRandomInt(1, 100) <= 85)
+            else if (self.yardsToTouchdown() >= 45 && getRandomInt(1, 100) <= 85)
                 fieldGoalSuccess = false;
-            if (self.yardsToTouchdown() >= 40 && getRandomInt(1, 100) <= 75)
+            else if (self.yardsToTouchdown() >= 40 && getRandomInt(1, 100) <= 75)
                 fieldGoalSuccess = false;
-            if (self.yardsToTouchdown() >= 35 && getRandomInt(1, 100) <= 65)
+            else if (self.yardsToTouchdown() >= 35 && getRandomInt(1, 100) <= 65)
                 fieldGoalSuccess = false;
 
             if (fieldGoalSuccess) {
@@ -861,6 +864,7 @@ var playMaker = {
         let _kickoffResultText = titleCase(kickoffType);
         let ballKickOffSpot = 35; //set ball Spot Start at 35 yard line
         let isTouchback = false; //flag to determine when touchback occurs
+        let isPenalty = false; //flag to determine when there is a penalty on the kickoff
         
         console.log('kickoffPower: %s, kickoffAngle: %s', kickoffPower, kickoffAngle);
 
@@ -868,9 +872,20 @@ var playMaker = {
         let receivingTeam = self.awayTeamID();
         let kickingTeam = self.homeTeamID();
 
-        if (self.teamReceivingInitialKickoff() === self.homeTeamID()) {
+        if (self.isBeginningOfHalf && self.teamReceivingInitialKickoff() === self.homeTeamID()) {
             receivingTeam = self.homeTeamID();
             kickingTeam = self.awayTeamID();
+        }
+
+        //set to false after kickoff
+        self.isBeginningOfHalf = false;
+
+        //normal change of possession after kickoff
+        if (!self.isBeginningOfHalf) {
+            if (self.currentTeamWithBall() === self.homeTeamID()) {
+                receivingTeam = self.homeTeamID();
+                kickingTeam = self.awayTeamID();
+            }
         }
         
         //handle kickoff type
@@ -906,6 +921,7 @@ var playMaker = {
                 if (kickoffPower < 25) {
                     _yards = 30; //mark spot at opposing teams 35 for penalty (65 yards to touchdown), so kickoff would essentially be 30 yards.
                     _kickoffResultText += ' Unsuccessful - Ball did not travel proper distance.';
+                    isPenalty = true;
                 }
                 else if (kickoffAngle > 20 || kickoffAngle < 80) {
                     _returnYards = getRandomInt(1, _yards + ballKickOffSpot); //ball can easily be returned for touchdown since it's essentially a normal kickoff
@@ -914,6 +930,7 @@ var playMaker = {
                 else {
                     _yards = 30; //mark spot at opposing teams 35 for penalty (65 yards to touchdown), so kickoff would essentially be 30 yards.
                     _kickoffResultText += ' Unsuccessful - Ball went out of bounds.';
+                    isPenalty = true;
                 }
             }
         }
@@ -923,6 +940,7 @@ var playMaker = {
             if (kickoffAngle <= 20 || kickoffAngle >= 80) {
                 _yards = 30; //mark spot at opposing teams 35 for penalty (65 yards to touchdown), so kickoff would essentially be 30 yards.
                 _kickoffResultText += ' Penalty - Ball kicked out of bounds.';
+                isPenalty = true;
             }
             else if (_yards >= 76) {
                 isTouchback = true;
@@ -930,7 +948,15 @@ var playMaker = {
             else {
                 //get random int to determine if team runs it out of end zone
                 if (_yards >= 65 && getRandomInt(1, 100) >= 85) {
-                    _returnYards = getRandomInt(1, _yards + ballKickOffSpot); //ball can easily be returned for touchdown since it's essentially a normal kickoff
+                    //chance of big return
+                    if (getRandomInt(1, 100) >= 90) {
+                        //receiving team will at least run the ball out of the end-zone if they "decide" to return (yards kicked - 65 (total max kick for goal line reception)
+                        _returnYards = getRandomInt(_yards - 65, _yards + ballKickOffSpot); //There is a small chance the ball will be returned, but most likely result will be a touchback
+                    }
+                    else {
+                        _returnYards = getRandomInt(_yards - 65, 40); //more likely chance only allows for return of 40 yards
+                    }
+                    
                 }
                 else if (_yards >= 65) {                    
                     isTouchback = true;
@@ -942,13 +968,22 @@ var playMaker = {
 
         self.currentTeamWithBall(receivingTeam); //this will be the team running or getting a touchback.
 
-        if (isTouchback) {
-            _kickoffResultText += ' - TOUCHBACK';
-            //home is left end-zone, away is right
-            if (self.currentTeamWithBall() === self.awayTeamID())
-                self.ballSpotStart(80);
-            else
-                self.ballSpotStart(20); //set ball at 20 yard line when a touchback occurs
+        if (isTouchback || isPenalty) {
+            if (isTouchback) {
+                _kickoffResultText += ' - TOUCHBACK';
+                //home is left end-zone, away is right
+                //set ball at 20 yard line when a touchback occurs
+                if (self.currentTeamWithBall() === self.awayTeamID())
+                    self.ballSpotStart(80);
+                else
+                    self.ballSpotStart(20);
+            }
+            if (isPenalty) { //HANDLE PENALTY
+                if (self.currentTeamWithBall() === self.awayTeamID())
+                    self.ballSpotStart(_yards);
+                else
+                    self.ballSpotStart(100 - _yards);
+            }
         }
         else {
             if (self.currentTeamWithBall() === self.awayTeamID())
@@ -956,6 +991,8 @@ var playMaker = {
             else
                 self.ballSpotStart(ballKickOffSpot + _yards - _returnYards);
         }
+
+        //TODO: Handle return for Touchdown
 
         //set the new position of the ball
         self.SetBallPosition();
@@ -994,13 +1031,14 @@ var playMaker = {
     play: function () {
         let playSelected = $('input[name=selectPlay]:checked').val();
         if (playSelected) {
+            self.hasRolled(false); //reset flag so player has to roll before making next play
             let thisPlaysResult = playMaker.getPlayResult(playSelected);
 
             playMaker.recordPlay(thisPlaysResult);                       
 
             _totalPlayCount += 1;            
         } else {
-            self.hasRolled(true); //TODO: BUG => make sure user doesn't need to roll again
+            self.hasRolled(true);
             alert('Choose a play');
         }
     },
@@ -1129,6 +1167,8 @@ function titleCase(str) {
     let splitStr = '';
 
     if (str) {
+        str = str.replace(/([A-Z]+)/g, "$1").replace(/([A-Z][a-z])/g, " $1"); //split on capital letters first (camel case strings)
+
         splitStr = str.toLowerCase().split(' ');
         for (var i = 0; i < splitStr.length; i++) {
             // You do not need to check if i is larger than splitStr length, as your for does that for you

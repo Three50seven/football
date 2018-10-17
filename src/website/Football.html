@@ -2,13 +2,13 @@
 <!--PREVENT SCRIPT WARNING WHEN RUNNING ON LOCAL HOST, otherwise, for internet zone change to: url=(0014)about:internet-->
 <!-- saved from url=(0016)http://localhost -->
 <html lang="en">
-<!-- NAME: Paul Krimm          						-->
-<!-- DATE: 2018.09.18			 					-->
+<!-- NAME: Paul Krimm -->
+<!-- DATE: 2018.09.18 -->
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    
+
     <link rel="stylesheet" type="text/css" href="styles/main.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="styles/team-colors.css" media="screen" />
     <!--<link rel="stylesheet" type="text/css" href="styles/bootstrap.min.css" media="screen" />-->
@@ -155,18 +155,34 @@
     </section>
 
     <br>
-    <div id="kickoffPlays" data-bind="visible:kickoffNeeded() && gameStarted">
-        <br>        
+    <p class="last-play-container" data-bind="visible: gameStarted()">
+        # Plays: <span id="playCount">0</span>
+        <br>
+        Play result: <span id="playResult">0</span>
+    </p>
+    <div id="kickoffPlays" data-bind="visible:kickoffNeeded() && gameStarted" align="center">
+        <br>
         Choose a kickoff play (click sliders to select power and angle of kick): <br>
         <br />
         <label><input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked"> Kickoff</label>
         <label><input type="radio" name="selectKickoffPlay" value="onside"> On-Side Kick</label>
+        <br /><br />
         <div class="slidecontainer">
-            Power: <input type="range" min="1" max="100" value="50" class="slider" id="kickoffPower" data-bind="click: GetKickoffPower">
+            Power:
+            <button type="button" id="powerStopper" class="btn-default" data-bind="click: GetKickoffPower">
+                Select Power
+            </button>
+            <input type="range" min="1" max="100" value="50" class="slider" id="kickoffPower" data-bind="click: GetKickoffPower" />
             <span class="smaller">(select a higher power for stronger kick, a lower value will allow for a return)</span>
+
             <br />
-            Angle : <input type="range" min="1" max="100" value="50" class="slider" id="kickoffAngle" data-bind="click: GetKickoffAngle">
+            Angle :
+            <button type="button" id="angleStopper" class="btn-default" data-bind="click: GetKickoffAngle">
+                Select Angle
+            </button>
+            <input type="range" min="1" max="100" value="50" class="slider" id="kickoffAngle" data-bind="click: GetKickoffAngle" />
             <span class="smaller">(select center for a normal kick-off, select left or right for on-side kick)</span>
+            <br />
             <p>
                 Kick-Off Power: <span id="kickoffPowerSelected"></span>
                 <br />
@@ -177,7 +193,7 @@
             Kickoff
         </button>
     </div>
-    <div id="mainPlaySelection" data-bind="visible:!kickoffNeeded()">
+    <div id="mainPlaySelection" data-bind="visible:!kickoffNeeded()" align="center">
         <button type="button" id="diceRoller" class="btn-default" data-bind="click: RollDice, visible:!hasRolled()">
             Roll Dice
         </button>
@@ -217,13 +233,9 @@
             <br>
             <span id="diceValues"></span>
         </p>
-        <p>
-            # Plays: <span id="playCount">0</span>
-            <br>
-            Play result: <span id="playResult">0</span>
-        </p>
         <br />
-        <div id="storage-controls">
+        <!--TODO: Update Storage - needs further development to work properly-->
+        <div id="storage-controls" align="center" style="display:none;">
             <button type="button" id="resetGame" class="btn-default" data-bind="click: ResetGame">
                 RESET GAME
             </button>
@@ -236,179 +248,183 @@
         </div>
 
         <br><br><br>
-        <span class="white">Play History:</span>
-        <div id="playHistoryScroller" class="scroller">
-            <table id="playHistory" class="football-stats alt-color-tr">
+        <div align="center">
+            <span class="white">Play History:</span>
+            <div id="playHistoryScroller" class="scroller">
+                <table id="playHistory" class="football-stats alt-color-tr">
+                    <thead>
+                        <tr>
+                            <th>
+                                Team
+                            </th>
+                            <th>
+                                Down
+                            </th>
+                            <th>
+                                # of Plays in Drive
+                            </th>
+                            <th>
+                                Total Yards for Play
+                            </th>
+                            <th>
+                                Play Result
+                            </th>
+                            <th>
+                                Spot of Ball
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: teamPlayHistory">
+                        <tr>
+                            <td><span data-bind="text: fullTeamName()"></span></td>
+                            <td><span data-bind="text: down"></span></td>
+                            <td><span data-bind="text: playCount"></span></td>
+                            <td><span data-bind="text: playYards"></span></td>
+                            <td><span data-bind="text: playResult"></span></td>
+                            <td><span data-bind="text: ballSpot"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br>
+        <div align="center">
+            <span class="white">Game Stats:</span>
+            <table id="gameStats" class="football-stats">
                 <thead>
                     <tr>
                         <th>
                             Team
                         </th>
                         <th>
-                            Down
+                            # of Plays Total
                         </th>
                         <th>
-                            # of Plays in Drive
+                            Total Yards Rushing
                         </th>
                         <th>
-                            Total Yards for Play
+                            Total Yards Passing
                         </th>
                         <th>
-                            Play Result
-                        </th>
-                        <th>
-                            Spot of Ball
+                            Total Time of Possession
                         </th>
                     </tr>
                 </thead>
-                <tbody data-bind="foreach: teamPlayHistory">
+                <tbody>
                     <tr>
-                        <td><span data-bind="text: fullTeamName()"></span></td>
-                        <td><span data-bind="text: down"></span></td>
-                        <td><span data-bind="text: playCount"></span></td>
-                        <td><span data-bind="text: playYards"></span></td>
-                        <td><span data-bind="text: playResult"></span></td>
-                        <td><span data-bind="text: ballSpot"></span></td>
+                        <td>
+                            49ERS (home)
+                        </td>
+                        <td>
+                            26
+                        </td>
+                        <td>
+                            115
+                        </td>
+                        <td>
+                            345
+                        </td>
+                        <td>
+                            15:30
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            LIONS (away)
+                        </td>
+                        <td>
+                            34
+                        </td>
+                        <td>
+                            120
+                        </td>
+                        <td>
+                            400
+                        </td>
+                        <td>
+                            16:20
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+            <span class="white">Box Score:</span>
+            <table id="boxScore" class="football-stats">
+                <thead>
+                    <tr>
+                        <th>
+                            Team
+                        </th>
+                        <th>
+                            1<sup>st</sup>
+                        </th>
+                        <th>
+                            2<sup>nd</sup>
+                        </th>
+                        <th>
+                            3<sup>rd</sup>
+                        </th>
+                        <th>
+                            4<sup>th</sup>
+                        </th>
+                        <th>
+                            OT
+                        </th>
+                        <th>
+                            TOTAL SCORE
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            49ERS (home)
+                        </td>
+                        <td>
+                            14
+                        </td>
+                        <td>
+                            7
+                        </td>
+                        <td>
+                            3
+                        </td>
+                        <td>
+                            0
+                        </td>
+                        <td>
+                            -
+                        </td>
+                        <td>
+                            23
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            LIONS (away)
+                        </td>
+                        <td>
+                            6
+                        </td>
+                        <td>
+                            21
+                        </td>
+                        <td>
+                            3
+                        </td>
+                        <td>
+                            0
+                        </td>
+                        <td>
+                            -
+                        </td>
+                        <td>
+                            30
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <br>
-        <span class="white">Game Stats:</span>
-        <table id="gameStats" class="football-stats">
-            <thead>
-                <tr>
-                    <th>
-                        Team
-                    </th>
-                    <th>
-                        # of Plays Total
-                    </th>
-                    <th>
-                        Total Yards Rushing
-                    </th>
-                    <th>
-                        Total Yards Passing
-                    </th>
-                    <th>
-                        Total Time of Possession
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        49ERS (home)
-                    </td>
-                    <td>
-                        26
-                    </td>
-                    <td>
-                        115
-                    </td>
-                    <td>
-                        345
-                    </td>
-                    <td>
-                        15:30
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        LIONS (away)
-                    </td>
-                    <td>
-                        34
-                    </td>
-                    <td>
-                        120
-                    </td>
-                    <td>
-                        400
-                    </td>
-                    <td>
-                        16:20
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        <span class="white">Box Score:</span>
-        <table id="boxScore" class="football-stats">
-            <thead>
-                <tr>
-                    <th>
-                        Team
-                    </th>
-                    <th>
-                        1<sup>st</sup>
-                    </th>
-                    <th>
-                        2<sup>nd</sup>
-                    </th>
-                    <th>
-                        3<sup>rd</sup>
-                    </th>
-                    <th>
-                        4<sup>th</sup>
-                    </th>
-                    <th>
-                        OT
-                    </th>
-                    <th>
-                        TOTAL SCORE
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        49ERS (home)
-                    </td>
-                    <td>
-                        14
-                    </td>
-                    <td>
-                        7
-                    </td>
-                    <td>
-                        3
-                    </td>
-                    <td>
-                        0
-                    </td>
-                    <td>
-                        -
-                    </td>
-                    <td>
-                        23
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        LIONS (away)
-                    </td>
-                    <td>
-                        6
-                    </td>
-                    <td>
-                        21
-                    </td>
-                    <td>
-                        3
-                    </td>
-                    <td>
-                        0
-                    </td>
-                    <td>
-                        -
-                    </td>
-                    <td>
-                        30
-                    </td>
-                </tr>
-            </tbody>
-        </table>
     </div>
 
     <script language="JavaScript" src="script/libraries/jquery-3.3.1.min.js"></script>

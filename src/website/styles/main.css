@@ -1,7 +1,7 @@
 ﻿body {
     background-color: #222;
     color: #7ED1FB;
-    font-family: Arial, Helvetica, sans-serif
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .main-site-link {
@@ -375,7 +375,12 @@ input[type="submit"].btn-default:disabled {
 
 /*Sliders*/
 .slidecontainer {
-    width: 20%;
+    max-width: 350px;
+}
+
+.last-play-container {
+    font-size: 22px;
+    font-weight:600
 }
 
 .slider {
