@@ -1,0 +1,533 @@
+﻿/*#mainField {
+	position: relative;
+	width: 100%;
+	padding-bottom: 80%;
+	margin: 20px;
+}
+
+#mainField canvas{
+	position: absolute;
+	width: 100%;
+	height: 80%;
+	border: solid 1px pink; 
+}*/
+
+/*sources: https://codepen.io/rtro92/pen/bqlCx and https://www.w3schools.com/howto/howto_css_image_text_blocks.asp*/
+/* Container holding the image and the text */
+#field-container {
+    position: absolute;
+    margin:10px;
+}
+
+#field {
+    position:static;
+    height: 20px;
+    width: 220px;
+    background-color: lawngreen;
+}
+
+#end-zone-left {
+    position: static;
+    height: 20px;
+    width: 10px;
+    float: left;
+    /*background-color: #FC2700; NOTE: THIS IS SET IN JAVASCRIPT BASED ON HOME TEAM*/
+}
+
+#end-zone-right {
+    position: static;
+    height: 20px;
+    width: 10px;
+    float: right;
+    /*background-color: #4600FC;  NOTE: THIS IS SET IN JAVASCRIPT BASED ON AWAY TEAM*/
+}
+
+#ball-position {
+    margin-top: 5px;
+    /*margin-left: 195px; 195 is max for right position, 0 is max left NOTE: THIS IS SET IN JAVASCRIPT BASED ON BALL POSITION*/
+    height: 10px;
+    width: 5px;
+    background-color: #5E562E;
+    border-radius: 50%;
+    display: inline-block;    
+}
+
+/*Ball Position Indicator With Image:*/
+#field-container-img {
+    position: absolute;
+    height: 103px;
+    width: 220px;
+    margin: 10px;
+}
+
+#field-img {
+    position: static;
+    height: 103px;
+    width: 220px;
+    background-color: lawngreen;
+    background-image: url("../content/images/FootballField_no_grass_mini_with_center_img.png");
+}
+
+#end-zone-left-img {
+    position: static;
+    height: 96px;
+    width: 16px;
+    float: left;
+    margin-top: 4px;
+    margin-left: 4px;
+    /*background-color: #FC2700; NOTE: THIS IS SET IN JAVASCRIPT BASED ON HOME TEAM*/
+}
+
+#end-zone-right-img {
+    position: static;
+    height: 96px;
+    width: 16px;
+    float: right;    
+    margin-top: 4px;
+    margin-right: 4px;
+    /*background-color: #4600FC;  NOTE: THIS IS SET IN JAVASCRIPT BASED ON AWAY TEAM*/
+}
+
+/*source: https://www.w3schools.com/css/tryit.asp?filename=trycss3_gradient-linear_trans */
+#home-team-trail {
+    height: 10px;
+    margin-top: 48px;
+    position: absolute;
+    display: inline-block;
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+#away-team-trail {
+    height: 10px;
+    margin-top: 48px;
+    position: absolute;
+    display: inline-block;
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+#ball-position-img {
+    margin-top: 48px;
+    margin-left: 0px; /*175px is max for right position, 85px is 50 yard line from left-to-right, is 50yd from right-to-left, 0 is max left NOTE: THIS IS SET IN JAVASCRIPT BASED ON BALL POSITION*/
+    height: 10px;
+    width: 5px;
+    position: absolute;
+    background-color: #413809;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.rotate-right {
+    -webkit-transform: rotate(90deg);
+    -webkit-transform-origin: left top;
+    -moz-transform: rotate(90deg);
+    -moz-transform-origin: left top;
+    -ms-transform: rotate(90deg);
+    -ms-transform-origin: left top;
+    -o-transform: rotate(90deg);
+    -o-transform-origin: left top;
+    transform: rotate(90deg);
+    transform-origin: left top;
+    position: absolute;
+    top: 0;
+    /*left: 100%;*/
+    white-space: nowrap;
+    font-size: 8px;
+    color: white;
+    margin-left: 10px;
+}
+
+
+.rotate-left {
+    -webkit-transform: rotate(-90deg);
+    -webkit-transform-origin: left top;
+    -moz-transform: rotate(-90deg);
+    -moz-transform-origin: left top;
+    -ms-transform: rotate(-90deg);
+    -ms-transform-origin: left top;
+    -o-transform: rotate(90deg);
+    -o-transform-origin: left top;
+    transform: rotate(-90deg);
+    transform-origin: left top;
+    position: absolute;
+    top: 0;
+    /*left: 100%;*/
+    white-space: nowrap;
+    font-size: 8px;
+    color: white;
+    margin-left: 7px;
+}
+
+/* Bottom right text */
+.field-text-block {
+    position: relative;
+    bottom: 248px;
+    right: 93px; /*100px = right endzone starting and ending at 956px*/
+    background-color: black;
+    color: white;
+    padding-left: 1px;
+    padding-right: 1px;
+}
+
+#direction-indicator {
+  border: solid gold;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}
+
+.left {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
+
+.field .overlay {
+	float: left;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	z-index: 1000;
+	background-color: #92AD40;
+	padding: 5px;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+
+.field-img {
+	width: 850px;
+	height: 400px;
+}
+
+.gold {
+	color: gold;	
+}
+.white {
+	color: white;	
+}
+
+/*source: https://www.w3schools.com/howto/howto_css_circles.asp*/
+.hasBall {
+	height: 10px;
+	width: 5px;
+	margin-right: 5px;
+	background-color: gold;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.team-timeout-container {
+	
+}
+
+.timeout-container {
+	padding-left: 45px;
+	text-align: right;
+	position: absolute;	
+}
+
+.timeout-display {
+	color: gold;
+	font-size: 15px;
+	height: 12px;
+	width: 5px;
+	background-color: gold;
+	display: inline-block;
+}
+
+.score-display {
+	padding-left: 15px;
+}
+
+#currentGameInfo {
+	width: 50%;
+	overflow: hidden;
+	border: 1px solid #fff
+}
+
+#currentGameInfo div {
+	float: left;
+	padding: 10px;
+}
+
+.football-stats {
+	color: gold;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 50%;	
+}
+
+.football-stats td, .football-stats th {
+	border: 1px solid #193d26;
+    padding: 8px;
+}
+
+.alt-color-tr tr:nth-child(even){background-color: #363c42;}
+
+.football-stats tr:hover {background-color: #193d26;}
+
+.football-stats th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #294e70;
+    color: white;
+}
+
+.scroller {
+	overflow-y: auto;
+	height: 400px;
+}
+
+body {
+	background-color: #000000; 
+	font-family: Arial;
+}
+	
+/*BUTTON STYLES*/
+.btn-default, .btn-default:visited, input[type="submit"].btn-default {
+  background-color: #0568ae;
+  display: inline-block;
+  position: relative;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-decoration: none;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1rem;
+  font-weight: normal;
+  padding: 12px 20px;
+  border: 0;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.btn-default:hover, .btn-default:focus, input[type="submit"].btn-default:hover{
+  background-color: #045086;
+  text-decoration: none;
+}
+
+.btn-default, input[type="submit"].btn-default {
+  -webkit-transition: background-color 0.14s ease-in-out, color 0.25s ease-in-out;
+  transition: background-color 0.14s ease-in-out, color 0.25s ease-in-out;
+}
+
+input[type="submit"].btn-default.btn-default-gray, input[type="submit"].btn-default.btn-default-gray:visited {
+  background-color: #666666;
+  color: #fff;
+}
+
+input[type="submit"].btn-default.btn-default-gray:hover, input[type="submit"].btn-default.btn-default-gray:focus, input[type="submit"].btn-default.btn-default-gray:visited:hover, input[type="submit"].btn-default.btn-default-gray:visited:focus {
+  background-color: #545454;
+}
+
+.recip-buttons .btn-default {
+    margin: 0 0.25rem;
+}
+
+.btn-default, .btn-default:visited, input[type="submit"].btn-default.btn-default-small {
+    font-size: .75rem;
+    padding: 6px 10px;
+    margin: 0 5px;
+}
+
+.btn-default-point-total {
+	background-color: #999900;
+}
+
+.btn-default.btn-default-separate {
+    margin-left: 3em;
+    margin-right: 3em;
+}
+
+.btn-default.btn-default-small.btn-default-solo {
+    margin: 0 !important;
+}
+
+input[type="submit"].btn-default:disabled {
+    background-color: #666666;
+    color: #fff;
+    cursor: default;
+}
+/*END BUTTON STYLES*/
+
+.play-controls {
+	color: gold;
+}
+
+.play-controls div {
+	border: solid 1px white; 
+}
+
+/*Sliders*/
+.slidecontainer {
+    width: 20%;
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 25px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: #4CAF50;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: #4CAF50;
+    cursor: pointer;
+}
+
+.smaller {
+    font-size: .75em;
+}
+
+/*Hide the radio button dot of radio button controls (where not needed)*/
+input[type="radio"][name="selectTeam"], 
+input[type="radio"][name="selectCoinTossWinner"] {
+    visibility: hidden;
+}
+
+.team-select-container {
+    height: 250px;
+    overflow: auto;
+}
+
+.team-name-select {
+    font-size: 22px;
+    color: white;
+    padding: 5px;
+}
+
+.teams-picked {
+    font-size: 22px;
+}
+
+.selected-team {
+    font-size: 42px;
+    outline: 1px solid #4CAF50;
+    padding: 5px;
+}
+
+/*Coin Toss Animations and Styles
+    source: https://codepen.io/le0864/pen/pbmoVQ
+*/
+.coin-toss-result {
+    font-size: 22px;
+    color: white;
+}
+
+#coin {
+    position: relative;
+    margin: 0 auto;
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+}
+
+    #coin div {
+        width: 100%;
+        height: 100%;
+        -webkit-border-radius: 50%;
+        -moz-border-radius: 50%;
+        border-radius: 50%;
+        -webkit-box-shadow: inset 0 0 45px rgba(255,255,255,.3), 0 12px 20px -10px rgba(0,0,0,.4);
+        -moz-box-shadow: inset 0 0 45px rgba(255,255,255,.3), 0 12px 20px -10px rgba(0,0,0,.4);
+        box-shadow: inset 0 0 45px rgba(255,255,255,.3), 0 12px 20px -10px rgba(0,0,0,.4);
+    }
+
+.side-a {
+    background-color: #bb0000;
+    text-align: center;
+}
+
+.side-b {
+    background-color: #3e3e3e;
+    text-align: center;
+}
+
+.side-txt {
+    padding-top: 60px;
+}
+
+#coin {
+    transition: -webkit-transform 1s ease-in;
+    -webkit-transform-style: preserve-3d;
+}
+
+    #coin div {
+        position: absolute;
+        -webkit-backface-visibility: hidden;
+    }
+
+.side-a {
+    z-index: 100;
+}
+
+.side-b {
+    -webkit-transform: rotateY(-180deg);
+}
+
+#coin.heads {
+    -webkit-animation: flipHeads 3s ease-out forwards;
+    -moz-animation: flipHeads 3s ease-out forwards;
+    -o-animation: flipHeads 3s ease-out forwards;
+    animation: flipHeads 3s ease-out forwards;
+}
+
+#coin.tails {
+    -webkit-animation: flipTails 3s ease-out forwards;
+    -moz-animation: flipTails 3s ease-out forwards;
+    -o-animation: flipTails 3s ease-out forwards;
+    animation: flipTails 3s ease-out forwards;
+}
+
+@-webkit-keyframes flipHeads {
+    from {
+        -webkit-transform: rotateY(0);
+        -moz-transform: rotateY(0);
+        transform: rotateY(0);
+    }
+
+    to {
+        -webkit-transform: rotateY(1800deg);
+        -moz-transform: rotateY(1800deg);
+        transform: rotateY(1800deg);
+    }
+}
+
+@-webkit-keyframes flipTails {
+    from {
+        -webkit-transform: rotateY(0);
+        -moz-transform: rotateY(0);
+        transform: rotateY(0);
+    }
+
+    to {
+        -webkit-transform: rotateY(1980deg);
+        -moz-transform: rotateY(1980deg);
+        transform: rotateY(1980deg);
+    }
+}
+/*End Coin Flip Styles*/
