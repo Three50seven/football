@@ -464,7 +464,6 @@ $(function () {
         self.kickoffPower = -1;
         self.kickoffAngle = -1;        
         self.TossCoin = function () {
-            //START_HERE
             let coinValue = getRandomInt(1, 2); //pick 1 or 2 randomly, 1=heads, 2=tails
             let coinSideSelected = parseInt($('input[name=selectCoinSide]:checked').val(), 10);
 
@@ -579,12 +578,36 @@ $(function () {
                     reverse = 1;
             }, _kickoffSliderDifficulty);
         };
+        self.ShowHideSpecialTeamsMenu = function () {
+            //show/hide special teams menu depending on down
+            if (self.currentDown() === 4) {
+                $('#specialTeamsMenu').addClass(SHOW_SPECIAL_TEAMS_CLASS);
+            }
+            else {
+                $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
+            }
+        };
+        self.ChangePossession = function () {
+            self.yardsToFirst(10);
+            self.currentDown(1);
+            self.playCountForPossession(0); //reset play count for possession
+
+            //change possession of ball
+            if (self.currentTeamWithBall() === self.awayTeamID())
+                self.currentTeamWithBall(self.homeTeamID());
+            else
+                self.currentTeamWithBall(self.awayTeamID());
+        };
         self.PuntBall = function () {
+            //START_HERE
             self.isPunt(true);
-            self.SetupKickoff();
+            self.ChangePossession();
+            self.SetupKickoff();            
         };
         self.KickFieldGoal = function () {
+             //START_HERE
             self.isFieldGoal(true);
+            self.ChangePossession();
             self.SetupKickoff();
         };
         //END KICKOFF VARIABLES/FUNCTIONS
@@ -982,15 +1005,7 @@ var playMaker = {
                 self.yardsToFirst(self.yardsToFirst() - _yards); //subtract the yards from the current yards to First Down
                 self.currentDown(self.currentDown() + 1);  //increment the current Down
             }
-        }
-
-        //show/hide special teams menu depending on down
-        if (self.currentDown() === 4) {
-            $('#specialTeamsMenu').addClass(SHOW_SPECIAL_TEAMS_CLASS);
-        }
-        else {
-            $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
-        }
+        }        
 
         console.log('YARDS: ' + _yards);
         let playResult = new PlayResult(_yards, _playResultText);        
@@ -1007,20 +1022,15 @@ var playMaker = {
             playMaker.recordPlay(playResult);
 
             //now handle turnover events
-            _yards = 0;
-            self.yardsToFirst(10);
-            self.currentDown(1);
-            self.playCountForPossession(0); //reset play count for possession
+            _yards = 0;            
             self.ballSpotStart(self.yardsToTouchdown());
             self.yardsTraveled(0); //reset yards traveled for possession
             _playResultText = _playResultText + ' Change of Possession';
 
-            //change possession
-            if (self.currentTeamWithBall() === self.awayTeamID())
-                self.currentTeamWithBall(self.homeTeamID());
-            else
-                self.currentTeamWithBall(self.awayTeamID());
+            self.ChangePossession();            
         }
+
+        self.ShowHideSpecialTeamsMenu();
 
         //on turnovers, this will return the play of the team taking over possession
         return playResult;
