@@ -97,7 +97,7 @@
             <div data-bind="visible: coinTossValue() > 0">
                 <span class="coin-toss-result" data-bind="text: coinTossResultText"></span>
                 <br />
-                The <span data-bind="text: coinTossWinnerInfo() ? coinTossWinnerInfo().teamCityAndName() : '[Error - coin toss winner not determined.]'"></span> Won the Coin Toss.
+                The <span data-bind="text: coinTossWinnerInfo() ? coinTossWinnerInfo().teamCityAndName() : '[Error - coin toss winner not determined.]'"></span> won the coin toss.
                 <br /><br />
                 Choose to receive or kickoff.
                 <br /><br />
@@ -157,7 +157,7 @@
 
     <br>
     <p class="last-play-container" data-bind="visible: gameStarted()">
-        # Plays: <span id="playCount">0</span>
+        # Total Plays in Game: <span id="playCount">0</span>
         <br>
         Play result: <span id="playResult">0</span>
     </p>
@@ -200,21 +200,41 @@
         </button>
     </div>
     <div id="mainPlaySelection" data-bind="visible:!kickoffNeeded()" align="center">
-        <button type="button" id="diceRoller" class="btn-default" data-bind="click: RollDice, visible:!hasRolled()">
-            Roll Dice
-        </button>
+        <div data-bind="visible:!hasRolled()">
+            <button type="button" id="diceRoller" class="btn-default" data-bind="click: RollDice">
+                Roll Dice
+            </button>
+            <br /><br />
+            <nav>
+                <ul>
+                    <li class="sub-menu-parent" tab-index="0">
+                        <a href="#" data-bind="click: CloseSpecialTeamsMenu">Special Teams</a>
+                        <ul class="sub-menu" id="specialTeamsMenu">
+                            <li><a href="#" data-bind="click: PuntBall">Punt</a></li>
+                            <li><a href="#" data-bind="click: KickFieldGoal">Field Goal</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+            <br /><br /><br /><br />
+            <button type="button" id="callTimeout" class="btn-default" data-bind="click: CallTimeout">
+                Call Timeout
+            </button>
+        </div>
+        <br />
         <div class="play-controls" data-bind="visible:hasRolled()">
             <button type="button" id="makePlay" class="btn-default" data-bind="click: MakePlay">
                 Make a Play
             </button>
+            <br /><br />
             <div>
                 <br>
                 Choose a play: <br>
                 <!-- ko if: !pointAttemptAfterTouchDown() -->
                 <label><input type="radio" name="selectPlay" value="pass" checked="checked"> Pass</label>
                 <label><input type="radio" name="selectPlay" value="run"> Run</label>
-                <label><input type="radio" name="selectPlay" value="punt"> Punt</label>
-                <label><input type="radio" name="selectPlay" value="fieldGoal"> Field Goal</label>
+                <!--<label><input type="radio" name="selectPlay" value="punt"> Punt</label>
+            <label><input type="radio" name="selectPlay" value="fieldGoal"> Field Goal</label>-->
                 <!-- /ko -->
                 <!-- ko if: pointAttemptAfterTouchDown() -->
                 <label><input type="radio" name="selectPlay" value="extraPoint"> Extra Point Attempt</label>

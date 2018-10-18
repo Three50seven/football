@@ -1,5 +1,12 @@
 //POTENTIAL GAME ENGINES TO ANIMATE FIELD: https://gist.github.com/bebraw/768272
 //START_HERE TAG IS USED TO MARK WHERE I LEFT OFF IN DEV:
+//CONSTANTS:
+const KICKOFF_SPOT = 35;
+const SAFETY_KICKOFF_SPOT = 20;
+const EXTRA_POINT_KICK_SPOT = 15;
+const TWO_POINT_CONVERSION_SPOT = 2;
+const TOUCHBACK_YARD_LINE = 20;
+const SHOW_SPECIAL_TEAMS_CLASS = 'show-sub-menu';
 
 var _totalPlayCount = 0;
 var _diceSumTotal = 0;
@@ -20,7 +27,7 @@ $(function () {
             return getNumberWithEnding(self.currentQuarter());
         });
         self.currentDown = ko.observable(1);
-        self.ballSpotStart = ko.observable(35); //set initial ball spot on home kickoff spot
+        self.ballSpotStart = ko.observable(0); //set initial ball spot on home kickoff spot
         self.yardsTraveled = ko.observable(0);
         self.yardsToFirst = ko.observable(10);        
         self.yardsToTouchdown = ko.computed(function () {
@@ -35,11 +42,14 @@ $(function () {
         });
         self.playCountForPossession = ko.observable(0);
         self.hasRolled = ko.observable(false);
-        self.currentTeamWithBall = ko.observable(0);
+        self.currentTeamWithBall = ko.observable(0);        
         self.teamPlayHistory = ko.observableArray();
         self.boxScore = ko.observableArray(); //TODO: Populate with data for table: boxScore
         self.teamStats = ko.observableArray(); //TODO: Populate with data for table: gameStats        
         self.needCoinToss = ko.observable(true); //determines when coin toss is needed
+        self.CloseSpecialTeamsMenu = function () {
+            $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
+        };
         self.ChooseCoinSide = function () {
             //use away team info on heads of coin if heads is selected, otherwise away team is tails
             let coinSideSelected = parseInt($('input[name=selectCoinSide]:checked').val(), 10);
@@ -89,6 +99,14 @@ $(function () {
         self.awayTeamScore = ko.observable(0);
 
         //GAME TIMER VARIABLES
+        self.currentTeamHasTimeOuts = ko.computed(function () {
+            if (self.currentTeamWithBall() === self.awayTeamID() && self.awayTeamTimeOuts() > 0)
+                return true;
+            if (self.currentTeamWithBall() === self.homeTeamID() && self.homeTeamTimeOuts() > 0)
+                return true;
+
+            return false;
+        });
         self.timerId = 0;
         self.elapsedTime = ko.observable(0);
         self.initialTime = ko.observable(900);
@@ -134,6 +152,77 @@ $(function () {
             self.ChooseCoinSide();
             return picked;
         });
+        self.SetupKickoffBallSpot = function () {
+            console.log('SETTING UP KICKOFF BALL SPOT');
+            console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', isExtraPointKick(), isKickoff(), isSafety());
+            //if (isExtraPointKick() || isKickoff() || isSafety()) {
+            //    //set spot depending on type of kick, default is normal kickoff
+            //    let spot = KICKOFF_SPOT;
+                                
+            //    let kickingTeam = self.homeTeamID();
+
+            //    //if the team with ball is the home team, they are receiving, so set kicking team to away team
+            //    if (self.currentTeamWithBall() === self.homeTeamID()) {
+            //        kickingTeam = self.awayTeamID();
+            //    }                
+
+            //    //KICKOFF => if kicking team is away team, kick from right of field, otherwise kick from left of field (default)
+            //    //SAFETY => same side of field as KICKOFF, just use different kickoff spot
+            //    //EXTRA POINT => if kicking team is home team, kick from right of field, otherwise kick from left of field (default)
+            //    //since receiving team is already marked as having the ball on kickoffs, add 30 + 2 (ball width) to mark kickoff spot
+            //    //for safety it will be 60 + 2 (ball width)
+            //    if (isKickoff()) {
+            //        console.log('SPOT BEFORE CHANGE (KICKOFF): %s', spot);
+            //        if (kickingTeam === self.awayTeamID()) {
+            //            spot = spot + 32;
+            //        }
+            //    }
+
+            //    if (isSafety()) {
+            //        spot = SAFETY_KICKOFF_SPOT;
+            //        console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot);
+            //        if (kickingTeam === self.awayTeamID()) {
+            //            spot = spot + 62;
+            //        }
+            //    }
+
+            //    if (isExtraPointKick()) {
+            //        spot = EXTRA_POINT_KICK_SPOT;
+
+            //        console.log('SPOT BEFORE CHANGE (EXTRA POINT): %s', spot);
+            //        if (kickingTeam === self.homeTeamID()) {
+            //            spot = 100 - spot; //subtract spot from 100 to move ball to right side of field
+            //        }
+            //    }
+
+            //    self.ballSpotStart(spot);
+
+            //    console.log('AFTER KICKOFF SPOT SET => Home Team: %s, Away Team: %s, Kicking Team %s, Spot: %s', self.homeTeamID(), self.awayTeamID(), kickingTeam, spot);
+            //}
+            if (isExtraPointKick() || isKickoff() || isSafety()) {
+                //set spot depending on type of kick, default is normal kickoff
+                let spot = KICKOFF_SPOT;
+
+                if (isKickoff()) {
+                    console.log('SPOT BEFORE CHANGE (KICKOFF): %s', spot);                    
+                    spot = spot + 32;                    
+                }
+                if (isSafety()) {
+                    spot = SAFETY_KICKOFF_SPOT;
+                    console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot); 
+                    spot = spot + 62;
+                }
+                if (isExtraPointKick()) {
+                    spot = EXTRA_POINT_KICK_SPOT;
+                    console.log('SPOT BEFORE CHANGE (EXTRA POINT): %s', spot);
+                }
+                self.ballSpotStart(spot);
+            }
+            console.log('just return ball spot: %s', self.ballSpotStart());
+            ////otherwise (field goal or  leave the ball kick off spot
+            self.SetBallPosition();
+            return self.ballSpotStart();
+        };
         self.ballSpot = ko.computed(function () {
             //home end-zone is always left
             //away end-zone is always right
@@ -196,7 +285,18 @@ $(function () {
         };
         self.RollDice = function () {
             gameDice.init();
-            self.hasRolled(true); //flag that the user has rolled the dice
+            self.hasRolled(true); //flag that the user has rolled the dice            
+        };        
+        self.CallTimeout = function () {
+            console.log('TODO: Setup Timeout functionality.');
+            if (self.currentTeamHasTimeOuts()) {
+                if (self.currentTeamWithBall() === self.awayTeamID())
+                    self.awayTeamTimeOuts(self.awayTeamTimeOuts() - 1);
+                else
+                    self.homeTeamTimeOuts(self.homeTeamTimeOuts() - 1);
+            }
+            else
+                alert('No Timeouts Remaining');
         };
         self.ResetGame = function () {
             gameStorage.clearLocalStorage();
@@ -212,7 +312,7 @@ $(function () {
             $('input[name=selectPlay][value=pass]').prop('checked', 'checked');//reset play selector to default
         };
         self.SetupField = function () {
-            console.log('setting up field.');
+            console.log('SETTING UP FIELD');
             //$('#end-zone-left').addClass(self.homeTeamInfo().teamBgColor());            
             //$('#end-zone-right').addClass(self.awayTeamInfo().teamBgColor());
             $('#end-zone-left-img').addClass(self.homeTeamInfo().teamBgColor());
@@ -221,8 +321,9 @@ $(function () {
             $('#end-zone-left-txt').css('top', self.GetHomeTeamTextPosition(self.homeTeamInfo().teamName().length) + '%');
             $('#end-zone-right-txt').css('top', self.GetAwayTeamTextPosition(self.awayTeamInfo().teamName().length) + '%');
             self.SetBallPosition();
-        };
+        };        
         self.SetBallPosition = function () {
+            console.log('SETTING BALL POSITION');
             //$('#ball-position').css('margin-left', self.ballSpot() + 'px'); //195 is max for right position, 0 is max left
             $('#ball-position-img').css('margin-left', self.ballSpot() + 'px');
 
@@ -442,6 +543,8 @@ $(function () {
             }
         };
         self.SetupKickoff = function () {
+            self.kickoffNeeded(true); //used to show kickoff controls
+
             let min = 0;
             let max = 100;
             let reverse = 1;
@@ -454,6 +557,9 @@ $(function () {
             self.kickoffAngle = -1;
             $("#kickoffAngleSelected").text('select angle');
             $("#kickoffPowerSelected").text('select power');
+
+            //set initial kickoff ball spot for display:
+            self.SetupKickoffBallSpot();
 
             //setup power slider movement
             self.kickoffPowerSliderIntervalId = window.setInterval(function () {
@@ -472,7 +578,15 @@ $(function () {
                 if (i === min)
                     reverse = 1;
             }, _kickoffSliderDifficulty);
-        };      
+        };
+        self.PuntBall = function () {
+            self.isPunt(true);
+            self.SetupKickoff();
+        };
+        self.KickFieldGoal = function () {
+            self.isFieldGoal(true);
+            self.SetupKickoff();
+        };
         //END KICKOFF VARIABLES/FUNCTIONS
         self.SelectTeam = function () {
             let teamIdSelected = parseInt($('input[name=selectTeam]:checked').val(), 10);
@@ -493,7 +607,6 @@ $(function () {
             self.currentTeamWithBall(self.teamReceivingInitialKickoff());
             self.pointAttemptAfterTouchDown(false);
             self.SetupField();
-            self.kickoffNeeded(true);
             self.isKickoff(true);
             self.SetupKickoff();
             self.gameStarted(true);
@@ -519,6 +632,12 @@ $(function () {
 
     ko.applyBindings(viewModel);
 }); //END DOCUMENT READY FUNCTION
+
+//object constructor for new play result record
+function PlayResult(yards, playText) {
+    this.yards = yards;
+    this.playResultText = playText;
+}
 
 //object constructor for a new play history record, stored in array, self.teamPlayHistory()
 function PlayHistory(teamId, teamName, down, playCount, playYards, playResult, ballSpot) {
@@ -722,13 +841,14 @@ var playMaker = {
         if (playSelected === 'extraPoint' || playSelected === 'twoPointConversion') {
             self.pointAttemptAfterTouchDown(false); //reset flag after extra point attempt
             turnover = true; //always change possession after extra point attempts
-            self.kickoffNeeded(true);
+            self.isKickoff(true);
             self.isExtraPointKick(true);
             self.SetupKickoff();
 
             //EXTRA POINT
-            if (playSelected === 'extraPoint' && _diceSumTotal >= 4) {
-                _yards = getRandomInt(1, 45); //need 25 yards for good extra point
+            if (playSelected === 'extraPoint' && _diceSumTotal >= 2) {
+                //need 25 yards for good extra point (15yds of field + 10yds of end-zone), get random number between 15 and 55 to determine if yards are good enough
+                _yards = getRandomInt(EXTRA_POINT_KICK_SPOT, EXTRA_POINT_KICK_SPOT + 40);
 
                 //Chance of extra point being missed (need a number >= 10 out of 100 chances)
                 if (_yards >= 25 && getRandomInt(1, 100) >= 10) {
@@ -740,14 +860,13 @@ var playMaker = {
                 }
             }
             else if (playSelected === 'extraPoint') {
-                _yards = 0;
                 _playResultText = _playResultText + ' Blocked';
             }
 
             //TWO POINT CONVERSION:
             if (playSelected === 'twoPointConversion' && _diceSumTotal >= 6) {
                 _yards = getRandomInt(1, 4); //need two yards for 2 point conversion
-                if (_yards >= 2) {
+                if (_yards >= TWO_POINT_CONVERSION_SPOT) {
                     _playResultText = _playResultText + ' SUCCESSFUL';
                     playMaker.addScore('twopointconversion');
                 }
@@ -766,25 +885,22 @@ var playMaker = {
             turnover = true;
 
         //HANDLE PUNT
-        if (playSelected === 'punt') {
-            self.kickoffNeeded(true);
-            self.isPunt(true);
-            if (_diceSumTotal >= 4) {
-                _yards = getRandomInt(1, self.yardsToTouchdown() + 10); //account for touchback
+        if (playSelected === 'punt') {            
+            if (_diceSumTotal >= 2) {
+                _yards = getRandomInt(10, self.yardsToTouchdown() + 10); //account for touchback and start punt at minimum of 10 yards (otherwise team should be kicking a field goal)
                 if (_yards >= self.yardsToTouchdown()) {
                     _playResultText = _playResultText + ' - Touchback';
-                    _yards = self.yardsToTouchdown() - 20; //set on 20 yard line
+                    _yards = TOUCHBACK_YARD_LINE; //set on 20 yard line
                 }
                 else
                     _playResultText = _playResultText;
             } else {
-                _yards = 0;
                 _playResultText = _playResultText + ' Blocked';
             }
         }        
 
         //HANDLE FIELD GOAL
-        if (playSelected === 'fieldGoal' && _diceSumTotal >= 4) {
+        if (playSelected === 'fieldGoal' && _diceSumTotal >= 2) {
             let fieldGoalSuccess = true;
             //Chance of field goal does down for every 5 yards over 30 away from goal line
             if (self.yardsToTouchdown() >= 50)
@@ -799,17 +915,15 @@ var playMaker = {
             if (fieldGoalSuccess) {
                 _yards = self.yardsToTouchdown() + 10; //add 10 yards to account for end-zone length
                 _playResultText = _playResultText + ' GOOD';
-                playMaker.addScore('fieldgoal');
-                self.kickoffNeeded(true);
+                playMaker.addScore('fieldgoal');                
                 self.isKickoff(true);
                 self.SetupKickoff();
             } else {
                 _yards = self.yardsToTouchdown();
-                _playResultText = _playResultText + ' attempt missed';
+                _playResultText = _playResultText + ' NO GOOD - attempt missed';
             }
         }
         else if (playSelected === 'fieldGoal') {
-            _yards = 0;
             _playResultText = _playResultText + ' Blocked';
         }
 
@@ -834,11 +948,9 @@ var playMaker = {
         }
         //NO GAIN PLAYS
         if (!_positiveYards && !_negativeYards && playSelected ==='pass') {
-            _yards = 0;
             _playResultText = _playResultText + ' Incomplete';
         }
         if (!_positiveYards && !_negativeYards && playSelected === 'run') {
-            _yards = 0;
             _playResultText = _playResultText + ' for no gain';
         }
 
@@ -850,12 +962,12 @@ var playMaker = {
         }
 
         //SAFETY
-        if (100 - self.yardsToTouchdown() < 0 && (playSelected === 'pass' || playSelected === 'run')) {
+        if (self.yardsToTouchdown() > 100 && (playSelected === 'pass' || playSelected === 'run')) {
             _playResultText = 'SAFETY';
             playMaker.addScore('safety');
-            self.kickoffNeeded(true);
-            self.isKickoff(true);
+            self.isSafety(true);
             self.SetupKickoff();
+            turnover = true;
         }  
 
         //DETERMINE DOWN
@@ -872,12 +984,34 @@ var playMaker = {
             }
         }
 
+        //show/hide special teams menu depending on down
+        if (self.currentDown() === 4) {
+            $('#specialTeamsMenu').addClass(SHOW_SPECIAL_TEAMS_CLASS);
+        }
+        else {
+            $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
+        }
+
+        console.log('YARDS: ' + _yards);
+        let playResult = new PlayResult(_yards, _playResultText);        
+        
+        //set the new position of the ball (if not kicking fieldgoal, extrapoint, or two point conversion):
+        if (playSelected !== 'fieldGoal' && playSelected !== 'extraPoint' && playSelected !== 'twoPointConversion') {
+            self.yardsTraveled(self.yardsTraveled() + _yards);
+        }
+        self.SetBallPosition();        
+
         //TURNOVER
         if (turnover) {
+            //before turning over the ball, record the play of team turning over the ball          
+            playMaker.recordPlay(playResult);
+
+            //now handle turnover events
+            _yards = 0;
             self.yardsToFirst(10);
             self.currentDown(1);
             self.playCountForPossession(0); //reset play count for possession
-            self.ballSpotStart(self.yardsToTouchdown()); 
+            self.ballSpotStart(self.yardsToTouchdown());
             self.yardsTraveled(0); //reset yards traveled for possession
             _playResultText = _playResultText + ' Change of Possession';
 
@@ -888,15 +1022,7 @@ var playMaker = {
                 self.currentTeamWithBall(self.awayTeamID());
         }
 
-        console.log('YARDS: ' + _yards);
-        let playResult = { yards: _yards, playResultText: _playResultText };
-
-        //set the new position of the ball (if not kicking fieldgoal, extrapoint, or two point conversion):
-        if (playSelected !== 'fieldGoal' && playSelected !== 'extraPoint' && playSelected !== 'twoPointConversion') {            
-            self.yardsTraveled(self.yardsTraveled() + _yards);
-        }        
-        self.SetBallPosition();
-
+        //on turnovers, this will return the play of the team taking over possession
         return playResult;
     },
 
@@ -1035,7 +1161,7 @@ var playMaker = {
         console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
 
         //create a play result and record it in the play history
-        let kickoffResult = { yards: _yards, playResultText: _kickoffResultText };        
+        let kickoffResult = new PlayResult(_yards, _kickoffResultText);       
 
         //record/show play results       
         self.currentTeamWithBall(kickingTeam); //set current team with ball to kickoff team briefly to record the correct team name in the history
@@ -1050,7 +1176,7 @@ var playMaker = {
                 if (isTouchback) {
                     _returnPlayText += ' - TOUCHBACK';
                     //set ball at 20 yard line when a touchback occurs
-                    _yards = 20;
+                    _yards = TOUCHBACK_YARD_LINE;
                 }
 
                 ////home is left end-zone, away is right
@@ -1062,20 +1188,20 @@ var playMaker = {
                 //}
             }
             else {
-                let ballSpotTotal = ballKickOffSpot + _yards - _returnYards;
+                let ballSpotTotal = 100 - ballKickOffSpot + _yards - _returnYards;
                 console.log('BALL SPOT TOTAL: %s', ballSpotTotal);
 
                 //if (self.currentTeamWithBall() === self.awayTeamID()) {
                 //    self.ballSpotStart(100 - ballSpotTotal); //add the yards kicked, and subtract the yards returned from the ball kickoff spot to get new ball start.
                 //}
                 //else {
-                    self.ballSpotStart(ballSpotTotal);
+                    self.ballSpotStart(100-ballSpotTotal);
                 //}
             }
             //TODO: Handle return for Touchdown 
 
             //create a play result and record it in the play history
-            let returnResult = { yards: _returnYards, playResultText: _returnPlayText };
+            let returnResult = new PlayResult(_returnYards, _returnPlayText);
             self.currentTeamWithBall(receivingTeam); //set back to receiving team for proper team in play history
             playMaker.recordPlay(returnResult);
         }
@@ -1109,6 +1235,10 @@ var playMaker = {
         let playSelected = $('input[name=selectPlay]:checked').val();
         if (playSelected) {
             self.hasRolled(false); //reset flag so player has to roll before making next play
+            
+            //clear results in list of die values
+            $("#diceValues").empty();
+
             let thisPlaysResult = playMaker.getPlayResult(playSelected);
 
             playMaker.recordPlay(thisPlaysResult);                       
@@ -1136,15 +1266,18 @@ var playMaker = {
                 score = 2;
                 break;
         }
-        if (currentTeamWithBall() === homeTeamID()) {
-            homeTeamScore(homeTeamScore() + score);
+        if (currentTeamWithBall() === homeTeamID()) { 
+            //add score to home team, unless safety
             if (type === 'safety')
                 awayTeamScore(awayTeamScore() + score);
+            else
+                homeTeamScore(homeTeamScore() + score);            
         }
-        else {
-            awayTeamScore(awayTeamScore() + score);
+        else { //add score to home team, unless safety
             if (type === 'safety')
                 homeTeamScore(homeTeamScore() + score);
+            else
+                awayTeamScore(awayTeamScore() + score);            
         }            
     }
 };
@@ -1221,7 +1354,7 @@ function getDownText(playAttempt, yardsToFirst) {
         yardsToFirstText = yardsToFirst.toString(); 
     }
 
-    if (self.yardsToTouchdown() <= 10)
+    if (self.yardsToTouchdown() <= self.yardsToFirst())
         yardsToFirstText = 'GOAL';
 
     return getNumberWithEnding(playAttempt) + ' & ' + yardsToFirstText;
