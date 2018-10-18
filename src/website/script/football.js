@@ -40,6 +40,29 @@ $(function () {
         self.boxScore = ko.observableArray(); //TODO: Populate with data for table: boxScore
         self.teamStats = ko.observableArray(); //TODO: Populate with data for table: gameStats        
         self.needCoinToss = ko.observable(true); //determines when coin toss is needed
+        self.ChooseCoinSide = function () {
+            //use away team info on heads of coin if heads is selected, otherwise away team is tails
+            let coinSideSelected = parseInt($('input[name=selectCoinSide]:checked').val(), 10);
+            if (coinSideSelected === 1) {
+                $(".side-a").removeClass(self.homeTeamInfo().teamBgColor());
+                $(".side-a").addClass(self.awayTeamInfo().teamBgColor());
+                $("#side-a-txt").text(self.awayTeamInfo().teamName());
+
+                $(".side-b").removeClass(self.awayTeamInfo().teamBgColor());
+                $(".side-b").addClass(self.homeTeamInfo().teamBgColor());
+                $("#side-b-txt").text(self.homeTeamInfo().teamName());
+            }
+            else {
+                $(".side-b").removeClass(self.homeTeamInfo().teamBgColor());
+                $(".side-b").addClass(self.awayTeamInfo().teamBgColor());
+                $("#side-b-txt").text(self.awayTeamInfo().teamName());
+
+                $(".side-a").removeClass(self.awayTeamInfo().teamBgColor());
+                $(".side-a").addClass(self.homeTeamInfo().teamBgColor());
+                $("#side-a-txt").text(self.homeTeamInfo().teamName());
+            }
+            return true; //return true so radio button is checked
+        };
 
         //HOME TEAM VARIABLES:        
         self.homeTeamID = ko.observable(0); //28
@@ -105,8 +128,10 @@ $(function () {
         //GENERAL GAME FUNCTIONS:
         self.teamsPicked = ko.computed(function () {
             let picked = false;
-            if (homeTeamID() && awayTeamID() && homeTeamID() > 0 && awayTeamID() > 0)
+            if (homeTeamID() && awayTeamID() && homeTeamID() > 0 && awayTeamID() > 0) {
                 picked = true;
+            }
+            self.ChooseCoinSide();
             return picked;
         });
         self.ballSpot = ko.computed(function () {
@@ -314,7 +339,7 @@ $(function () {
         self.coinTossLoser = ko.observable(0); //stores team id of coin toss loser
         self.teamReceivingInitialKickoff = ko.observable(0); //stores value of team receiving ball at start of game
         self.isBeginningOfHalf = true; //flag to indicate when the beginning of a half occurs
-        self.coinTossWinningOption = ko.observable('receive'); //stores value of the option chosen by the coin-toss winning team
+        self.coinTossWinningOption = ko.observable('receive'); //stores value of the option chosen by the coin-toss winning team        
         self.coinTossResultText = ko.computed(function () {
             if (self.coinTossValue() === 1)
                 return 'Heads';
@@ -904,11 +929,7 @@ var playMaker = {
         if (self.isBeginningOfHalf && self.teamReceivingInitialKickoff() === self.homeTeamID()) {
             receivingTeam = self.homeTeamID();
             kickingTeam = self.awayTeamID();
-        }
-
-        //when kicking from away side, subtract from 100 so ball spot start is right side of field
-        if (kickingTeam === awayTeamID())
-            ballKickOffSpot = 100 - ballKickOffSpot;
+        }        
 
         //set to false after kickoff TODO: reset to true when 2nd quarter begins
         self.isBeginningOfHalf = false;
@@ -1032,24 +1053,24 @@ var playMaker = {
                     _yards = 20;
                 }
 
-                //home is left end-zone, away is right
-                if (self.currentTeamWithBall() === self.awayTeamID()) {
-                    self.ballSpotStart(100 - _yards);
-                }
-                else {
+                ////home is left end-zone, away is right
+                //if (self.currentTeamWithBall() === self.awayTeamID()) {
+                //    self.ballSpotStart(100 - _yards);
+                //}
+                //else {
                     self.ballSpotStart(_yards);
-                }
+                //}
             }
             else {
                 let ballSpotTotal = ballKickOffSpot + _yards - _returnYards;
                 console.log('BALL SPOT TOTAL: %s', ballSpotTotal);
 
-                if (self.currentTeamWithBall() === self.awayTeamID()) {
-                    self.ballSpotStart(100 - ballSpotTotal); //add the yards kicked, and subtract the yards returned from the ball kickoff spot to get new ball start.
-                }
-                else {
+                //if (self.currentTeamWithBall() === self.awayTeamID()) {
+                //    self.ballSpotStart(100 - ballSpotTotal); //add the yards kicked, and subtract the yards returned from the ball kickoff spot to get new ball start.
+                //}
+                //else {
                     self.ballSpotStart(ballSpotTotal);
-                }
+                //}
             }
             //TODO: Handle return for Touchdown 
 

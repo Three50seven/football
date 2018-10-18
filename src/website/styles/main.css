@@ -4,6 +4,10 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+label {
+    font-size: 22px;
+}
+
 .main-site-link {
     font-size: 32px;
     color: #FE9428;

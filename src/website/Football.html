@@ -80,15 +80,16 @@
                 </button>
                 <br /><br />
                 <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span>, choose heads or tails: <br>
-                <label><input type="radio" name="selectCoinSide" value="1" checked="checked"> Heads</label>
-                <label><input type="radio" name="selectCoinSide" value="2"> Tails</label>
+                <label><input type="radio" name="selectCoinSide" value="1" checked="checked" data-bind="click: ChooseCoinSide"> Heads</label>
+                <label><input type="radio" name="selectCoinSide" value="2" data-bind="click: ChooseCoinSide"> Tails</label>
+                <br /><br />
                 <div id="coinBox">
                     <div id="coin" data-bind="click: TossCoin">
-                        <div class="side-a" data-bind="class: homeTeamInfo().teamBgColor()">
-                            <br /><br /><span class="side-txt" data-bind="text: homeTeamInfo().teamName()"></span> (heads)
+                        <div class="side-a">
+                            <br /><br /><span class="side-txt" id="side-a-txt"></span> (heads)
                         </div>
-                        <div class="side-b" data-bind="class: awayTeamInfo().teamBgColor()">
-                            <br /><br /><span class="side-txt" data-bind="text: awayTeamInfo().teamName()"></span> (tails)
+                        <div class="side-b">
+                            <br /><br /><span class="side-txt" id="side-b-txt"></span> (tails)
                         </div>
                     </div>
                 </div>
