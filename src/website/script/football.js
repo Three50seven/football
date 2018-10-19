@@ -7,12 +7,13 @@ const EXTRA_POINT_KICK_SPOT = 15;
 const TWO_POINT_CONVERSION_SPOT = 2;
 const TOUCHBACK_YARD_LINE = 20;
 const SHOW_SPECIAL_TEAMS_CLASS = 'show-sub-menu';
+const MAX_TIME_OF_QUARTER = 900; //900 seconds = 15 minutes
 
 var _totalPlayCount = 0;
 var _diceSumTotal = 0;
 var _teams = new TeamArray();
 var _timeIntervalCountDown = 1000; //Modify this value to set how fast the clock counts down for a quarter, 1000 = 1 second, 500 = half second, etc.
-var _kickoffSliderDifficulty = 10; //change to higher number to slow down slider, change to lower number to speed up
+var _kickoffSliderDifficulty = 10; //change to higher number to slow down kick sliders, change to lower number to speed up
 
 //DOCUMENT READY FUNCTION:
 $(function () {
@@ -41,12 +42,13 @@ $(function () {
             return yards;
         });
         self.playCountForPossession = ko.observable(0);
+        self.timeOfPossession = ko.observable(0);
         self.hasRolled = ko.observable(false);
         self.currentTeamWithBall = ko.observable(0);        
         self.teamPlayHistory = ko.observableArray();
-        self.boxScore = ko.observableArray(); //TODO: Populate with data for table: boxScore
-        self.teamStats = ko.observableArray(); //TODO: Populate with data for table: gameStats        
-        self.needCoinToss = ko.observable(true); //determines when coin toss is needed
+        self.gamePlayStats = ko.observableArray();
+        self.gameBoxScore = ko.observableArray();       
+        self.needCoinToss = ko.observable(true); //determines when coin toss is needed        
         self.CloseSpecialTeamsMenu = function () {
             $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
         };
@@ -114,20 +116,13 @@ $(function () {
         });
         self.timerId = 0;
         self.elapsedTime = ko.observable(0);
-        self.initialTime = ko.observable(900);
+        self.initialTime = ko.observable(MAX_TIME_OF_QUARTER);
         self.remainingTime = ko.computed(function () {
             return self.initialTime() - self.elapsedTime();
         });
         //display time source: https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
         self.remainingTimeDisplay = ko.computed(function () {
-            if (self.remainingTime() > 0) {
-                var minutes = Math.floor(self.remainingTime() / 60);
-                var seconds = self.remainingTime() - minutes * 60;
-                return str_pad_left(minutes, '0', 2) + ':' + str_pad_left(seconds, '0', 2);
-            }
-            else {
-                return '00:00';
-            }
+            return getTimeDisplay(self.remainingTime());
         });
         self.isRunning = ko.observable(false);
         self.StartCounter = function () {
@@ -285,8 +280,90 @@ $(function () {
                 return right.playId === left.playId ? 0 : right.playId < left.playId ? -1 : 1;
             });
         };
-        self.AddBoxScore = function () {
+        self.InitializeBoxScore = function () {
+            //insert two team records for this game
+            let homeBoxScore = new GameBoxScoreRecord(
+                self.homeTeamID(),
+                self.homeTeamInfo().teamName(),
+                0, 0, 0, 0, 0
+            );
+            let awayBoxScore = new GameBoxScoreRecord(
+                self.awayTeamID(),
+                self.awayTeamInfo().teamName(),
+                0, 0, 0, 0, 0
+            );
 
+            self.gameBoxScore.push(homeBoxScore);
+            self.gameBoxScore.push(awayBoxScore);
+        };
+        self.UpdateBoxScore = function () {
+            //TODO: call this at the end of each score to add total score for each team
+            let quarter = self.currentQuarter();
+            let homeTeam = $.grep(self.gameBoxScore(), function (team) { return team.teamId === self.homeTeamID(); })[0]; //get the home team
+            let awayTeam = $.grep(self.gameBoxScore(), function (team) { return team.teamId === self.awayTeamID(); })[0]; //get the away team
+
+            if (self.gameBoxScore().length > 0) {
+                if (quarter === 1) {
+                    homeTeam.firstQuarterScore = self.homeTeamScore();
+                    awayTeam.firstQuarterScore = self.awayTeamScore();
+                }
+                if (quarter === 2) {
+                    homeTeam.secondQuarterScore = self.homeTeamScore() - homeTeam.firstQuarterScore;
+                    awayTeam.secondQuarterScore = self.awayTeamScore() - awayTeam.firstQuarterScore;
+                }
+                if (quarter === 3) {
+                    homeTeam.thirdQuarterScore = self.homeTeamScore() - homeTeam.firstQuarterScore - homeTeam.secondQuarterScore;
+                    awayTeam.thirdQuarterScore = self.awayTeamScore() - awayTeam.firstQuarterScore - awayTeam.secondQuarterScore;
+                }
+                if (quarter === 4) {
+                    homeTeam.fourthQuarterScore = self.homeTeamScore() - homeTeam.firstQuarterScore - homeTeam.secondQuarterScore - homeTeam.thirdQuarterScore;
+                    awayTeam.fourthQuarterScore = self.awayTeamScore() - awayTeam.firstQuarterScore - awayTeam.secondQuarterScore - awayTeam.thirdQuarterScore;
+                }
+                if (quarter >= 5) {
+                    homeTeam.overtimeScore = self.homeTeamScore() - homeTeam.firstQuarterScore - homeTeam.secondQuarterScore - homeTeam.thirdQuarterScore - homeTeam.fourthQuarterScore;
+                    awayTeam.overtimeScore = self.awayTeamScore() - awayTeam.firstQuarterScore - awayTeam.secondQuarterScore - awayTeam.thirdQuarterScore - awayTeam.fourthQuarterScore;
+                }
+            }
+            else {
+                console.log('ERROR: gameBoxScore array was never initialized. Initializing...');
+                self.InitializeBoxScore();
+                console.log('Updating Box Score...');
+                self.UpdateBoxScore();
+            }
+        };
+        self.InitializeGameStats = function () {
+            //insert two team records for this game
+            let homeTeamPlayStat = new GamePlayStatRecord(
+                self.homeTeamID(),
+                self.homeTeamInfo().teamName(),
+                0, 0, 0, 0, 0
+            );
+            let awayTeamPlayStat = new GamePlayStatRecord(
+                self.awayTeamID(),
+                self.awayTeamInfo().teamName(),
+                0, 0, 0, 0, 0
+            );
+
+            self.gamePlayStats.push(homeTeamPlayStat);
+            self.gamePlayStats.push(awayTeamPlayStat);
+        };
+        self.UpdateGameStat = function (teamStatUpdates) {
+            //TODO: call this at the end of each play to update team stats
+            if (self.gamePlayStats().length > 0) {
+                let team = $.grep(self.gamePlayStats(), function (team) { return team.teamId === teamStatUpdates.teamId; })[0]; //get the team that needs an update
+
+                team.totalPlayCount += teamStatUpdates.totalPlayCount;
+                team.totalYardsRushing += teamStatUpdates.totalYardsRushing;
+                team.totalYardsPassing += teamStatUpdates.totalYardsPassing;
+                team.totalTimePossession += teamStatUpdates.totalTimePossession;
+                team.totalTurnovers += teamStatUpdates.totalTurnovers;
+            }
+            else {
+                console.log('ERROR: gamePlayStats array was never initialized. Initializing...');
+                self.InitializeGameStats();
+                console.log('Updating Box Score...');
+                self.UpdateGameStat();
+            }
         };
         self.RollDice = function () {
             gameDice.init();
@@ -599,6 +676,7 @@ $(function () {
             self.yardsToFirst(10);
             self.currentDown(1);
             self.playCountForPossession(0); //reset play count for possession
+            self.timeOfPossession(0); //reset time of possession
 
             //change possession of ball
             if (self.currentTeamWithBall() === self.awayTeamID())
@@ -622,19 +700,24 @@ $(function () {
         self.SelectTeam = function () {
             let teamIdSelected = parseInt($('input[name=selectTeam]:checked').val(), 10);
 
-            self.ClearCoinColors();
+            if (teamIdSelected === self.homeTeamID()) {
+                alert('The away team must be different than the home team.  Please select a different team.');
+            }
+            else {
+                self.ClearCoinColors();
 
-            //console.log('Team Selected %s.', typeof teamIdSelected);
+                //console.log('Team Selected %s.', typeof teamIdSelected);
 
-            if (typeof teamIdSelected === 'number') {
+                if (typeof teamIdSelected === 'number') {
 
-                //console.log('Team Selected %s.', teamIdSelected);
+                    //console.log('Team Selected %s.', teamIdSelected);
 
-                if (!self.homeTeamID())
-                    self.homeTeamID(teamIdSelected);
-                else
-                    self.awayTeamID(teamIdSelected);
-            }            
+                    if (!self.homeTeamID())
+                        self.homeTeamID(teamIdSelected);
+                    else
+                        self.awayTeamID(teamIdSelected);
+                }
+            }         
         };
         self.StartGame = function () {
             self.currentTeamWithBall(self.teamReceivingInitialKickoff());
@@ -643,12 +726,21 @@ $(function () {
             self.isKickoff(true);
             self.SetupKickoff();
             self.gameStarted(true);
+            self.InitializeBoxScore();
+            self.InitializeGameStats();
         };
         self.ResetTeams = function () {
             self.ClearCoinColors();
             self.homeTeamID(0);
             self.awayTeamID(0);
             console.log('TEAMS RESET');
+        };
+        self.ShowOtherGameInfo = function () {
+            if ($("#gameInfoBox").is(":hidden")) {
+                $("#gameInfoBox").show("slow");
+            } else {
+                $("#gameInfoBox").slideUp();
+            }
         };
     }; //END KNOCKOUT viewModel
 
@@ -665,12 +757,81 @@ $(function () {
     };
 
     ko.applyBindings(viewModel);
+
+    //initially set game info to hidden
+    $("#gameInfoBox").slideUp();
 }); //END DOCUMENT READY FUNCTION
 
+//LOOKUP TYPES:
+//TODO: Use these instead of relying on 'magic' strings
+var KICKOFF_TYPES = {
+    KICKOFF: 'kickoff',
+    ONSIDE: 'onside',
+    PUNT: 'punt',
+    FIELDGOAL: 'fieldgoal',
+    EXTRAPOINT: 'extrapoint',
+    SAFETY: 'safety'
+};
+
+var GAME_PLAY_TYPES = {
+    RUN: 'run',
+    PASS: 'pass',
+    EXTRAPOINT: 'extraPoint',
+    TWOPOINTCONVERSION: 'twoPointConversion',
+    FIELDGOAL: 'fieldGoal'
+};
+
+var SCORE_TYPES = {
+    TOUCHDOWN: 'touchdown',
+    FIELDGOAL: 'fieldgoal',
+    SAFETY: 'safety',
+    EXTRAPOINT: 'extrapoint',
+    TWOPOINTCONVERSION: 'twopointconversion'
+};
+
+//CONSTRUCTORS
+//object constructor for gamePlayStats record
+function GamePlayStatRecord(teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers) {
+    this.teamId = teamId;
+    this.teamName = teamName;
+    this.totalPlayCount = totalPlayCount;
+    this.totalYardsRushing = totalYardsRushing;
+    this.totalYardsPassing = totalYardsPassing;
+    this.totalTimePossession = totalTimePossession;
+    this.totalTurnovers = totalTurnovers;
+    this.fullTeamName = getFullTeamName(this.teamName, this.teamId);
+    this.totalTimePossessionDisplay = getTimeDisplay(this.totalTimePossession); //TODO: BUG, Not correctly displaying time as 00:00
+}
+
+//object constructor for gameBoxScore
+function GameBoxScoreRecord(teamId, teamName, firstQuarterScore, secondQuarterScore, thirdQuarterScore, fourthQuarterScore, overtimeScore) {
+    this.teamId = teamId;
+    this.teamName = teamName;
+    this.firstQuarterScore = firstQuarterScore;
+    this.secondQuarterScore = secondQuarterScore;
+    this.thirdQuarterScore = thirdQuarterScore;
+    this.fourthQuarterScore = fourthQuarterScore;
+    this.overtimeScore = overtimeScore;    
+    this.fullTeamName = getFullTeamName(this.teamName, this.teamId);
+    this.totalScore = function () {
+        let first = this.firstQuarterScore ? this.firstQuarterScore : 0;
+        let second = this.firstQuarterScore ? this.firstQuarterScore : 0;
+        let third = this.firstQuarterScore ? this.firstQuarterScore : 0;
+        let fourth = this.firstQuarterScore ? this.firstQuarterScore : 0;
+        let ot = this.firstQuarterScore ? this.firstQuarterScore : 0;
+
+        //return sum of all quarters for total
+        return first + second + third + fourth + ot;
+    };
+}
+
+
 //object constructor for new play result record
-function PlayResult(yards, playText) {
+function PlayResult(yards, playText, isTurnover = false, playType = '') {
     this.yards = yards;
     this.playResultText = playText;
+    this.isTurnover = isTurnover;
+    this.playType = playType;
 }
 
 //object constructor for a new play history record, stored in array, self.teamPlayHistory()
@@ -684,17 +845,7 @@ function PlayHistory(teamId, teamName, down, playCount, playYards, playResult, b
     this.playYards = playYards;
     this.playResult = playResult;
     this.ballSpot = ballSpot;
-    this.fullTeamName = function () {
-        if (!this.teamName)
-            return '';
-
-        if (self.awayTeamID() === teamId) {
-            return this.teamName + ' (away)';
-        }
-        else {
-            return this.teamName + ' (home)';
-        }
-    };
+    this.fullTeamName = getFullTeamName(this.teamName, this.teamId);
 }
 
 //object constructor for a new teams array, stored in, _teams
@@ -867,9 +1018,9 @@ var playMaker = {
         let _negativeYards = false;
         let bigYardPlay = getRandomInt(1, 100) >= 85;
         let yardageMax = 15;
-        let turnover = false;
+        let turnover = false;        
 
-        self.playCountForPossession(self.playCountForPossession() + 1);
+        self.playCountForPossession(self.playCountForPossession() + 1);        
 
         //Chance of a big yard play is increased
         if (bigYardPlay)
@@ -884,7 +1035,7 @@ var playMaker = {
             _negativeYards = true;
 
         //HANDLE EXTRA POINT (after touchdown) PLAYS:
-        if (playSelected === 'extraPoint' || playSelected === 'twoPointConversion') {
+        if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT || playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
             self.pointAttemptAfterTouchDown(false); //reset flag after extra point attempt
             turnover = true; //always change possession after extra point attempts
             self.isKickoff(true);
@@ -892,46 +1043,46 @@ var playMaker = {
             self.SetupKickoff();
 
             //EXTRA POINT
-            if (playSelected === 'extraPoint' && _diceSumTotal >= 2) {
+            if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT && _diceSumTotal >= 2) {
                 //need 25 yards for good extra point (15yds of field + 10yds of end-zone), get random number between 15 and 55 to determine if yards are good enough
                 _yards = getRandomInt(EXTRA_POINT_KICK_SPOT, EXTRA_POINT_KICK_SPOT + 40);
 
                 //Chance of extra point being missed (need a number >= 10 out of 100 chances)
                 if (_yards >= 25 && getRandomInt(1, 100) >= 10) {
                     _playResultText = _playResultText + ' GOOD';
-                    playMaker.addScore('extrapoint');
+                    playMaker.addScore(SCORE_TYPES.EXTRAPOINT);
                 }
                 else {
                     _playResultText = _playResultText + ' NO GOOD';
                 }
             }
-            else if (playSelected === 'extraPoint') {
+            else if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT) {
                 _playResultText = _playResultText + ' Blocked';
             }
 
             //TWO POINT CONVERSION:
-            if (playSelected === 'twoPointConversion' && _diceSumTotal >= 6) {
+            if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION && _diceSumTotal >= 6) {
                 _yards = getRandomInt(1, 4); //need two yards for 2 point conversion
                 if (_yards >= TWO_POINT_CONVERSION_SPOT) {
                     _playResultText = _playResultText + ' SUCCESSFUL';
-                    playMaker.addScore('twopointconversion');
+                    playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
                 }
                 else {
                     _playResultText = _playResultText + ' FAILED';
                 }
             }
-            else if (playSelected === 'twoPointConversion') {
+            else if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
                 _playResultText = _playResultText + ' FAILED';
             }
                 
         }
 
         //always turnover ball if punting or kicking a field goal
-        if (playSelected === 'punt' || playSelected === 'fieldGoal')
+        if (playSelected === GAME_PLAY_TYPES.PUNT || playSelected === GAME_PLAY_TYPES.FIELDGOAL)
             turnover = true;
 
         //HANDLE PUNT
-        if (playSelected === 'punt') {            
+        if (playSelected === GAME_PLAY_TYPES.PUNT) {            
             if (_diceSumTotal >= 2) {
                 _yards = getRandomInt(10, self.yardsToTouchdown() + 10); //account for touchback and start punt at minimum of 10 yards (otherwise team should be kicking a field goal)
                 if (_yards >= self.yardsToTouchdown()) {
@@ -946,7 +1097,7 @@ var playMaker = {
         }        
 
         //HANDLE FIELD GOAL
-        if (playSelected === 'fieldGoal' && _diceSumTotal >= 2) {
+        if (playSelected === GAME_PLAY_TYPES.FIELDGOAL && _diceSumTotal >= 2) {
             let fieldGoalSuccess = true;
             //Chance of field goal does down for every 5 yards over 30 away from goal line
             if (self.yardsToTouchdown() >= 50)
@@ -961,7 +1112,7 @@ var playMaker = {
             if (fieldGoalSuccess) {
                 _yards = self.yardsToTouchdown() + 10; //add 10 yards to account for end-zone length
                 _playResultText = _playResultText + ' GOOD';
-                playMaker.addScore('fieldgoal');                
+                playMaker.addScore(SCORE_TYPES.FIELDGOAL);                
                 self.isKickoff(true);
                 self.SetupKickoff();
             } else {
@@ -969,55 +1120,55 @@ var playMaker = {
                 _playResultText = _playResultText + ' NO GOOD - attempt missed';
             }
         }
-        else if (playSelected === 'fieldGoal') {
+        else if (playSelected === GAME_PLAY_TYPES.FIELDGOAL) {
             _playResultText = _playResultText + ' Blocked';
         }
 
         //POSITIVE YARDAGE PLAYS
-        if (_positiveYards && playSelected === 'pass') {
+        if (_positiveYards && playSelected === GAME_PLAY_TYPES.PASS) {
 
             _yards = getRandomInt(1, yardageMax);
             _playResultText = _playResultText + ' Complete';
         }
-        if (_positiveYards && playSelected === 'run') {
+        if (_positiveYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _yards = getRandomInt(1, yardageMax);
             _playResultText = _playResultText + ' Successful';
         }
         //NEGATIVE YARDAGE PLAYS
-        if (_negativeYards && playSelected === 'pass') {
+        if (_negativeYards && playSelected === GAME_PLAY_TYPES.PASS) {
             _yards = getRandomInt(1, 15) * -1;
             _playResultText = 'Sacked for a loss';
         }
-        if (_negativeYards && playSelected === 'run') {
+        if (_negativeYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _yards = getRandomInt(1, 15) * -1;
             _playResultText = _playResultText + ' - tackled for a loss';
         }
         //NO GAIN PLAYS
-        if (!_positiveYards && !_negativeYards && playSelected ==='pass') {
+        if (!_positiveYards && !_negativeYards && playSelected === GAME_PLAY_TYPES.PASS) {
             _playResultText = _playResultText + ' Incomplete';
         }
-        if (!_positiveYards && !_negativeYards && playSelected === 'run') {
+        if (!_positiveYards && !_negativeYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _playResultText = _playResultText + ' for no gain';
         }
 
         //TOUCHDOWN
-        if (_yards >= self.yardsToTouchdown() && (playSelected === 'pass' || playSelected === 'run')) {
-            _playResultText = 'TOUCHDOWN';
-            playMaker.addScore('touchdown');
+        if (_yards >= self.yardsToTouchdown() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+            _playResultText = SCORE_TYPES.TOUCHDOWN.toUpperCase();
+            playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
             self.pointAttemptAfterTouchDown(true);
         }
 
         //SAFETY
-        if (self.yardsToTouchdown() > 100 && (playSelected === 'pass' || playSelected === 'run')) {
-            _playResultText = 'SAFETY';
-            playMaker.addScore('safety');
+        if (self.yardsToTouchdown() > 100 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+            _playResultText = SCORE_TYPES.SAFETY.toUpperCase();
+            playMaker.addScore(SCORE_TYPES.SAFETY);
             self.isSafety(true);
             self.SetupKickoff();
             turnover = true;
         }  
 
         //DETERMINE DOWN
-        if (_yards >= self.yardsToFirst() && (playSelected === 'pass' || playSelected === 'run')) {
+        if (_yards >= self.yardsToFirst() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             self.yardsToFirst(10); //reset yards to first for next set of downs
             self.currentDown(1); //reset to first down
         }
@@ -1028,20 +1179,20 @@ var playMaker = {
                 self.yardsToFirst(self.yardsToFirst() - _yards); //subtract the yards from the current yards to First Down
                 self.currentDown(self.currentDown() + 1);  //increment the current Down
             }
-        }        
-
+        }
+        
         console.log('YARDS: ' + _yards);
-        let playResult = new PlayResult(_yards, _playResultText);        
+        let playResult = new PlayResult(_yards, _playResultText, turnover, playSelected);
         
         //set the new position of the ball (if not kicking fieldgoal, extrapoint, or two point conversion):
         if (playSelected !== 'fieldGoal' && playSelected !== 'extraPoint' && playSelected !== 'twoPointConversion') {
             self.yardsTraveled(self.yardsTraveled() + _yards);
         }
-        self.SetBallPosition();        
+        self.SetBallPosition();
 
         //TURNOVER
         if (turnover) {
-            //before turning over the ball, record the play of team turning over the ball          
+            //before turning over the ball, record the play of team turning over the ball
             playMaker.recordPlay(playResult);
 
             //now handle turnover events
@@ -1243,14 +1394,44 @@ var playMaker = {
         self.SetBallPosition();        
     },
 
+    recordTimeOfPossession: function (playType, yards) {
+        let timeSpentWithBall = 0; //represents second team spent with ball
+        //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
+        //nfl avgerages (time of possession) = avg. time of possession / avg. number of plays 
+        //~26.20s / play on high end
+        //~28.40s / play on low end
+        //27.3 rounded up to 27 even = time per play
+
+        timeSpentWithBall += 5; //automatically add 5 seconds for setting up play etc.
+
+        //(TODO: Subtract time from clock based on yards and type of play)
+        if (playType === GAME_PLAY_TYPES.RUN)
+            timeSpentWithBall += Math.round(yards / 2); //run 2 yards/second
+
+        if (playType === GAME_PLAY_TYPES.PASS) {
+            timeSpentWithBall += 2; //automatically add 2 seconds for time to throw.
+            timeSpentWithBall += Math.round(yards / 10); //pass 10 yards/second
+            timeSpentWithBall += Math.round(yards / 4 / 2); //count about 1/4 of the pass yards as a catch and run, so use part of the 2yards/s calc. for 1/4 of the yards
+        }
+
+        console.log('TIME OF POSSESSION: %s', self.timeOfPossession());        
+
+        timeSpentWithBall = Math.round(timeSpentWithBall);
+
+        self.timeOfPossession(timeSpentWithBall); //record time of possession in seconds
+
+        //TODO: Handle SETTING THE REMAINING TIME in a game-wide time management function that changes the quarter etc.
+    },
+
     recordPlay: function (thisPlaysResult) {
         let team = $.grep(_teams, function (team) { return team.teamId === self.currentTeamWithBall(); })[0]; //get the current team making the play
         let pluralizer = 's';
-        let yardsText = thisPlaysResult.yards.toString() + " Yard" + pluralizer;
-        console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
         if (thisPlaysResult.yards === 1 || thisPlaysResult.yards === -1)
             pluralizer = '';
+
+        let yardsText = thisPlaysResult.yards.toString() + " Yard" + pluralizer;
+        console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
         //PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot
         self.AddPlayHistory(new PlayHistory(self.currentTeamWithBall(),
@@ -1262,6 +1443,29 @@ var playMaker = {
             getYardText())); //Spot of Ball text in Play History
 
         playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer);
+
+        //RECORD TIME OF POSSESSION
+        this.recordTimeOfPossession(thisPlaysResult.playSelected, thisPlaysResult.yards);
+
+        //now record stats for this play
+        this.recordGameStats(team, thisPlaysResult);
+    },
+
+    recordGameStats: function (team, thisPlaysResult) {
+        let playStatsRecord = new GamePlayStatRecord(team.teamId, team.teamName, self.playCountForPossession(),0,0,self.timeOfPossession(),0);
+
+        if (thisPlaysResult.playType === GAME_PLAY_TYPES.RUN) {
+            playStatsRecord.totalYardsRushing = thisPlaysResult.yards;
+        }
+
+        if (thisPlaysResult.playType === GAME_PLAY_TYPES.PASS) {
+            playStatsRecord.totalYardsPassing = thisPlaysResult.yards;
+        }
+
+        if (thisPlaysResult.isTurnover)
+            playStatsRecord.totalTurnovers = 1;
+
+        self.UpdateGameStat(playStatsRecord);
     },
 
     play: function () {
@@ -1286,32 +1490,35 @@ var playMaker = {
     addScore: function (type) {
         let score = 0;
         switch (type) {
-            case 'touchdown':
+            case SCORE_TYPES.TOUCHDOWN:
                 score = 6;
                 break;
-            case 'fieldgoal':
+            case SCORE_TYPES.FIELDGOAL:
                 score = 3;
                 break;
-            case 'extrapoint':
+            case SCORE_TYPES.EXTRAPOINT:
                 score = 1;
                 break;
-            case 'safety', 'twopointconversion':
+            case SCORE_TYPES.SAFETY, SCORE_TYPES.TWOPOINTCONVERSION:
                 score = 2;
                 break;
         }
         if (currentTeamWithBall() === homeTeamID()) { 
             //add score to home team, unless safety
-            if (type === 'safety')
+            if (type === SCORE_TYPES.SAFETY)
                 awayTeamScore(awayTeamScore() + score);
             else
                 homeTeamScore(homeTeamScore() + score);            
         }
-        else { //add score to home team, unless safety
-            if (type === 'safety')
+        else { //add score to away team, unless safety
+            if (type === SCORE_TYPES.SAFETY)
                 homeTeamScore(homeTeamScore() + score);
             else
                 awayTeamScore(awayTeamScore() + score);            
-        }            
+        }
+
+        //update the box score
+        self.UpdateBoxScore();
     }
 };
 
@@ -1400,6 +1607,31 @@ function getYardText() {
         yardText = self.awayTeamInfo().teamName();
 
     return yardText + ' ' + self.currentBallSpot();
+}
+
+function getFullTeamName(teamName, teamId) {
+    if (!teamName)
+        return '';
+
+    if (self.awayTeamID() === teamId) {
+        return teamName + ' (away)';
+    }
+    else {
+        return teamName + ' (home)';
+    }
+}
+
+//note, only works for minutes/seconds as of writing of function and needs at the time
+function getTimeDisplay(timeSeconds) {
+    console.log('timeSeconds: %s', timeSeconds);
+    if (timeSeconds > 0) {
+        var minutes = Math.floor(timeSeconds / 60);
+        var seconds = timeSeconds - minutes * 60;
+        return str_pad_left(minutes, '0', 2) + ':' + str_pad_left(seconds, '0', 2);
+    }
+    else {
+        return '00:00';
+    }
 }
 
 function str_pad_left(string, pad, length) {
