@@ -509,6 +509,11 @@ input[type="radio"][name="selectCoinTossWinner"] {
     overflow: auto;
 }
 
+.coin-toss-winner-txt {
+    outline: 1px solid #A2A2A2;
+    border-radius: 20%;
+}
+
 .team-name-select {
     font-size: 22px;
     color: white;
@@ -519,10 +524,25 @@ input[type="radio"][name="selectCoinTossWinner"] {
     font-size: 22px;
 }
 
+.team-select-img {
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%;
+}
+
 .selected-team {
     font-size: 42px;
-    outline: 1px solid #4CAF50;
+    /*outline: 1px solid #4CAF50;*/
     padding: 5px;
+}
+
+.team-images-container {
+    float: left;
+    padding: 10px;
+}
+
+.team-images {
+    float: right;
 }
 
 /*Coin Toss Animations and Styles
@@ -553,12 +573,12 @@ input[type="radio"][name="selectCoinTossWinner"] {
     }
 
 .side-a {
-    background-color: #bb0000;
+    /*background-color: #bb0000;*/
     text-align: center;
 }
 
 .side-b {
-    background-color: #3e3e3e;
+    /*background-color: #3e3e3e;*/
     text-align: center;
 }
 

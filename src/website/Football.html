@@ -39,17 +39,17 @@
                     <span id="end-zone-right-txt" data-bind="text: awayTeamInfo().teamName(), class: awayTeamInfo().teamBgColor()" class="rotate-right"></span>
                 </div>
             </div>
-        </div>
+        </div>        
         <br /><br /><br /><br /><br /><br /><br />
         <div id="mainField"></div>
         <!--<div class="field-container" style="display:none;">
-        <img class="field-img" src="content/images/FootballField_no_grass.PNG" alt="football-field">
-        <div class="field-text-block lions-bg">
-            <span id="awayteamDistance"></span>
-            <i id="direction-indicator" class="left"></i>
-            <span id="awayteamDistance"></span>
-        </div>
-        </div>-->
+    <img class="field-img" src="content/images/FootballField_no_grass.PNG" alt="football-field">
+    <div class="field-text-block lions-bg">
+        <span id="awayteamDistance"></span>
+        <i id="direction-indicator" class="left"></i>
+        <span id="awayteamDistance"></span>
+    </div>
+    </div>-->
     </div>
 
     <br>
@@ -67,6 +67,7 @@
                 <div class="team-name-select" data-bind="class: teamBgColor()">
                     <!--TODO/EMBELISH: Make team selected more noticeable - maybe add animation to selected-team class-->
                     <label>
+                        <img class="team-select-img" data-bind="attr:{src: teamImage()}" />
                         <input type="radio" name="selectTeam" data-bind="value: teamId, click: SelectTeam">
                         <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
                     </label>
@@ -102,12 +103,12 @@
                 Choose to receive or kickoff.
                 <br /><br />
                 <label>
-                    <input type="radio" name="selectCoinTossWinner" value="receive" checked="checked" data-bind="click: SelectCoinTossWinningOption">
-                    <span data-bind="css: { 'selected-team': coinTossWinningOption() === 'receive'}">Receive</span>
+                    <input type="radio" name="selectCoinTossWinner" value="receive" data-bind="click: SelectCoinTossWinningOption" checked="checked">
+                    <span class="coin-toss-winner-txt" data-bind="css: { 'selected-team': coinTossWinningOption() === 'receive'}">Receive</span>
                 </label>
                 <label>
                     <input type="radio" name="selectCoinTossWinner" value="kickoff" data-bind="click: SelectCoinTossWinningOption">
-                    <span data-bind="css: { 'selected-team': coinTossWinningOption() === 'kickoff'}">Kickoff</span>
+                    <span class="coin-toss-winner-txt" data-bind="css: { 'selected-team': coinTossWinningOption() === 'kickoff'}">Kickoff</span>
                 </label>
                 <br /><br />
                 The <span data-bind="text: teamReceivingInitialKickoffInfo() ? teamReceivingInitialKickoffInfo().teamCityAndName() : '[Error - kickoff team not determined.]'"></span>, are receiving the initial kickoff.
@@ -154,6 +155,13 @@
             Stop timer
         </button>
     </section>
+
+    <div class="team-images-container" data-bind="visible: gameStarted">
+        <div class="team-images"><img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" /></div>
+        <div class="team-images"><br /><br />AT</div>
+        <div class="team-images"><img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}" /></div>
+        <br />
+    </div>
 
     <br>
     <p class="last-play-container" data-bind="visible: gameStarted()">

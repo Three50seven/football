@@ -50,24 +50,29 @@ $(function () {
         self.CloseSpecialTeamsMenu = function () {
             $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
         };
+        self.ClearCoinColors = function () {
+            //clear class on current coin
+            $(".side-a").removeClass(self.homeTeamInfo().teamBgColor());
+            $(".side-b").removeClass(self.homeTeamInfo().teamBgColor());
+            $(".side-a").removeClass(self.awayTeamInfo().teamBgColor());
+            $(".side-b").removeClass(self.awayTeamInfo().teamBgColor());
+        };
         self.ChooseCoinSide = function () {
+            self.ClearCoinColors();
+
             //use away team info on heads of coin if heads is selected, otherwise away team is tails
             let coinSideSelected = parseInt($('input[name=selectCoinSide]:checked').val(), 10);
             if (coinSideSelected === 1) {
-                $(".side-a").removeClass(self.homeTeamInfo().teamBgColor());
                 $(".side-a").addClass(self.awayTeamInfo().teamBgColor());
                 $("#side-a-txt").text(self.awayTeamInfo().teamName());
 
-                $(".side-b").removeClass(self.awayTeamInfo().teamBgColor());
                 $(".side-b").addClass(self.homeTeamInfo().teamBgColor());
                 $("#side-b-txt").text(self.homeTeamInfo().teamName());
             }
             else {
-                $(".side-b").removeClass(self.homeTeamInfo().teamBgColor());
                 $(".side-b").addClass(self.awayTeamInfo().teamBgColor());
                 $("#side-b-txt").text(self.awayTeamInfo().teamName());
 
-                $(".side-a").removeClass(self.awayTeamInfo().teamBgColor());
                 $(".side-a").addClass(self.homeTeamInfo().teamBgColor());
                 $("#side-a-txt").text(self.homeTeamInfo().teamName());
             }
@@ -205,12 +210,12 @@ $(function () {
 
                 if (isKickoff()) {
                     console.log('SPOT BEFORE CHANGE (KICKOFF): %s', spot);                    
-                    spot = spot + 32;                    
+                    spot = spot + 30;                    
                 }
                 if (isSafety()) {
                     spot = SAFETY_KICKOFF_SPOT;
                     console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot); 
-                    spot = spot + 62;
+                    spot = spot + 60;
                 }
                 if (isExtraPointKick()) {
                     spot = EXTRA_POINT_KICK_SPOT;
@@ -493,6 +498,9 @@ $(function () {
                 self.coinTossWinner(self.homeTeamID());
                 self.coinTossLoser(self.awayTeamID());
             }
+
+            //call function to set default value
+            self.SelectCoinTossWinningOption();
         };
         self.SelectCoinTossWinningOption = function () {
             let option = $('input[name=selectCoinTossWinner]:checked').val();
@@ -614,6 +622,8 @@ $(function () {
         self.SelectTeam = function () {
             let teamIdSelected = parseInt($('input[name=selectTeam]:checked').val(), 10);
 
+            self.ClearCoinColors();
+
             //console.log('Team Selected %s.', typeof teamIdSelected);
 
             if (typeof teamIdSelected === 'number') {
@@ -634,7 +644,8 @@ $(function () {
             self.SetupKickoff();
             self.gameStarted(true);
         };
-        self.ResetTeams = function () {            
+        self.ResetTeams = function () {
+            self.ClearCoinColors();
             self.homeTeamID(0);
             self.awayTeamID(0);
             console.log('TEAMS RESET');
@@ -748,6 +759,18 @@ function TeamArrayRecord(teamId, teamColor, teamCity, teamMascot) {
             return '';
 
         return this.teamColor + '-bg';
+    };
+    this.teamThumbnail = function () {
+        if (!this.teamColor)
+            return '';
+
+        return 'content/images/teams/thumbs/' + this.teamColor + '.png';
+    };
+    this.teamImage = function () {
+        if (!this.teamColor)
+            return '';
+
+        return 'content/images/teams/large/' + this.teamColor + '.png';
     };
 }
 
