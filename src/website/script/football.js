@@ -9,7 +9,7 @@ const TOUCHBACK_YARD_LINE = 20;
 const SHOW_SPECIAL_TEAMS_CLASS = 'show-sub-menu';
 const MAX_TIME_OF_QUARTER = 900; //900 seconds = 15 minutes
 
-var _totalPlayCount = 0;
+var _totalPlayCount = 1;
 var _diceSumTotal = 0;
 var _teams = new TeamArray();
 var _timeIntervalCountDown = 1000; //Modify this value to set how fast the clock counts down for a quarter, 1000 = 1 second, 500 = half second, etc.
@@ -41,7 +41,7 @@ $(function () {
 
             return yards;
         });
-        self.playCountForPossession = ko.observable(0);
+        self.playCountForPossession = ko.observable(1);
         self.timeOfPossession = ko.observable(0);
         self.hasRolled = ko.observable(false);
         self.currentTeamWithBall = ko.observable(0);        
@@ -675,7 +675,7 @@ $(function () {
         self.ChangePossession = function () {
             self.yardsToFirst(10);
             self.currentDown(1);
-            self.playCountForPossession(0); //reset play count for possession
+            self.playCountForPossession(1); //reset play count for possession
             self.timeOfPossession(0); //reset time of possession
 
             //change possession of ball

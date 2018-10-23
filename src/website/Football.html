@@ -20,10 +20,11 @@
     <div id="container">
         <div id="header" style="height: 60px;">
             <span class="header-text">Play Football</span>
-            <div class="team-images"><img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0" /></div>
-            <div class="team-images" data-bind="visible: awayTeamID() > 0 && homeTeamID() > 0"><br /><br />at</div>
+            <!--reverse order for float-->
             <div class="team-images"><img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0" /></div>
-            <br />            
+            <div class="team-images" data-bind="visible: awayTeamID() > 0 && homeTeamID() > 0"><br /><br />at</div>
+            <div class="team-images"><img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0" /></div>
+            <br />
         </div>
         <!--END of div header-->
         <div id="body">            
