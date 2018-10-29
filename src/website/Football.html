@@ -214,7 +214,15 @@
                 <br /><br />
             </div>
             <div id="mainPlaySelection" data-bind="visible:!kickoffNeeded()" align="center">
-                <div data-bind="visible:!hasRolled()">
+                <div data-bind="visible:pointAttemptAfterTouchDown()">
+                    <button type="button" id="diceRoller" class="btn-default" data-bind="click: MakePlayAfterTD">
+                        Make Attempt
+                    </button>
+                    <br /><br />
+                    <label><input type="radio" name="afterTDPlay" value="extraPoint" checked="checked"> Extra Point Attempt</label>
+                    <label><input type="radio" name="afterTDPlay" value="twoPointConversion"> 2 Point Conversion</label>
+                </div>
+                <div data-bind="visible:!hasRolled() && !pointAttemptAfterTouchDown()">
                     <button type="button" id="diceRoller" class="btn-default" data-bind="click: RollDice">
                         Roll Dice
                     </button>
@@ -249,10 +257,6 @@
                         <label><input type="radio" name="selectPlay" value="run"> Run</label>
                         <!--<label><input type="radio" name="selectPlay" value="punt"> Punt</label>
             <label><input type="radio" name="selectPlay" value="fieldGoal"> Field Goal</label>-->
-                        <!-- /ko -->
-                        <!-- ko if: pointAttemptAfterTouchDown() -->
-                        <label><input type="radio" name="selectPlay" value="extraPoint"> Extra Point Attempt</label>
-                        <label><input type="radio" name="selectPlay" value="twoPointConversion"> 2 Point Conversion</label>
                         <!-- /ko -->
                         <br>
                         <p style="display:none;">
@@ -389,7 +393,7 @@
                 </div>
                 <!--END of hidden div slider gameInfoBox-->
             </div>
-        </div>
+            </div>
         <!--END of div body-->
         <div id="footer">
             Copyright Note: All images and logos belong to the NFL - this is just a training/testing web application with no intention to sell this product.
