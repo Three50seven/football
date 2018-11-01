@@ -174,7 +174,7 @@
                 <br>
                 Play result: <span id="playResult">0</span>
             </p>
-            <div id="kickoffPlays" data-bind="visible:kickoffNeeded() && gameStarted" align="center">
+            <div id="kickoffPlays" data-bind="visible:showKickoffControls() && gameStarted" align="center">
                 <br>
                 Click sliders or buttons to select power and angle of kick: <br>
                 <br />
@@ -213,7 +213,7 @@
                 </button>
                 <br /><br />
             </div>
-            <div id="mainPlaySelection" data-bind="visible:!kickoffNeeded()" align="center">
+            <div id="mainPlaySelection" data-bind="visible:!showKickoffControls()" align="center">
                 <div data-bind="visible:pointAttemptAfterTouchDown()">
                     <button type="button" id="diceRoller" class="btn-default" data-bind="click: MakePlayAfterTD">
                         Make Attempt

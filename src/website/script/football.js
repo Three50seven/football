@@ -4,6 +4,7 @@
 const KICKOFF_SPOT = 35;
 const SAFETY_KICKOFF_SPOT = 20;
 const EXTRA_POINT_KICK_SPOT = 15;
+const END_ZONE_YARDS = 10;
 const TWO_POINT_CONVERSION_SPOT = 2;
 const TOUCHBACK_YARD_LINE = 20;
 const SHOW_SPECIAL_TEAMS_CLASS = 'show-sub-menu';
@@ -253,7 +254,7 @@ $(function () {
                 console.log('HOME => yardsTraveled:' + self.yardsTraveled() + ' ballSpotStart:' + self.ballSpotStart() + ' trailWidth: ' + trailWidth);
             }
             else {
-                let marginWidth = (181 - trailWidth) - (self.ballSpotStart() * ratio);
+                let marginWidth =181 - trailWidth - self.ballSpotStart() * ratio;
                 console.log('margin-width: ' + marginWidth);
                 $('#home-team-trail').css('width', '0px');
                 $('#away-team-trail').css('background-image', 'linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,1)');
@@ -323,6 +324,8 @@ $(function () {
                     homeTeam.overtimeScore = self.homeTeamScore() - homeTeam.firstQuarterScore - homeTeam.secondQuarterScore - homeTeam.thirdQuarterScore - homeTeam.fourthQuarterScore;
                     awayTeam.overtimeScore = self.awayTeamScore() - awayTeam.firstQuarterScore - awayTeam.secondQuarterScore - awayTeam.thirdQuarterScore - awayTeam.fourthQuarterScore;
                 }
+
+                self.gameBoxScore.refresh(homeTeam);
             }
             else {
                 console.log('ERROR: gameBoxScore array was never initialized. Initializing...');
@@ -357,6 +360,8 @@ $(function () {
                 team.totalYardsPassing += teamStatUpdates.totalYardsPassing;
                 team.totalTimePossession += teamStatUpdates.totalTimePossession;
                 team.totalTurnovers += teamStatUpdates.totalTurnovers;
+
+                self.gamePlayStats.refresh(team);
             }
             else {
                 console.log('ERROR: gamePlayStats array was never initialized. Initializing...');
@@ -516,7 +521,7 @@ $(function () {
         };
         //KICKOFF AND COIN TOSS VARIABLES/FUNCTIONS
         self.pointAttemptAfterTouchDown = ko.observable(false); //determines when extra point or 2 point conversion is needed
-        self.kickoffNeeded = ko.observable(true); //determines when kickoff is needed
+        self.showKickoffControls = ko.observable(true); //determines when to show kickoff controls
         self.isKickoff = ko.observable(false); //determines when kick is a normal or onside kickoff
         self.isSafety = ko.observable(false); //determines when kickoff is a safety kick
         self.isPunt = ko.observable(false); //determines when kick is a punt
@@ -619,20 +624,13 @@ $(function () {
             if (self.kickoffPower >= 0 && self.kickoffAngle >= 0) {
                 //handle kickoff
                 playMaker.kickoff(kickoffPower, kickoffAngle);
-
-                //reset kickoffNeeded and other kick flags to false
-                self.kickoffNeeded(false);   
-                self.isKickoff(false);
-                self.isSafety(false);
-                self.isPunt(false);
-                self.isFieldGoal(false);
             }
             else {
                 alert('Select kick power and angle');
             }
         };
         self.SetupKickoff = function () {
-            self.kickoffNeeded(true); //used to show kickoff controls
+            self.showKickoffControls(true); //used to show kickoff controls
 
             let min = 0;
             let max = 100;
@@ -758,6 +756,16 @@ $(function () {
             var value = ko.utils.unwrapObservable(valueAccessor());
             $(element).addClass(value);
             element['__ko__previousClassValue__'] = value;
+        }
+    };
+
+    //KO function to "refresh" an observable array when a non observable item is updated. (refreshes the DOM)
+    //source: https://stackoverflow.com/questions/13231738/refresh-observablearray-when-items-are-not-observables
+    ko.observableArray.fn.refresh = function (item) {
+        var index = this['indexOf'](item);
+        if (index >= 0) {
+            this.splice(index, 1);
+            this.splice(index, 0, item);
         }
     };
 
@@ -994,15 +1002,15 @@ function getNumberWithEnding(number) {
     if (number <= 0)
         return 0;
     //get the 'th' numbers first since this covers the majority:
-    if ((number % 100) == 10 || (number % 100) == 11 || (number % 100) == 12 || (number % 100) == 13
-        || (number % 10) == 4 || (number % 10) == 5 || (number % 10) == 6 || (number % 10) == 7
-        || (number % 10) == 8 || (number % 10) == 9 || (number % 10) == 0)
+    if (number % 100 === 10 || number % 100 === 11 || number % 100 === 12 || number % 100 === 13
+        || number % 10 === 4 || number % 10 === 5 || number % 10 === 6 || number % 10 === 7
+        || number % 10 === 8 || number % 10 === 9 || number % 10 === 0)
         return number.toString() + 'th';
-    if ((number % 10) == 1)
+    if (number % 10 === 1)
         return number.toString() + 'st';
-    if ((number % 10) == 2)
+    if (number % 10 === 2)
         return number.toString() + 'nd';
-    if ((number % 10) == 3)
+    if (number % 10 === 3)
         return number.toString() + 'rd';
 }
 
@@ -1012,7 +1020,7 @@ var playMaker = {
     },
 
     initPlayAfterTouchdown: function () {
-        playMaker.playAfterTouchdown();
+        playMaker.playAfterTouchdown();        
     },
 
     display: function (playText) {
@@ -1044,30 +1052,10 @@ var playMaker = {
             _negativeYards = true;
 
         //HANDLE EXTRA POINT (after touchdown) PLAYS:
-        if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT || playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
-            self.pointAttemptAfterTouchDown(false); //reset flag after extra point attempt
+        if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {            
             turnover = true; //always change possession after extra point attempts
             self.isKickoff(true);
-            self.isExtraPointKick(true);
-            self.SetupKickoff();
-
-            //EXTRA POINT
-            if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT && _diceSumTotal >= 2) {
-                //need 25 yards for good extra point (15yds of field + 10yds of end-zone), get random number between 15 and 55 to determine if yards are good enough
-                _yards = getRandomInt(EXTRA_POINT_KICK_SPOT, EXTRA_POINT_KICK_SPOT + 40);
-
-                //Chance of extra point being missed (need a number >= 10 out of 100 chances)
-                if (_yards >= 25 && getRandomInt(1, 100) >= 10) {
-                    _playResultText = _playResultText + ' GOOD';
-                    playMaker.addScore(SCORE_TYPES.EXTRAPOINT);
-                }
-                else {
-                    _playResultText = _playResultText + ' NO GOOD';
-                }
-            }
-            else if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT) {
-                _playResultText = _playResultText + ' Blocked';
-            }
+            self.SetupKickoff();           
 
             //TWO POINT CONVERSION:
             if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION && _diceSumTotal >= 6) {
@@ -1218,15 +1206,16 @@ var playMaker = {
         //on turnovers, this will return the play of the team taking over possession
         return playResult;
     },
-
+    
     kickoff: function (kickoffPower, kickoffAngle) {
         let kickoffType = $('input[name=selectKickoffPlay]:checked').val();
         let _yards = convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle);
         let _returnYards = 0;
         let _kickoffResultText = titleCase(kickoffType);
-        let ballKickOffSpot = 35; //set ball Spot Start at 35 yard line        
+        let ballKickOffSpot = KICKOFF_SPOT; //set ball Spot Start at 35 yard line        
         let isTouchback = false; //flag to determine when touchback occurs
-        let isPenalty = false; //flag to determine when there is a penalty on the kickoff                
+        let isPenalty = false; //flag to determine when there is a penalty on the kickoff
+        let isReturnTypeKickoff = kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.PUNT || kickoffType === KICKOFF_TYPES.SAFETY;        
 
         console.log('kickoffPower: %s, kickoffAngle: %s', kickoffPower, kickoffAngle);
 
@@ -1235,10 +1224,10 @@ var playMaker = {
             ballKickOffSpot = self.currentBallSpot();
         }
         if (self.isSafety()) {
-            ballKickOffSpot = 20;
+            ballKickOffSpot = SAFETY_KICKOFF_SPOT;
         }
         if (self.isExtraPointKick()) {
-            ballKickOffSpot = 15;
+            ballKickOffSpot = EXTRA_POINT_KICK_SPOT;
         }
 
         let totalMaxKickWithoutTouchback = 100 - ballKickOffSpot; //variable used in calculations below for determining max return yards etc.
@@ -1263,8 +1252,7 @@ var playMaker = {
                 kickingTeam = self.awayTeamID();
             }
         }
-
-        //handle kickoff type
+        
         if (kickoffType === KICKOFF_TYPES.ONSIDE) {
             let onsideSuccessful = false;
 
@@ -1310,7 +1298,7 @@ var playMaker = {
                 }
             }
         }
-        else {
+        else if (kickoffType === KICKOFF_TYPES.KICKOFF) {
             //normal kick
             console.log('NORMAL KICKOFF');
             //if angle is extreme, no matter what the power is, the ball will go out of bounds:
@@ -1351,8 +1339,26 @@ var playMaker = {
                 }
             }
         }
+        else if (kickoffType === KICKOFF_TYPES.EXTRAPOINT) {
+            let chanceOfBlock = getRandomInt(1, 100);
 
-        self.currentTeamWithBall(receivingTeam); //this will be the team running or getting a touchback.
+            if (chanceOfBlock > 6) {
+                //need 25 yards for good extra point
+                if (_yards > EXTRA_POINT_KICK_SPOT + END_ZONE_YARDS) {
+                    _kickoffResultText += ' GOOD';
+                    playMaker.addScore(SCORE_TYPES.EXTRAPOINT);
+                }
+                else {
+                    _kickoffResultText += ' NO GOOD';
+                }
+            }
+            else {
+                _kickoffResultText += ' Blocked';
+            }
+        }
+
+
+        //self.currentTeamWithBall(receivingTeam); //this will be the team running or getting a touchback.
 
         console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
 
@@ -1364,7 +1370,7 @@ var playMaker = {
         playMaker.recordPlay(kickoffResult);
 
         //show return of kick (if any), but only for kicks that allow for returns
-        if (!self.isFieldGoal() && !self.isExtraPointKick()) {
+        if (isReturnTypeKickoff) {
             let _returnPlayText = 'Kickoff Return';
 
             //Handle new spot of ball
@@ -1404,9 +1410,27 @@ var playMaker = {
 
         //set the new position of the ball
         self.SetBallPosition();
+
+        //setup for next kickoff
+        playMaker.resetKickoffFlags(kickoffType);
     },
 
-    recordTimeOfPossession: function (playType, yards) {
+    resetKickoffFlags: function (kickoffType) {
+        self.showKickoffControls(false);
+
+        if (kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE)
+            self.isKickoff(false);
+        else if (kickoffType === KICKOFF_TYPES.EXTRAPOINT)
+            self.isExtraPointKick(false);
+        else if (kickoffType === KICKOFF_TYPES.SAFETY)
+            self.isSafety(false);  
+        else if (kickoffType === KICKOFF_TYPES.FIELDGOAL)
+            self.isFieldGoal(false);  
+        else if (kickoffType === KICKOFF_TYPES.PUNT)
+            self.isPunt(false);
+    },
+
+    recordTimeOfPossession: function (typeOfPlay, yards) {
         let timeSpentWithBall = 0; //represents second team spent with ball
         //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
         //nfl avgerages (time of possession) = avg. time of possession / avg. number of plays 
@@ -1417,10 +1441,10 @@ var playMaker = {
         timeSpentWithBall += 5; //automatically add 5 seconds for setting up play etc.
 
         //(TODO: Subtract time from clock based on yards and type of play)
-        if (playType === GAME_PLAY_TYPES.RUN)
+        if (typeOfPlay === GAME_PLAY_TYPES.RUN)
             timeSpentWithBall += Math.round(yards / 2); //run 2 yards/second
 
-        if (playType === GAME_PLAY_TYPES.PASS) {
+        if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
             timeSpentWithBall += 2; //automatically add 2 seconds for time to throw.
             timeSpentWithBall += Math.round(yards / 10); //pass 10 yards/second
             timeSpentWithBall += Math.round(yards / 4 / 2); //count about 1/4 of the pass yards as a catch and run, so use part of the 2yards/s calc. for 1/4 of the yards
@@ -1464,7 +1488,7 @@ var playMaker = {
     },
 
     recordGameStats: function (team, thisPlaysResult) {
-        let playStatsRecord = new GamePlayStatRecord(team.teamId, team.teamName, self.playCountForPossession(), 0, 0, self.timeOfPossession(), 0);
+        let playStatsRecord = new GamePlayStatRecord(team.teamId, team.teamName, 1, 0, 0, self.timeOfPossession(), 0);
 
         if (thisPlaysResult.playType === GAME_PLAY_TYPES.RUN) {
             playStatsRecord.totalYardsRushing = thisPlaysResult.yards;
@@ -1499,10 +1523,24 @@ var playMaker = {
         }
     },
 
-    playAfterTouchdown: function() {
+    playAfterTouchdown: function () {        
         let playSelected = $('input[name=afterTDPlay]:checked').val();
-        //TODO: handle play selected
+        let spot = EXTRA_POINT_KICK_SPOT;
+
+        self.yardsTraveled(0); //reset yards traveled since team already got TD
+        self.pointAttemptAfterTouchDown(false); //reset point after attempt flag
+        
         //START_HERE
+        if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT) {
+            self.isExtraPointKick(true);
+            self.SetupKickoff();
+        }
+        else if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
+            spot = TWO_POINT_CONVERSION_SPOT;      
+        }       
+
+        self.ballSpotStart(spot);
+        self.SetBallPosition();
         //this is going to use same kickoff params as normal kickoffs
         //already wrote conversion from kickoff power and angle [e.g. convertKickoffPowerToYards('extrapoint', 39, 40);]
     },
