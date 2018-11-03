@@ -255,8 +255,6 @@
                         <!-- ko if: !pointAttemptAfterTouchDown() -->
                         <label><input type="radio" name="selectPlay" value="pass" checked="checked"> Pass</label>
                         <label><input type="radio" name="selectPlay" value="run"> Run</label>
-                        <!--<label><input type="radio" name="selectPlay" value="punt"> Punt</label>
-            <label><input type="radio" name="selectPlay" value="fieldGoal"> Field Goal</label>-->
                         <!-- /ko -->
                         <br>
                         <p style="display:none;">
@@ -348,6 +346,7 @@
                                         <th>Total Yards Passing</th>
                                         <th>Total Time of Possession</th>
                                         <th>Turnovers</th>
+                                        <th>1<sup>st</sup> Downs</th>
                                     </tr>
                                 </thead>
                                 <tbody data-bind="foreach: gamePlayStats">
@@ -358,6 +357,7 @@
                                         <td><span data-bind="text: totalYardsPassing"></span></td>
                                         <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
                                         <td><span data-bind="text: totalTurnovers"></span></td>
+                                        <td><span data-bind="text: totalFirstDowns"></span></td>
                                     </tr>
                                 </tbody>
                             </table>
