@@ -1,0 +1,33 @@
+﻿//TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
+{
+  "scripts": [
+
+  ],
+  "styles": [
+    {
+      "name": "styles-main",
+      "filename": "styles.css",
+      "referenceOnly": true,
+      "files": [
+        "Content/css/style.css",
+        "Content/css/index.css"
+      ]
+    },
+    {
+      "name": "styles-print",
+      "filename": "print.css",
+      "referenceOnly": true,
+      "files": [
+        "Content/css/print.css"
+      ]
+    },
+    {
+      "name": "styles-dev",
+      "filename": "dev.css",
+      "referenceOnly": true,
+      "files": [
+        "Content/css/dev.css"
+      ]
+    }
+  ]
+}

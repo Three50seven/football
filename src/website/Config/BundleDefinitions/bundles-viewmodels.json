@@ -1,0 +1,79 @@
+﻿//TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
+{
+  "scripts": [
+    {
+      "name": "baseline-conversion-manage-model",
+      "subpath": "models",
+      "files": [
+        "knockout-bundle",
+        "Scripts/ViewModels/BaselineConversion/baselineconversion.manage.js"
+      ]
+    },
+    {
+      "name": "document-add-model",
+      "subpath": "models",
+      "files": [
+        "knockout-bundle",
+        "jquery-unobtrusive-ajax",
+        "validation-bundle",
+        "datetime-bundle",
+        "file-upload-bundle",
+        "Scripts/Modules/Knockout/ko.validation.js",
+        "Scripts/ViewModels/Document/document.add.js"
+      ]
+    },
+    {
+      "name": "user-add-model",
+      "subpath": "models",
+      "files": [
+        "knockout-bundle",
+        "check-all-bundle",
+        "Scripts/ViewModels/User/user.add.js"
+      ]
+    },
+    {
+      "name": "suppress-eligible-model",
+      "subpath": "models",
+      "files": [
+        "check-all-bundle",
+        "Scripts/ViewModels/Eligible/eligible.suppress.js"
+      ]
+    },
+    {
+      "name": "user-manage-model",
+      "subpath": "models",
+      "files": [
+        "knockout-bundle",
+        "check-all-bundle",
+        "datetime-bundle",
+        "Scripts/ViewModels/User/user.manage.js"
+      ]
+    },
+    {
+      "name": "report-snapshot-manage-model",
+      "subpath": "models",
+      "files": [
+        "datetime-bundle",
+        "Scripts/ViewModels/ReportSnapshots/reportsnapshots.manage.js"
+      ]
+    },
+    {
+      "name": "dashboard",
+      "subpath": "models",
+      "files": [
+        "jquery-unobtrusive-ajax",
+        "validation-bundle",
+        "Scripts/ViewModels/dashboard.js"
+      ]
+    },
+    {
+      "name": "leadership-report",
+      "subpath": "models",
+      "files": [
+        "Scripts/ViewModels/leadership.report.js"
+      ]
+    }
+  ],
+  "styles": [
+  ]
+}

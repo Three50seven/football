@@ -1,0 +1,102 @@
+﻿//TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
+{
+  "scripts": [
+    {
+      "name": "jquery-all",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/JQuery/jquery-3.2.1.js",
+        "Scripts/Lib/JQuery/jquery-ui-1.12.1.js"
+      ]
+    },
+    {
+      "name": "jquery",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/JQuery/jquery-3.2.1.js"
+      ]
+    },
+    {
+      "name": "jquery-ui",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/JQuery/jquery-ui-1.12.1.js"
+      ]
+    },
+    {
+      "name": "knockout",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/Knockout/knockout-3.4.2.js"
+      ]
+    },
+    {
+      "name": "knockout-mapping",
+      "subpath": "lib",
+      "filename": "knockout.mapping.min.js",
+      "files": [
+        "Scripts/Lib/Knockout/knockout.mapping.js"
+      ]
+    },
+    {
+      "name": "tinymce",
+      "subpath": "lib/tinymce",
+      "files": [
+        "Scripts/Lib/tinymce.js"
+      ]
+    },
+    {
+      "name": "tinymce-plugins",
+      "subpath": "lib/tinymce/plugins/pacreporting",
+      "files": [
+        "Scripts/Lib/tinymce.pacreporting.js"
+      ],
+      "filename": "plugin.min.js"
+    },
+    {
+      "name": "jquery.validate.unobtrusive",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/JQuery/jquery.validate.unobtrusive.js"
+      ]
+    },
+    {
+      "name": "jquery-unobtrusive-ajax",
+      "filename": "jquery.unobtrusive-ajax.min.js",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/JQuery/jquery.unobtrusive-ajax.js"
+      ]
+    },
+    {
+      "name": "jquery.validate",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/JQuery/jquery.validate.js"
+      ]
+    },
+    {
+      "name": "jquery-fileupload",
+      "filename": "jquery.fileupload.min.js",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/Fileupload/jquery.iframe-transport.js",
+        "Scripts/Lib/Fileupload/jquery.fileupload.js",
+        "Scripts/Lib/Fileupload/jquery.fileupload-jquery-ui.js",
+        "Scripts/Lib/Fileupload/jquery.fileupload-ui.js",
+        "Scripts/Lib/Fileupload/jquery.fileupload-process.js",
+        "Scripts/Lib/Fileupload/jquery.fileupload-validate.js"
+      ]
+    },
+    {
+      "name": "moment",
+      "subpath": "lib",
+      "files": [
+        "Scripts/Lib/moment.js"
+      ]
+    }
+  ],
+  "styles": [
+
+  ]
+}

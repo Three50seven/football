@@ -1,0 +1,22 @@
+﻿/*
+	TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
+	SEE: https://zellwk.com/blog/nunjucks-with-gulp/ for details
+*/
+<!-- layout.nunjucks -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- You write code for this content block in another file -->
+  {% block content %} {% endblock %}
+
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

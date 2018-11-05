@@ -1,0 +1,94 @@
+﻿//TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
+{
+  "scripts": [
+    {
+      "name": "pre-body-bundle",
+      "subpath": "common",
+      "files": [
+        "modernizr",
+        "Scripts/Modules/extensions.js",
+        "Scripts/Modules/exception.handler.js"
+      ]
+    },
+    {
+      "name": "main-bundle",
+      "subpath": "common",
+      "files": [
+        "jquery-all",
+        "Scripts/Modules/Plugins/jquery.extensions.js",
+        "Scripts/Modules/Plugins/jquery.mobile.responsive.table.js",
+        "Scripts/Modules/Plugins/jquery.scrollTo.js",
+        "Scripts/Modules/Plugins/jquery.isOnScreen.js",
+        "Scripts/Modules/constants.js",
+        "Scripts/Modules/environment.js",
+        "Scripts/Modules/notifications.js",
+        "Scripts/Modules/indicator.js",
+        "Scripts/Modules/ajax.js",
+        "Scripts/Modules/serializer.js",
+        "Scripts/Modules/formatter.js",
+        "Scripts/Modules/numerics.js"
+      ]
+    },
+    {
+      "name": "validation-bundle",
+      "subpath": "common",
+      "files": [
+        "jquery.validate",
+        "jquery.validate.unobtrusive",
+        "Scripts/Modules/Plugins/jquery.clearvalidation.js",
+        "Scripts/Modules/Plugins/jquery.updateValidation.js",
+        "Scripts/Modules/Plugins/jquery.validationsummary.js",
+        "Scripts/Modules/validation.js"
+      ]
+    },
+    {
+      "name": "knockout-bundle",
+      "subpath": "common",
+      "files": [
+        "knockout",
+        "knockout-mapping",
+        "Scripts/Lib/Knockout/knockout-projections.js",
+        "Scripts/Modules/Knockout/ko.startup.js",
+        "Scripts/Modules/Knockout/ko.extensions.common.js",
+        "Scripts/Modules/Knockout/ko.bindings.common.js"
+      ]
+    },
+    {
+      "name": "file-upload-bundle",
+      "subpath": "common",
+      "files": [
+        "jquery-fileupload",
+        "Scripts/Modules/Components/fileupload.js",
+        "Scripts/Modules/Components/fileupload.singledoc.js"
+      ]
+    },
+    {
+      "name": "datetime-bundle",
+      "subpath": "common",
+      "files": [
+        "moment",
+        "Scripts/Modules/datetime.js",
+        "Scripts/Modules/Components/datetime.datepicker.js"
+      ]
+    },
+    {
+      "name": "richtext-editor-bundle",
+      "subpath": "common",
+      "files": [
+        "tinymce",
+        "tinymce-plugins",
+        "Scripts/Modules/Components/richtext.editor.js"
+      ]
+    },
+    {
+      "name": "check-all-bundle",
+      "subpath": "common",
+      "files": [
+        "Scripts/Modules/checkall.js"
+      ]
+    }
+  ],
+  "styles": [
+
+  ]
+}
