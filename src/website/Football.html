@@ -27,7 +27,7 @@
             <br />
         </div>
         <!--END of div header-->
-        <div id="body">            
+        <div id="body">
             <div id="mainFieldDisplay" data-bind="visible: gameStarted()">
                 Ball position:
                 <div id="field-container" style="display: none;">
@@ -54,13 +54,13 @@
                 <br /><br /><br /><br /><br /><br /><br />
                 <div id="mainField"></div>
                 <!--<div class="field-container" style="display:none;">
-        <img class="field-img" src="content/images/FootballField_no_grass.PNG" alt="football-field">
-        <div class="field-text-block lions-bg">
-            <span id="awayteamDistance"></span>
-            <i id="direction-indicator" class="left"></i>
-            <span id="awayteamDistance"></span>
-        </div>
-        </div>-->
+                <img class="field-img" src="content/images/FootballField_no_grass.PNG" alt="football-field">
+                <div class="field-text-block lions-bg">
+                    <span id="awayteamDistance"></span>
+                    <i id="direction-indicator" class="left"></i>
+                    <span id="awayteamDistance"></span>
+                </div>
+                </div>-->
             </div>
 
             <br>
@@ -128,7 +128,7 @@
                         <br /><br />
                         <button class="btn-default" style="margin-top:5px" id="startGame" data-bind="click: StartGame, visible: teamReceivingInitialKickoff() > 0">
                             Start Game
-                        </button>                        
+                        </button>
                     </div>
                 </div>
             </div>
@@ -154,13 +154,13 @@
                 </div>
                 <div id="currentQuarter" class="white" data-bind="text: currentQuarterDisplay()"></div>
                 <div id="timeRemainingInQuarter" class="gold" data-bind="text: remainingTimeDisplay"></div>
-                <div id="currentDown" data-bind="text: getDownText(self.currentDown(), self.yardsToFirst())" class="white"></div>
-                <div id="currentBallSpot" data-bind="text: getYardText()" class="white"></div>
+                <div id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())" class="white"></div>
+                <div id="currentBallSpot" data-bind="text: HELPERS.getYardText()" class="white"></div>
             </div>
 
             <section id="stopWatch" data-bind="visible: gameStarted">
                 <!--<input  id="initialTime" style="width:100px;height:20" data-bind="value:  initialTime" />
-        <span id="remainingTime" data-bind="text: remainingTime"></span> second(s)-->
+                <span id="remainingTime" data-bind="text: remainingTime"></span> second(s)-->
                 <button class="btn-default" style="margin-top:5px" id="StartCounter" data-bind="click: StartCounter, visible: !isRunning()">
                     Start timer
                 </button>
@@ -393,7 +393,7 @@
                 </div>
                 <!--END of hidden div slider gameInfoBox-->
             </div>
-            </div>
+        </div>
         <!--END of div body-->
         <div id="footer">
             Copyright Note: All images and logos belong to the NFL - this is just a training/testing web application with no intention to sell this product.
@@ -404,6 +404,11 @@
     <script language="JavaScript" src="script/libraries/jquery-3.3.1.min.js"></script>
     <script language="JavaScript" src="script/libraries/knockout-3.2.0.js"></script>
     <!--<script language="JavaScript" src="script/libraries/bootstrap.min.js"></script>-->
+    <script language="JavaScript" scr="script/view-models/main-game-model.js"></script>
+    <script language="JavaScript" src="script/utilities/utilities.js"></script>
+    <script language="JavaScript" src="script/modules/lookup-types.js"></script>
+    <script language="JavaScript" src="script/modules/constructors.js"></script>
     <script language="JavaScript" src="script/football.js"></script>
+    <script language="JavaScript" src="script/utilities/game-helpers.js"></script>
 </body>
 </html>

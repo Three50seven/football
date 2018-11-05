@@ -1,4 +1,5 @@
 //POTENTIAL GAME ENGINES TO ANIMATE FIELD: https://gist.github.com/bebraw/768272
+//POTENTIAL GAME ENGINES TO ANIMATE FIELD: https://gist.github.com/bebraw/768272
 //START_HERE TAG IS USED TO MARK WHERE I LEFT OFF IN DEV:
 //CONSTANTS:
 const KICKOFF_SPOT = 35;
@@ -18,6 +19,48 @@ var _kickoffSliderDifficulty = 10; //change to higher number to slow down kick s
 
 //DOCUMENT READY FUNCTION:
 $(function () {
+      //Shared Models for both the ViewModels    
+
+    //START_HERE: Continue breaking down view model for KnockOut.js (See view-models\main-game-model.js and below comments for start)
+    //source: https://stackoverflow.com/questions/25253547/split-viewmodel-into-multiple-viewmodels-in-knockout-js
+    //var officeModel = function (vm) {
+    //    var self = this;
+    //    self.header = ko.observable("Administration");
+    //    self.vm = ko.observable(vm);
+    //};
+
+    //var viewModel1 = function () {
+    //    var self = this;
+    //    self.profileModel = new profileModel("Called from viewModel1");
+    //    self.officeModel = new officeModel("office model Called from viewModel1");
+    //};
+
+    //var viewModel2 = function () {
+    //    var self = this;
+    //    self.profileModel = new profileModel("Called from viewModel2");
+    //    self.officeModel = new officeModel("office model Called from viewModel2");
+    //};
+
+    ////the overall view model
+    //var viewModel = function () {
+    //    var self = this;
+    //    self.profile = new profileModel(),
+    //    self.office = new officeModel(),
+    //    self.viewModel1 = new viewModel1(),
+    //    self.viewModel2 = new viewModel2()
+    //};
+
+    //var viewModel = function () {
+    //    var self = this;
+
+    //    self.mainGameModel = new mainGameModel(),
+
+    //    //HOME TEAM VARIABLES:        
+    //        self.homeTeamID = ko.observable(0); //28
+    //    ...........
+    //    ko.applyBindings(new viewModel());
+
+
     var viewModel = function () {
         var self = this;
 
@@ -123,7 +166,7 @@ $(function () {
         });
         //display time source: https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
         self.remainingTimeDisplay = ko.computed(function () {
-            return getTimeDisplay(self.remainingTime());
+            return UTILITIES.getTimeDisplay(self.remainingTime());
         });
         self.isRunning = ko.observable(false);
         self.StartCounter = function () {
@@ -772,170 +815,6 @@ $(function () {
     $("#gameInfoBox").slideUp();
 }); //END DOCUMENT READY FUNCTION
 
-//LOOKUP TYPES:
-//TODO: Use these instead of relying on 'magic' strings
-var KICKOFF_TYPES = {
-    KICKOFF: 'kickoff',
-    ONSIDE: 'onside',
-    PUNT: 'punt',
-    FIELDGOAL: 'fieldgoal',
-    EXTRAPOINT: 'extrapoint',
-    SAFETY: 'safety'
-};
-
-var GAME_PLAY_TYPES = {
-    RUN: 'run',
-    PASS: 'pass',
-    EXTRAPOINT: 'extraPoint',
-    TWOPOINTCONVERSION: 'twoPointConversion',
-    FIELDGOAL: 'fieldGoal'
-};
-
-var SCORE_TYPES = {
-    TOUCHDOWN: 'touchdown',
-    FIELDGOAL: 'fieldgoal',
-    SAFETY: 'safety',
-    EXTRAPOINT: 'extrapoint',
-    TWOPOINTCONVERSION: 'twopointconversion'
-};
-
-//CONSTRUCTORS
-//object constructor for gamePlayStats record
-function GamePlayStatRecord(teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns) {
-    this.teamId = teamId;
-    this.teamName = teamName;
-    this.totalPlayCount = totalPlayCount;
-    this.totalYardsRushing = totalYardsRushing;
-    this.totalYardsPassing = totalYardsPassing;
-    this.totalTimePossession = totalTimePossession;
-    this.totalTurnovers = totalTurnovers;
-    this.totalFirstDowns = totalFirstDowns;
-    this.fullTeamName = getFullTeamName(this.teamName, this.teamId);
-    this.totalTimePossessionDisplay = getTimeDisplay(this.totalTimePossession); //TODO: BUG, Not correctly displaying time as 00:00
-}
-
-//object constructor for gameBoxScore
-function GameBoxScoreRecord(teamId, teamName, firstQuarterScore, secondQuarterScore, thirdQuarterScore, fourthQuarterScore, overtimeScore) {
-    this.teamId = teamId;
-    this.teamName = teamName;
-    this.firstQuarterScore = firstQuarterScore;
-    this.secondQuarterScore = secondQuarterScore;
-    this.thirdQuarterScore = thirdQuarterScore;
-    this.fourthQuarterScore = fourthQuarterScore;
-    this.overtimeScore = overtimeScore;
-    this.fullTeamName = getFullTeamName(this.teamName, this.teamId);
-    this.totalScore = function () {
-        let first = this.firstQuarterScore ? this.firstQuarterScore : 0;
-        let second = this.firstQuarterScore ? this.firstQuarterScore : 0;
-        let third = this.firstQuarterScore ? this.firstQuarterScore : 0;
-        let fourth = this.firstQuarterScore ? this.firstQuarterScore : 0;
-        let ot = this.firstQuarterScore ? this.firstQuarterScore : 0;
-
-        //return sum of all quarters for total
-        return first + second + third + fourth + ot;
-    };
-}
-
-
-//object constructor for new play result record
-function PlayResult(yards, playText, isTurnover = false, playType = '') {
-    this.yards = yards;
-    this.playResultText = playText;
-    this.isTurnover = isTurnover;
-    this.playType = playType;
-}
-
-//object constructor for a new play history record, stored in array, self.teamPlayHistory()
-function PlayHistory(teamId, teamName, down, playCount, playYards, playResult, ballSpot) {
-    this.playId = self.teamPlayHistory().length + 1;
-    this.totalPlayCount = _totalPlayCount;
-    this.teamId = teamId;
-    this.teamName = teamName;
-    this.down = down;
-    this.playCount = playCount;
-    this.playYards = playYards;
-    this.playResult = playResult;
-    this.ballSpot = ballSpot;
-    this.fullTeamName = getFullTeamName(this.teamName, this.teamId);
-}
-
-//object constructor for a new teams array, stored in, _teams
-function TeamArray() {
-    var teamArray = new Array();
-
-    teamArray.push(new TeamArrayRecord(1, 'cardinals', 'Arizona', 'Cardinals'));
-    teamArray.push(new TeamArrayRecord(2, 'falcons', 'Atlanta', 'Falcons'));
-    teamArray.push(new TeamArrayRecord(3, 'ravens', 'Baltimore', 'Ravens'));
-    teamArray.push(new TeamArrayRecord(4, 'bills', 'Buffalo', 'Bills'));
-    teamArray.push(new TeamArrayRecord(5, 'panthers', 'Carolina', 'Panthers'));
-    teamArray.push(new TeamArrayRecord(6, 'bears', 'Chicago', 'Bears'));
-    teamArray.push(new TeamArrayRecord(7, 'bengals', 'Cincinnati', 'Bengals'));
-    teamArray.push(new TeamArrayRecord(8, 'browns', 'Cleveland', 'Browns'));
-    teamArray.push(new TeamArrayRecord(9, 'cowboys', 'Dallas', 'Cowboys'));
-    teamArray.push(new TeamArrayRecord(10, 'broncos', 'Denver', 'Broncos'));
-    teamArray.push(new TeamArrayRecord(11, 'lions', 'Detroit', 'Lions'));
-    teamArray.push(new TeamArrayRecord(12, 'packers', 'Green Bay', 'Packers'));
-    teamArray.push(new TeamArrayRecord(13, 'texans', 'Houston', 'Texans'));
-    teamArray.push(new TeamArrayRecord(14, 'colts', 'Indianapolis', 'Colts'));
-    teamArray.push(new TeamArrayRecord(15, 'jaguars', 'Jacksonville', 'Jaguars'));
-    teamArray.push(new TeamArrayRecord(16, 'chiefs', 'Kansas City', 'Chiefs'));
-    teamArray.push(new TeamArrayRecord(17, 'chargers', 'Los Angeles', 'Chargers'));
-    teamArray.push(new TeamArrayRecord(18, 'rams', 'Los Angeles', 'Rams'));
-    teamArray.push(new TeamArrayRecord(19, 'dolphins', 'Miami', 'Dolphins'));
-    teamArray.push(new TeamArrayRecord(20, 'vikings', 'Minnesota', 'Vikings'));
-    teamArray.push(new TeamArrayRecord(21, 'patriots', 'New England', 'Patriots'));
-    teamArray.push(new TeamArrayRecord(22, 'saints', 'New Orleans', 'Saints'));
-    teamArray.push(new TeamArrayRecord(23, 'giants', 'New York', 'Giants'));
-    teamArray.push(new TeamArrayRecord(24, 'jets', 'New York', 'Jets'));
-    teamArray.push(new TeamArrayRecord(25, 'raiders', 'Oakland', 'Raiders'));
-    teamArray.push(new TeamArrayRecord(26, 'eagles', 'Philadelphia', 'Eagles'));
-    teamArray.push(new TeamArrayRecord(27, 'steelers', 'Pittsburgh', 'Steelers'));
-    teamArray.push(new TeamArrayRecord(28, 'forty-niners', 'San Francisco', '49ers'));
-    teamArray.push(new TeamArrayRecord(29, 'seahawks', 'Seattle', 'Seahawks'));
-    teamArray.push(new TeamArrayRecord(30, 'buccaneers', 'Tampa Bay', 'Buccaneers'));
-    teamArray.push(new TeamArrayRecord(31, 'titans', 'Tennessee', 'Titans'));
-    teamArray.push(new TeamArrayRecord(32, 'redskins', 'Washington', 'Redskins'));
-
-    return teamArray;
-}
-
-function TeamArrayRecord(teamId, teamColor, teamCity, teamMascot) {
-    this.teamId = teamId;
-    this.teamColor = teamColor;
-    this.teamCity = teamCity;
-    this.teamMascot = teamMascot;
-    this.teamCityAndName = function () {
-        if (!this.teamCity || !this.teamMascot)
-            return '';
-
-        return this.teamCity + ' ' + this.teamMascot;
-    };
-    this.teamName = function () {
-        if (!this.teamMascot)
-            return '';
-
-        return this.teamMascot.toUpperCase();
-    };
-    this.teamBgColor = function () {
-        if (!this.teamColor)
-            return '';
-
-        return this.teamColor + '-bg';
-    };
-    this.teamThumbnail = function () {
-        if (!this.teamColor)
-            return '';
-
-        return 'content/images/teams/thumbs/' + this.teamColor + '.png';
-    };
-    this.teamImage = function () {
-        if (!this.teamColor)
-            return '';
-
-        return 'content/images/teams/large/' + this.teamColor + '.png';
-    };
-}
-
 var gameDice = {
     init: function () {
         gameDice.roll();
@@ -1028,7 +907,7 @@ var playMaker = {
 
     getPlayResult: function (playSelected) {
         let _yards = 0;
-        let _playResultText = titleCase(playSelected);
+        let _playResultText = UTILITIES.splitAndTitleCase(playSelected);
         let _positiveYards = false;
         let _negativeYards = false;
         let bigYardPlay = getRandomInt(1, 100) >= 85;
@@ -1162,7 +1041,7 @@ var playMaker = {
         let kickoffType = getKickoffType();
         let _yards = convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle);
         let _returnYards = 0;
-        let _kickoffResultText = titleCase(kickoffType);
+        let _kickoffResultText = UTILITIES.splitAndTitleCase(kickoffType);
         let ballKickOffSpot = KICKOFF_SPOT; //set ball Spot Start at 35 yard line        
         let isTouchback = false; //flag to determine when touchback occurs
         let isPenalty = false; //flag to determine when there is a penalty on the kickoff
@@ -1429,13 +1308,13 @@ var playMaker = {
         console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
         //PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot
-        self.AddPlayHistory(new PlayHistory(self.currentTeamWithBall(),
+        self.AddPlayHistory(new PlayHistory(self.teamPlayHistory().length + 1, self.currentTeamWithBall(),
             team.teamName(),
-            getDownText(self.currentDown(), self.yardsToFirst()),
+            HELPERS.getDownText(self.currentDown(), self.yardsToFirst()),
             self.playCountForPossession(),
             yardsText,
             thisPlaysResult.playResultText,
-            getYardText())); //Spot of Ball text in Play History
+            HELPERS.getYardText())); //Spot of Ball text in Play History
 
         playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer);
 
@@ -1679,29 +1558,6 @@ function convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle) {
     return kickoffYards - angleSubtractor;
 }
 
-function getDownText(playAttempt, yardsToFirst) {
-    let yardsToFirstText = '';
-
-    //null/empty check
-    if (yardsToFirst) {
-        yardsToFirstText = yardsToFirst.toString();
-    }
-
-    if (self.yardsToTouchdown() <= self.yardsToFirst())
-        yardsToFirstText = 'GOAL';
-
-    return getNumberWithEnding(playAttempt) + ' & ' + yardsToFirstText;
-}
-
-function getYardText() {
-    let yardText = self.homeTeamInfo().teamName();
-
-    if (self.currentTeamWithBall() === self.awayTeamID() && self.yardsToTouchdown() > 50)
-        yardText = self.awayTeamInfo().teamName();
-
-    return yardText + ' ' + self.currentBallSpot();
-}
-
 function getFullTeamName(teamName, teamId) {
     if (!teamName)
         return '';
@@ -1712,41 +1568,6 @@ function getFullTeamName(teamName, teamId) {
     else {
         return teamName + ' (home)';
     }
-}
-
-//note, only works for minutes/seconds as of writing of function and needs at the time
-function getTimeDisplay(timeSeconds) {
-    console.log('timeSeconds: %s', timeSeconds);
-    if (timeSeconds > 0) {
-        var minutes = Math.floor(timeSeconds / 60);
-        var seconds = timeSeconds - minutes * 60;
-        return str_pad_left(minutes, '0', 2) + ':' + str_pad_left(seconds, '0', 2);
-    }
-    else {
-        return '00:00';
-    }
-}
-
-function str_pad_left(string, pad, length) {
-    return (new Array(length + 1).join(pad) + string).slice(-length);
-}
-
-function titleCase(str) {
-    let splitStr = '';
-
-    if (str) {
-        str = str.replace(/([A-Z]+)/g, "$1").replace(/([A-Z][a-z])/g, " $1"); //split on capital letters first (camel case strings)
-
-        splitStr = str.toLowerCase().split(' ');
-        for (var i = 0; i < splitStr.length; i++) {
-            // You do not need to check if i is larger than splitStr length, as your for does that for you
-            // Assign it back to the array
-            splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
-        }
-        splitStr = splitStr.join(' ');
-    }
-    // Directly return the joined string
-    return splitStr;
 }
 
 //STORAGE FUNCTIONS Source: https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
@@ -1891,50 +1712,3 @@ var gameStorage = {
     }
 };
 //END STORAGE FUNCTIONS
-
-/*
-function loadField() {
-	//Load Field (source: http://jsfiddle.net/vZ8UT/)
-	//source2: https://stackoverflow.com/questions/34772957/how-to-make-canvas-responsive
-	//Create a new image object
-	var backgroundImage = new Image(); 
-	backgroundImage.src = "content/images/FootballField_no_grass.PNG";
-	backgroundImage.height = 700;
-	backgroundImage.width = 1400;
-	//Create a canvas
-	var canvas = document.createElement('canvas');
-	canvas.id = 'mainCanvas';
-
-	//Assuming that image object has loaded correctly...
-	canvas.width = backgroundImage.width || 1280;
-	canvas.height = backgroundImage.width || 931;
-
-	var ctx = canvas.getContext('2d');
-
-	//Append to the page, assuming we were able to get an element with id 'mainField'
-	//... this code is far too assuming.
-	document.getElementById('mainField').appendChild(canvas);
-
-	//ctx.fillRect(4,4,10,10);
-	
-	//Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    //Here you draw the backgroundImage object to the canvas
-    //using HTML5 2d Context's drawImage
-    //Read more here: http://dev.w3.org/html5/2dcontext/#dom-context-2d-drawimage
-	backgroundImage.onload = function() {
-		ctx.drawImage(backgroundImage, 0, 0);		
-	}
-}
-
-function resize(){    
-    $("#mainCanvas").outerHeight($(window).height()-$("#mainCanvas").offset().top- Math.abs($("#mainCanvas").outerHeight(true) - $("#mainCanvas").outerHeight()));
-  }
-  $(document).ready(function(){
-    //resize();
-    $(window).on("resize", function(){                      
-       // resize();
-    });
-  });
-*/
