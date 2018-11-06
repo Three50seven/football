@@ -1,3 +1,6 @@
+// For more information on how to configure a task runner, please visit:
+// https://github.com/gulpjs/gulp
+
 //TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
 /// <binding AfterBuild='fullprocess' />
 
@@ -17,11 +20,12 @@ var paths = {
 // flag to only updated bundle files if the script file is newer
 var onlyNewerFiles = true;
 
-var gulp = require("gulp");
-    //concat = require("gulp-concat"),
-    //cssmin = require("gulp-cssmin"),
-    //uglify = require("gulp-uglify"),
-    //newer = require("gulp-newer");
+var gulp = require("gulp"),
+    gutil = require('gulp-util'),
+    concat = require("gulp-concat"),
+    cssmin = require("gulp-cssmin"),
+    uglify = require("gulp-uglify"),
+    newer = require("gulp-newer");
 
 var scriptBundles = [],
     styleBundles = [],
@@ -40,6 +44,11 @@ styleBundles = styleBundles.concat(bundlesViewModels.styles);
 styleBundles = styleBundles.concat(stylesheetDefinitions.styles);
 
 function BuildFiles(bundle, bundlesList) {
+    gutil.log('Gulp.js has been successfully installed!\n' +
+        'For more information on how to configure it, please visit:\n' +
+        'https://github.com/gulpjs/gulp \n' +
+        'BUILDING FILES...');
+
     var bundleFiles = [];
 
     if (bundle && bundle.files && bundle.files.length) {
@@ -61,7 +70,7 @@ function BuildFiles(bundle, bundlesList) {
 }
 
 gulp.task("bundlejs", gulp.parallel(function () {
-
+    
     if (scriptBundles && scriptBundles.length) {
         for (var i = 0; i < scriptBundles.length; i++) {
             var scriptBundle = scriptBundles[i];
@@ -133,7 +142,7 @@ gulp.task("bundlecss", gulp.parallel(function () {
     console.log("Bundling CSS process complete.");
 }));
 
-gulp.task("fullprocess", gulp.parallel(["bundlejs", "bundlecss"]));
+gulp.task("fullprocess", ["bundlejs", "bundlecss"]);
 
 /*
 function defaultTask(cb) {
@@ -142,4 +151,14 @@ function defaultTask(cb) {
 }
 
 exports.default = defaultTask;
+
+
+var gulp  = require('gulp'),
+    gutil = require('gulp-util');
+
+gulp.task('default', function() {
+    gutil.log('Gulp.js has been successfully installed!\n' +
+              'For more information on how to configure it, please visit:\n' +
+              'https://github.com/gulpjs/gulp');
+});
 */
