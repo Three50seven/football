@@ -1,54 +1,38 @@
-// For more information on how to configure a task runner, please visit:
-// https://github.com/gulpjs/gulp
+/// <binding AfterBuild='local-build' ProjectOpened='project-open' />
 
-//TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
-/// <binding AfterBuild='fullprocess' />
+"use strict";
 
-/*
-This file in the main entry point for defining Gulp tasks and using Gulp plugins.
-Click here to learn more. http://go.microsoft.com/fwlink/?LinkId=518007
-also reference: https://gulpjs.com/docs/en/getting-started/creating-tasks
-*/
-
-var paths = {
-    webroot: "",
-    bundleDefinitionRoot: "./website/Config/BundleDefinitions/",
-    scriptsDestDirectory: "website/content/js/",
-    stylesDestDirectory: "website/content/css/"
+var settings = {
+    paths: {
+        scriptsDestDirectory: "./wwwroot/content/js/",
+        stylesDestDirectory: "./wwwroot/content/css/"
+    },
+    basePath: "./wwwroot/" // appended to filepaths defined in bundle.Files
 };
 
-// flag to only updated bundle files if the script file is newer
-var onlyNewerFiles = true;
-
 var gulp = require("gulp"),
-    gutil = require('gulp-util'),
     concat = require("gulp-concat"),
     cssmin = require("gulp-cssmin"),
     uglify = require("gulp-uglify"),
     newer = require("gulp-newer");
 
-var scriptBundles = [],
-    styleBundles = [],
-    bundlesLib = require(paths.bundleDefinitionRoot + "bundles-lib.json"),
-    bundlesModules = require(paths.bundleDefinitionRoot + "bundles-modules.json"),
-    bundlesViewModels = require(paths.bundleDefinitionRoot + "bundles-viewmodels.json"),
-    stylesheetDefinitions = require(paths.bundleDefinitionRoot + "stylesheet-definitions.json");
+// get bundle definitions from json config file
+var bundles = require("./assetbundles.json");
 
-scriptBundles = scriptBundles.concat(bundlesLib.scripts);
-scriptBundles = scriptBundles.concat(bundlesModules.scripts);
-scriptBundles = scriptBundles.concat(bundlesViewModels.scripts);
+// build out script bundles based on explicitly defined "type" or check file extension of first file in list
+var scriptBundles = bundles.filter(function (item) {
+    return (item.type !== undefined && (item.type === "js" || item.type === "JS"))
+        || (item.type === undefined && item.files !== undefined && item.files.length > 0 && item.files.some(function (file) { return file.endsWith("js"); }));
+});
 
-styleBundles = styleBundles.concat(bundlesLib.styles);
-styleBundles = styleBundles.concat(bundlesModules.styles);
-styleBundles = styleBundles.concat(bundlesViewModels.styles);
-styleBundles = styleBundles.concat(stylesheetDefinitions.styles);
+// build out style bundles based on explicitly defined "type" or check file extension of first file in list
+var styleBundles = bundles.filter(function (item) {
+    return (item.type !== undefined && (item.type === "css" || item.type === "CSS"))
+        || (item.type === undefined && item.files !== undefined && item.files.length > 0 && item.files.some(function (file) { return file.endsWith("css"); }));
+});
 
+// recursively build out list of files in a bundle
 function BuildFiles(bundle, bundlesList) {
-    gutil.log('Gulp.js has been successfully installed!\n' +
-        'For more information on how to configure it, please visit:\n' +
-        'https://github.com/gulpjs/gulp \n' +
-        'BUILDING FILES...');
-
     var bundleFiles = [];
 
     if (bundle && bundle.files && bundle.files.length) {
@@ -61,7 +45,10 @@ function BuildFiles(bundle, bundlesList) {
             if (existingBundle && existingBundle.length) {
                 bundleFiles = bundleFiles.concat(BuildFiles(existingBundle[0], bundlesList));
             } else {
-                bundleFiles.push(bundle.files[j]);
+                var file = bundle.files[j];
+                if (settings.basePath && settings.basePath.length)
+                    file = settings.basePath + file;
+                bundleFiles.push(file);
             }
         }
     }
@@ -69,52 +56,177 @@ function BuildFiles(bundle, bundlesList) {
     return bundleFiles;
 }
 
-gulp.task("bundlejs", gulp.parallel(function () {
-    
+function ToBool(value) {
+    if (value === undefined) {
+        return false;
+    } else if (typeof value === 'boolean') {
+        return value;
+    } else if (typeof value === 'number') {
+        value = value.toString();
+    } else if (typeof value !== 'string') {
+        return false;
+    }
+
+    switch (value.toLowerCase()) {
+        case "true":
+        case "yes":
+        case "1":
+            return true;
+        default:
+            return false;
+    }
+}
+
+function Argument(args, key, defaultValue) {
+    var self = this;
+
+    function _getArgumentValue(args, key) {
+        var option,
+            index = args.indexOf(key);
+
+        if (index > -1 && args.length > (index + 1)) {
+            return args[index + 1];
+        }
+
+        return undefined;
+    }
+
+    self.Value = defaultValue;
+    self.Argument = _getArgumentValue(args, key);
+
+    if (self.Argument !== undefined)
+        self.Value = self.Argument;
+}
+
+function BoolArgument(args, key, defaultValue) {
+    var self = this;
+
+    function _getArgumentValue(args, key) {
+        var option,
+            index = args.indexOf(key);
+
+        if (index > -1 && args.length > (index + 1)) {
+            return args[index + 1];
+        }
+
+        return undefined;
+    }
+
+    self.Value = defaultValue === undefined ? false : defaultValue;
+    self.Argument = _getArgumentValue(args, key);
+
+    if (self.Argument !== undefined)
+        self.Value = ToBool(self.Argument);
+}
+
+gulp.task("clean-js", function () {
+    return gulp
+        .src(settings.paths.scriptsDestDirectory, { read: false })
+        .on("end", function () {
+            console.log("* Cleaning destination '" + settings.paths.scriptsDestDirectory + "'... *");
+        })
+        .pipe(clean())
+        .on("end", function () {
+            console.log("* Cleaning complete. *");
+        });
+});
+
+function BundleJS(newerOnly) {
     if (scriptBundles && scriptBundles.length) {
-        for (var i = 0; i < scriptBundles.length; i++) {
+        console.log("*** Starting JS bundling. Newer Only: " + newerOnly + " ***");
+
+        var completedCount = 0,
+            totalBundleCount = scriptBundles.length;
+
+        for (var i = 0; i < totalBundleCount; i++) {
             var scriptBundle = scriptBundles[i];
-            if (scriptBundle.referenceOnly) {
-                console.log("Bundle for " + scriptBundle.name + " is set to only be referenced. No bundling for this bundle.")
-                continue;
-            }
 
-            console.log("Bundling " + scriptBundle.name + " ... ");
-
-            var files = BuildFiles(scriptBundle, scriptBundles); //get list of files for this bundle
-
-            var dest = paths.scriptsDestDirectory;
+            var dest = settings.paths.scriptsDestDirectory;
             dest += scriptBundle.subpath || "";
 
-            if (dest.slice(-1) != "/") { dest += "/"; }
+            if (dest.slice(-1) !== "/") { dest += "/"; }
 
             dest += scriptBundle.filename || (scriptBundle.name + ".min.js");
 
+            if (ToBool(scriptBundle.referenceOnly)) {
+                console.log("Bundle for " + scriptBundle.name + " is set to only be referenced. No bundling for this bundle.");
+
+                if (scriptBundle.staticOutputPath) {
+                    (function (scriptBundle, dest) {
+                        var gulpTask = gulp.src(settings.basePath + scriptBundle.staticOutputPath, { base: "." })
+                            .on("end", function () {
+                                console.log("Bundle " + scriptBundle.name + " marked as have a *static output* of '" + scriptBundle.staticOutputPath + "'. It will have it's static output copied to destination.");
+                            })
+                            .pipe(concat(dest))
+                            .pipe(gulp.dest("."))
+                            .on("end", function () {
+                                completedCount++;
+                                console.log("Static Output '" + scriptBundle.staticOutputPath + "' copied to '" + dest + "'.");
+                            });
+                    })(scriptBundle, dest);
+
+                } else {
+                    completedCount++;
+                }
+
+                continue;
+            }
+
+            var files = BuildFiles(scriptBundle, scriptBundles); //get list of files for this bundle
             var gulpTask = gulp.src(files, { base: "." });
 
-            if (onlyNewerFiles) {
+            if (newerOnly) {
                 gulpTask = gulpTask.pipe(newer(dest));
             }
 
-            gulpTask.pipe(concat(dest))
-                .pipe(uglify())
-                .pipe(gulp.dest("."));
+            (function (name, files) {
+                gulpTask
+                    .on("end", function () {
+                        console.log("Bundling " + name + " ... ");
+                        for (var i = 0; i < files.length; i++) {
+                            console.log(" - Includes file " + files[i] + ".");
+                        }
+                    })
+                    .pipe(concat(dest))
+                    .pipe(uglify())
+                    .pipe(gulp.dest("."))
+                    .on("end", function () {
+                        completedCount++;
+
+                        if (completedCount === totalBundleCount) {
+                            console.log("*** Bundling JS process complete. ***");
+                        }
+                    });
+            })(scriptBundle.name, files);
         }
-    }
-    else {
+    } else {
         console.log("No JS bundles found.");
     }
+}
 
-    console.log("Bundling JS process complete.");
-}));
+gulp.task("bundle-js", function () {
 
-gulp.task("bundlecss", gulp.parallel(function () {
+    var bundlingArguments = {
+        // flag to only updated bundle files if the script file is newer
+        // defaulted to "true" for quicker local builds
+        // process.argv.newerOnly is an optional parameter to set this value - intended as part of CI/build process
+        NewerOnly: new BoolArgument(process.argv, "--newerOnly", true)
+    };
+
+    BundleJS(bundlingArguments.NewerOnly.Value);
+});
+
+gulp.task("bundle-js-full", ["clean-js"], function () {
+    BundleJS(false);
+});
+
+gulp.task("bundle-css", function () {
 
     if (styleBundles && styleBundles.length) {
         for (var i = 0; i < styleBundles.length; i++) {
             var styleBundle = styleBundles[i];
-            if (styleBundle.referenceOnly) {
-                console.log("Bundle for " + styleBundle.name + " is set to only be referenced. No bundling for this bundle.")
+            if (ToBool(styleBundle.referenceOnly)) {
+                console.log("Bundle for " + styleBundle.name + " is set to only be referenced. No bundling for this bundle.");
                 continue;
             }
 
@@ -122,10 +234,10 @@ gulp.task("bundlecss", gulp.parallel(function () {
 
             var files = BuildFiles(styleBundle, styleBundles); //get list of files for this bundle
 
-            var dest = paths.stylesDestDirectory;
+            var dest = settings.paths.stylesDestDirectory;
             dest += styleBundle.subpath || "";
 
-            if (dest.slice(-1) != "/") { dest += "/"; }
+            if (dest.slice(-1) !== "/") { dest += "/"; }
 
             dest += styleBundle.filename || (styleBundle.name + ".min.css");
 
@@ -140,9 +252,123 @@ gulp.task("bundlecss", gulp.parallel(function () {
     }
 
     console.log("Bundling CSS process complete.");
-}));
+});
 
-gulp.task("fullprocess", ["bundlejs", "bundlecss"]);
+function NewFile(name, contents) {
+    //uses the node stream object
+    var readableStream = require('stream').Readable({ objectMode: true });
+
+    //reads in contents string
+    readableStream._read = function () {
+        this.push(new vinyl({ cwd: "", base: null, path: name, contents: new Buffer(contents) }));
+        this.push(null);
+    };
+    return readableStream;
+}
+
+function MergeProperties(base, target, output) {
+    // start with all properties in base
+    for (var prop in base) {
+        if (target.hasOwnProperty(prop)) {
+            // recursively merge nested properties if property is an object excluding arrays
+            if (typeof target[prop] !== null
+                && typeof base[prop] === "object"
+                && typeof target[prop] === "object"
+                && toString.call(base[prop]) !== "[object Array]") {
+                console.log("Base Property '" + prop + "': is OBJECT type - recursively merging properties...");
+                MergeProperties(base[prop], target[prop], output[prop]);
+            } else {
+                // set the output property to the new target property (includes arrays overwriting arrays)
+                console.log("Base Property '" + prop + "': output VALUE SET to " + target[prop]);
+                output[prop] = target[prop];
+            }
+        } else {
+            console.log("Base Property '" + prop + "' not found on target.");
+        }
+    }
+
+    // see if any new properties exist on the target and add to the output if not present
+    for (var prop in target) {
+        if (!output.hasOwnProperty(prop)) {
+            console.log("Target Property '" + prop + "': output VALUE SET to + " + target[prop]);
+            output[prop] = target[prop];
+        } else {
+            console.log("Target Property '" + prop + "': already exists on output.");
+        }
+    }
+}
+
+gulp.task("json:transform", function () {
+    var environment = new Argument(process.argv, "--environment"),
+        baseDirectory = new Argument(process.argv, "--basedir", "./"),
+        filename = new Argument(process.argv, "--basefilename", "appsettings"),
+        outputDirectory = new Argument(process.argv, "--outputdir", "./"),
+        outputFileName = new Argument(process.argv, "--outputfilename", "appsettings");
+
+    if (environment.Value) {
+        console.log("** Transforming JSON file '" + filename.Value + "' for '" + environment.Value + "' environment. **");
+
+        var settingsBase = require(baseDirectory.Value + filename.Value + ".json"),
+            newSettings = settingsBase,
+            environmentSettings = require(baseDirectory.Value + filename.Value + '.' + environment.Value + '.json');
+
+        MergeProperties(settingsBase, environmentSettings, newSettings);
+
+        //convert new object to a JSON string and write it a file in output directory
+        return NewFile(outputFileName.Value + ".json", JSON.stringify(newSettings, null, 2))
+            .pipe(gulp.dest(outputDirectory.Value));
+    } else {
+        console.error("Transform operation aborted. No environment specified.");
+    }
+});
+
+gulp.task("local-build", ["bundle-js", "bundle-css"]);
+
+gulp.task("build", ["bundle-js-full", "bundle-css"]);
+
+gulp.task("local-web-proj-clean", function () {
+
+    return del([
+        'bin/**',
+        'obj/**'
+    ]);
+
+});
+
+gulp.task("copy-local-content-to-wwwroot", function () {
+    gulp.src("../../data/content/sitecontent/**")
+        .pipe(gulp.dest("./wwwroot/local_sitecontent/"));
+});
+
+gulp.task("project-open", ["copy-local-content-to-wwwroot"]);
+
+// Gulp SASS Build Task
+gulp.task('sass', ['sass:compile', 'autoprefixer']);
+
+gulp.task('sass:compile', function () {
+    return gulp.src('./wwwroot/content/SCSS/**.scss')
+        .pipe(sass.sync().on('error', console.log))
+        .pipe(sourcemaps.init()) // not for production env
+        .pipe(sourcemaps.write('./'))  // not for production env
+        .pipe(gulp.dest('./wwwroot/content/css'));
+});
+
+// SASS Watch
+gulp.task('sass:watch', function () {
+    gulp.watch('./wwwroot/content/SCSS/**.scss', ['sass']);
+});
+
+// CSS Autoprefixer
+// adds custom cutting-edge styles for specific browsers
+gulp.task('autoprefixer', function () {
+    gulp.src('./wwwroot/content/css/styles.css', { base: "./" })
+        .pipe(autoprefixer())
+        .pipe(gulp.dest('.'));
+});
+
+gulp.task('print-node-version', function () {
+    console.log("Node Version: " + process.version);
+});
 
 /*
 function defaultTask(cb) {

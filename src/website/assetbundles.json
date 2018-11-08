@@ -1,0 +1,47 @@
+[
+  {
+    "name": "styles",
+    "files": [
+      "content/styles/main.css",
+      "content/styles/team-colors.css"
+    ]
+  },
+  {
+    "name": "main-bundle",
+    "subpath": "modules",
+    "files": [
+      "scripts/modules/constants.js",
+      "scripts/modules/environment.js",
+      "scripts/modules/constructors.js",
+      "scripts/modules/lookup-types.js"
+    ]
+  },
+  {
+    "name": "jquery-bundle",
+    "subpath": "lib",
+    "files": [
+      "scripts/libraries/JQuery/jquery-3.2.1.js"
+    ]
+  },
+  {
+    "name": "knockout-bundle",
+    "subpath": "lib",
+    "files": [
+      "scripts/libraries/Knockout/knockout-3.4.2.js"
+    ]
+  },
+  {
+    "name": "datetime-bundle",
+    "subpath": "modules",
+    "files": [
+      "scripts/libraries/moment.js"
+    ]
+  },
+  {
+    "name": "football-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/main-game-model.js"
+    ]
+  }
+]
