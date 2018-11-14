@@ -2,8 +2,8 @@
   {
     "name": "styles",
     "files": [
-      "content/styles/main.css",
-      "content/styles/team-colors.css"
+      "content/css/main.css",
+      "content/css/team-colors.css"
     ]
   },
   {
@@ -13,7 +13,7 @@
       "scripts/modules/constants.js",
       "scripts/modules/environment.js",
       "scripts/modules/constructors.js",
-      "scripts/modules/lookup-types.js"
+      "scripts/modules/lookup.types.js"
     ]
   },
   {
@@ -38,10 +38,12 @@
     ]
   },
   {
-    "name": "football-bundle",
+    "name": "main-game-bundle",
     "subpath": "viewmodels",
     "files": [
-      "scripts/view-models/main-game-model.js"
+      "scripts/view-models/main.game.model.js",
+      "scripts/view-models/football.js",
+      "scripts/view-models/game.helpers.js"
     ]
   }
 ]

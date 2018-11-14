@@ -1,4 +1,5 @@
 /// <binding AfterBuild='local-build' ProjectOpened='project-open' />
+//START_HERE => Fix Gulpfile errors SyntaxError: Unexpected token: name (first)
 
 "use strict";
 
@@ -188,7 +189,9 @@ function BundleJS(newerOnly) {
                         }
                     })
                     .pipe(concat(dest))
-                    .pipe(uglify())
+                    .pipe(uglify()).on('error', function (e) {
+                        console.log(e);
+                    })
                     .pipe(gulp.dest("."))
                     .on("end", function () {
                         completedCount++;
