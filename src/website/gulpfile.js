@@ -14,7 +14,7 @@ var settings = {
 var gulp = require("gulp"),
     concat = require("gulp-concat"),
     cssmin = require("gulp-cssmin"),
-    uglify = require("gulp-uglify"),
+    minify = require("gulp-minify"),
     newer = require("gulp-newer");
 
 // get bundle definitions from json config file
@@ -189,9 +189,9 @@ function BundleJS(newerOnly) {
                         }
                     })
                     .pipe(concat(dest))
-                    .pipe(uglify()).on('error', function (e) {
-                        console.log(e);
-                    })
+                    //.pipe(minify()).on('error', function (e) {
+                    //    console.log(e);
+                    //})
                     .pipe(gulp.dest("."))
                     .on("end", function () {
                         completedCount++;

@@ -17,10 +17,13 @@
     ]
   },
   {
-    "name": "jquery-bundle",
+    "name": "jquery-source",
     "subpath": "lib",
+    "filename": "jquery.min.js",
+    "referenceOnly": true,
+    "staticOutputPath": "scripts/libraries/JQuery/jquery-3.3.1.min.js",
     "files": [
-      "scripts/libraries/JQuery/jquery-3.2.1.js"
+      "scripts/libraries/JQuery/jquery-3.3.1.min.js"
     ]
   },
   {
@@ -38,12 +41,19 @@
     ]
   },
   {
+    "name": "utilities-bundle",
+    "subpath": "utilities",
+    "files": [
+      "scripts/utilities/game.helpers.js",
+      "scripts/utilities/utilities.js"
+    ]
+  },
+  {
     "name": "main-game-bundle",
     "subpath": "viewmodels",
     "files": [
       "scripts/view-models/main.game.model.js",
-      "scripts/view-models/football.js",
-      "scripts/view-models/game.helpers.js"
+      "scripts/view-models/football.js"
     ]
   }
 ]

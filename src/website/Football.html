@@ -9,13 +9,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" type="text/css" href="wwwroot/content/css/main.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="wwwroot/content/css/team-colors.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="wwwroot/content/css/styles.min.css" media="screen" />
 
     <title>Football: A Game of American Football in JavaScript</title>
+    <!--initialize objects for JavaScript-->
+    <script type="text/javascript">var MODULES = {}; MODULES.UI = {}; var COMPONENTS = {}; var USER = {};</script>    
 </head>
 
 <body>
+    <div id="jsconfig" style="display:none;visibility:hidden">
+        <!--<input type="hidden" value="@settings.AlertErrors.ToString().ToLower()" id="showJSErrors" />
+        <input type="hidden" value="@settings.Debug.ToString().ToLower()" id="isDebugMode" />
+        <input type="hidden" value="@settings.LogErrors.ToString().ToLower()" id="logJSErrors" />
+        <input type="hidden" value="@settings.UserSessionTimeout" id="sessionExpireTime" />-->
+        <input type="hidden" value="Production" id="app-environment" />
+    </div>
     <div id="container">
         <div id="header" style="height: 60px;">
             <span class="header-text">Play Football</span>
@@ -399,14 +407,10 @@
         </div>
     </div>
     <!--END of div container-->
-
-    <script language="JavaScript" src="scripts/libraries/JQuery/jquery-3.3.1.min.js"></script>
-    <script language="JavaScript" src="scripts/libraries/Knockout/knockout-3.4.2.js"></script>
-    <script language="JavaScript" scr="scripts/view-models/main-game-model.js"></script>
-    <script language="JavaScript" src="scripts/utilities/utilities.js"></script>
-    <script language="JavaScript" src="scripts/modules/lookup-types.js"></script>
-    <script language="JavaScript" src="scripts/modules/constructors.js"></script>
-    <script language="JavaScript" src="scripts/football.js"></script>
-    <script language="JavaScript" src="scripts/utilities/game-helpers.js"></script>
+    <script src="wwwroot/content/js/lib/jquery.min.js"></script>
+    <script src="wwwroot/content/js/lib/knockout-bundle.min.js"></script>
+    <script src="wwwroot/content/js/utilities/utilities-bundle.min.js"></script>
+    <script src="wwwroot/content/js/modules/main-bundle.min.js"></script>
+    <script src="wwwroot/content/js/viewmodels/main-game-bundle.min.js"></script>
 </body>
 </html>
