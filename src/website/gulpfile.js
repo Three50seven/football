@@ -11,11 +11,19 @@ var settings = {
     basePath: "./wwwroot/" // appended to filepaths defined in bundle.Files
 };
 
+var stopJsMinification = false;
+
 var gulp = require("gulp"),
     concat = require("gulp-concat"),
     cssmin = require("gulp-cssmin"),
-    uglify = require("gulp-uglify"),
-    newer = require("gulp-newer");
+    uglify = require("gulp-uglify-es").default,
+    newer = require("gulp-newer"),
+    clean = require('gulp-clean'),
+    del = require("del"),
+    vinyl = require('vinyl'),
+    sass = require('gulp-sass'),
+    sourcemaps = require('gulp-sourcemaps'),
+    autoprefixer = require('gulp-autoprefixer');
 
 // get bundle definitions from json config file
 var bundles = require("./assetbundles.json");

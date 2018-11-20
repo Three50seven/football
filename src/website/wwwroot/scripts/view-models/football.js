@@ -1,5 +1,4 @@
 //POTENTIAL GAME ENGINES TO ANIMATE FIELD: https://gist.github.com/bebraw/768272
-//POTENTIAL GAME ENGINES TO ANIMATE FIELD: https://gist.github.com/bebraw/768272
 //START_HERE TAG IS USED TO MARK WHERE I LEFT OFF IN DEV:
 //CONSTANTS:
 const KICKOFF_SPOT = 35;
@@ -16,8 +15,6 @@ var _diceSumTotal = 0;
 var _teams = new TeamArray();
 var _timeIntervalCountDown = 1000; //Modify this value to set how fast the clock counts down for a quarter, 1000 = 1 second, 500 = half second, etc.
 var _kickoffSliderDifficulty = 10; //change to higher number to slow down kick sliders, change to lower number to speed up
-
-console.log('FOOTBALL.js is hit');
 
 //DOCUMENT READY FUNCTION:
 $(function () {
@@ -95,7 +92,7 @@ $(function () {
         self.gamePlayStats = ko.observableArray();
         self.gameBoxScore = ko.observableArray();
         self.needCoinToss = ko.observable(true); //determines when coin toss is needed        
-        self.CloseSpecialTeamsMenu = function () {
+        self.CloseSpecialTeamsMenu = function () {            
             $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
         };
         self.ClearCoinColors = function () {
@@ -199,7 +196,7 @@ $(function () {
             return picked;
         });
         self.SetupKickoffBallSpot = function () {
-            console.log('SETTING UP KICKOFF BALL SPOT');
+            console.log('SETTING UP KICKOFF BALL SPOT');            
             console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', isExtraPointKick(), isKickoff(), isSafety());
             //if (isExtraPointKick() || isKickoff() || isSafety()) {
             //    //set spot depending on type of kick, default is normal kickoff
