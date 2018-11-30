@@ -6,12 +6,12 @@
 var settings = {
     paths: {
         scriptsDestDirectory: "./wwwroot/content/js/",
-        stylesDestDirectory: "./wwwroot/content/css/"
+        stylesDestDirectory: "./wwwroot/content/css/",
+        htmlBasePath: "./partials/"
     },
-    basePath: "./wwwroot/" // appended to filepaths defined in bundle.Files
+    basePath: "./wwwroot/", // appended to filepaths defined in bundle.Files
+    htmlSource: "./working-files/*.html"
 };
-
-var stopJsMinification = false;
 
 var gulp = require("gulp"),
     concat = require("gulp-concat"),
@@ -23,7 +23,8 @@ var gulp = require("gulp"),
     vinyl = require('vinyl'),
     sass = require('gulp-sass'),
     sourcemaps = require('gulp-sourcemaps'),
-    autoprefixer = require('gulp-autoprefixer');
+    autoprefixer = require('gulp-autoprefixer'),
+    htmlPartial = require('gulp-html-partial');
 
 // get bundle definitions from json config file
 var bundles = require("./assetbundles.json");
@@ -334,9 +335,22 @@ gulp.task("json:transform", function () {
     }
 });
 
-gulp.task("local-build", ["bundle-js", "bundle-css"]);
+gulp.task('bundle-html', function () {
+    const defaults = {
+        basePath: settings.paths.htmlBasePath,
+        tagName: 'partial',
+        variablePrefix: '@@'
+    };
 
-gulp.task("build", ["bundle-js-full", "bundle-css"]);
+    console.log("** Bundling HTML files **");
+    gulp.src([settings.htmlSource])
+        .pipe(htmlPartial(defaults))
+        .pipe(gulp.dest('.'));
+});
+
+gulp.task("local-build", ["bundle-js", "bundle-css", "bundle-html"]);
+
+gulp.task("build", ["bundle-js-full", "bundle-css", "bundle-html"]);
 
 gulp.task("local-web-proj-clean", function () {
 
