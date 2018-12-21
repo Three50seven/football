@@ -2,18 +2,8 @@
 <!--PREVENT SCRIPT WARNING WHEN RUNNING ON LOCAL HOST, otherwise, for internet zone change to: url=(0014)about:internet-->
 <!-- saved from url=(0016)http://localhost -->
 <html lang="en">
-<!-- NAME: Paul Krimm -->
-<!-- DATE: 2018.09.18 -->
-<head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <partial src="_main.html" title="Football: A Game of American Football in JavaScript"></partial>
-    <!--Football: A Game of American Football in JavaScript-->
-    <!--initialize objects for JavaScript-->
-    <script type="text/javascript">var MODULES = {}; MODULES.UI = {}; var COMPONENTS = {}; var USER = {};</script>
-</head>
+<partial src="_head.html" title="Football: A Game of American Football in JavaScript"></partial>
 
 <body>
     <div id="jsconfig" style="display:none;visibility:hidden">
@@ -60,13 +50,13 @@
                 <br /><br /><br /><br /><br /><br /><br />
                 <div id="mainField"></div>
                 <!--<div class="field-container" style="display:none;">
-                <img class="field-img" src="content/images/FootballField_no_grass.PNG" alt="football-field">
-                <div class="field-text-block lions-bg">
-                    <span id="awayteamDistance"></span>
-                    <i id="direction-indicator" class="left"></i>
-                    <span id="awayteamDistance"></span>
-                </div>
-                </div>-->
+            <img class="field-img" src="content/images/FootballField_no_grass.PNG" alt="football-field">
+            <div class="field-text-block lions-bg">
+                <span id="awayteamDistance"></span>
+                <i id="direction-indicator" class="left"></i>
+                <span id="awayteamDistance"></span>
+            </div>
+            </div>-->
             </div>
 
             <br>
@@ -166,7 +156,7 @@
 
             <section id="stopWatch" data-bind="visible: gameStarted">
                 <!--<input  id="initialTime" style="width:100px;height:20" data-bind="value:  initialTime" />
-                <span id="remainingTime" data-bind="text: remainingTime"></span> second(s)-->
+            <span id="remainingTime" data-bind="text: remainingTime"></span> second(s)-->
                 <button class="btn-default" style="margin-top:5px" id="StartCounter" data-bind="click: StartCounter, visible: !isRunning()">
                     Start timer
                 </button>
@@ -401,9 +391,7 @@
             </div>
         </div>
         <!--END of div body-->
-        <div id="footer">
-            Copyright Note: All images and logos belong to the NFL - this is just a training/testing web application with no intention to sell this product.
-        </div>
+        <partial src="_footer.html"></partial>
     </div>
     <!--END of div container-->
     <script src="wwwroot/content/js/lib/jquery.min.js"></script>
