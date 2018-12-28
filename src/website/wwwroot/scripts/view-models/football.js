@@ -1,20 +1,7 @@
 //POTENTIAL GAME ENGINES TO ANIMATE FIELD: https://gist.github.com/bebraw/768272
 //START_HERE TAG IS USED TO MARK WHERE I LEFT OFF IN DEV:
-//CONSTANTS:
-const KICKOFF_SPOT = 35;
-const SAFETY_KICKOFF_SPOT = 20;
-const EXTRA_POINT_KICK_SPOT = 15;
-const END_ZONE_YARDS = 10;
-const TWO_POINT_CONVERSION_SPOT = 2;
-const TOUCHBACK_YARD_LINE = 20;
-const SHOW_SPECIAL_TEAMS_CLASS = 'show-sub-menu';
-const MAX_TIME_OF_QUARTER = 900; //900 seconds = 15 minutes
 
-var _totalPlayCount = 1;
-var _diceSumTotal = 0;
-var _teams = new TeamArray();
-var _timeIntervalCountDown = 1000; //Modify this value to set how fast the clock counts down for a quarter, 1000 = 1 second, 500 = half second, etc.
-var _kickoffSliderDifficulty = 10; //change to higher number to slow down kick sliders, change to lower number to speed up
+
 
 //DOCUMENT READY FUNCTION:
 $(function () {
@@ -93,7 +80,7 @@ $(function () {
         self.gameBoxScore = ko.observableArray();
         self.needCoinToss = ko.observable(true); //determines when coin toss is needed        
         self.CloseSpecialTeamsMenu = function () {            
-            $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
+            $('#specialTeamsMenu').removeClass(MODULES.Constants.SHOW_SPECIAL_TEAMS_CLASS);
         };
         self.ClearCoinColors = function () {
             //clear class on current coin
@@ -128,10 +115,10 @@ $(function () {
         self.homeTeamID = ko.observable(0); //28
         self.homeTeamInfo = ko.computed(function () {
             if (self.homeTeamID() === 'undefined' || self.homeTeamID() <= 0)
-                return new TeamArrayRecord();
+                return new MODULES.Constructors.TeamArrayRecord();
 
-            let thisTeam = $.grep(_teams, function (team) { return team.teamId === self.homeTeamID(); })[0];
-            return $.grep(_teams, function (team) { return team.teamId === self.homeTeamID(); })[0]; //get the team selected by user;
+            let thisTeam = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === self.homeTeamID(); })[0];
+            return $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === self.homeTeamID(); })[0]; //get the team selected by user;
         });
         self.homeTeamTimeOuts = ko.observable(3);
         self.homeTeamScore = ko.observable(0);
@@ -140,10 +127,10 @@ $(function () {
         self.awayTeamID = ko.observable(0); //11
         self.awayTeamInfo = ko.computed(function () {
             if (self.awayTeamID() === 'undefined' || self.awayTeamID() <= 0)
-                return new TeamArrayRecord();
+                return new MODULES.Constructors.TeamArrayRecord();
 
-            let thisTeam = $.grep(_teams, function (team) { return team.teamId === self.awayTeamID(); })[0];
-            return $.grep(_teams, function (team) { return team.teamId === self.awayTeamID(); })[0]; //get the team selected by user;
+            let thisTeam = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === self.awayTeamID(); })[0];
+            return $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === self.awayTeamID(); })[0]; //get the team selected by user;
         });
         self.awayTeamTimeOuts = ko.observable(3);
         self.awayTeamScore = ko.observable(0);
@@ -159,7 +146,7 @@ $(function () {
         });
         self.timerId = 0;
         self.elapsedTime = ko.observable(0);
-        self.initialTime = ko.observable(MAX_TIME_OF_QUARTER);
+        self.initialTime = ko.observable(MODULES.Constants.MAX_TIME_OF_QUARTER);
         self.remainingTime = ko.computed(function () {
             return self.initialTime() - self.elapsedTime();
         });
@@ -178,7 +165,7 @@ $(function () {
                     self.isRunning(false);
                     self.Callback();
                 }
-            }, _timeIntervalCountDown);
+            }, MODULES.GameVariables.TimeIntervalCountDown);
         };
         self.StopCounter = function () {
             clearInterval(self.timerId);
@@ -200,7 +187,7 @@ $(function () {
             console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', isExtraPointKick(), isKickoff(), isSafety());
             //if (isExtraPointKick() || isKickoff() || isSafety()) {
             //    //set spot depending on type of kick, default is normal kickoff
-            //    let spot = KICKOFF_SPOT;
+            //    let spot = MODULES.Constants.KICKOFF_SPOT;
 
             //    let kickingTeam = self.homeTeamID();
 
@@ -222,7 +209,7 @@ $(function () {
             //    }
 
             //    if (isSafety()) {
-            //        spot = SAFETY_KICKOFF_SPOT;
+            //        spot = MODULES.Constants.SAFETY_KICKOFF_SPOT;
             //        console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot);
             //        if (kickingTeam === self.awayTeamID()) {
             //            spot = spot + 62;
@@ -230,7 +217,7 @@ $(function () {
             //    }
 
             //    if (isExtraPointKick()) {
-            //        spot = EXTRA_POINT_KICK_SPOT;
+            //        spot = MODULES.Constants.EXTRA_POINT_KICK_SPOT;
 
             //        console.log('SPOT BEFORE CHANGE (EXTRA POINT): %s', spot);
             //        if (kickingTeam === self.homeTeamID()) {
@@ -244,19 +231,19 @@ $(function () {
             //}
             if (isExtraPointKick() || isKickoff() || isSafety()) {
                 //set spot depending on type of kick, default is normal kickoff
-                let spot = KICKOFF_SPOT;
+                let spot = MODULES.Constants.KICKOFF_SPOT;
 
                 if (isKickoff()) {
                     console.log('SPOT BEFORE CHANGE (KICKOFF): %s', spot);
                     spot = spot + 30;
                 }
                 if (isSafety()) {
-                    spot = SAFETY_KICKOFF_SPOT;
+                    spot = MODULES.Constants.SAFETY_KICKOFF_SPOT;
                     console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot);
                     spot = spot + 60;
                 }
                 if (isExtraPointKick()) {
-                    spot = EXTRA_POINT_KICK_SPOT;
+                    spot = MODULES.Constants.EXTRA_POINT_KICK_SPOT;
                     console.log('SPOT BEFORE CHANGE (EXTRA POINT): %s', spot);
                 }
                 self.ballSpotStart(spot);
@@ -325,12 +312,12 @@ $(function () {
         };
         self.InitializeBoxScore = function () {
             //insert two team records for this game
-            let homeBoxScore = new GameBoxScoreRecord(
+            let homeBoxScore = new MODULES.Constructors.GameBoxScoreRecord(
                 self.homeTeamID(),
                 self.homeTeamInfo().teamName(),
                 0, 0, 0, 0, 0
             );
-            let awayBoxScore = new GameBoxScoreRecord(
+            let awayBoxScore = new MODULES.Constructors.GameBoxScoreRecord(
                 self.awayTeamID(),
                 self.awayTeamInfo().teamName(),
                 0, 0, 0, 0, 0
@@ -378,12 +365,12 @@ $(function () {
         };
         self.InitializeGameStats = function () {
             //insert two team records for this game
-            let homeTeamPlayStat = new GamePlayStatRecord(
+            let homeTeamPlayStat = new MODULES.Constructors.GamePlayStatRecord(
                 self.homeTeamID(),
                 self.homeTeamInfo().teamName(),
                 0, 0, 0, 0, 0, 0
             );
-            let awayTeamPlayStat = new GamePlayStatRecord(
+            let awayTeamPlayStat = new MODULES.Constructors.GamePlayStatRecord(
                 self.awayTeamID(),
                 self.awayTeamInfo().teamName(),
                 0, 0, 0, 0, 0, 0
@@ -698,7 +685,7 @@ $(function () {
                     reverse = -1;
                 if (i === min)
                     reverse = 1;
-            }, _kickoffSliderDifficulty);
+            }, MODULES.GameVariables.KickoffSliderDifficulty);
 
             //setup angle slider movement
             self.kickoffAngleSliderIntervalId = window.setInterval(function () {
@@ -707,15 +694,15 @@ $(function () {
                     reverse = -1;
                 if (i === min)
                     reverse = 1;
-            }, _kickoffSliderDifficulty);
+            }, MODULES.GameVariables.KickoffSliderDifficulty);
         };
         self.ShowHideSpecialTeamsMenu = function () {
             //show/hide special teams menu depending on down
             if (self.currentDown() === 4) {
-                $('#specialTeamsMenu').addClass(SHOW_SPECIAL_TEAMS_CLASS);
+                $('#specialTeamsMenu').addClass(MODULES.Constants.SHOW_SPECIAL_TEAMS_CLASS);
             }
             else {
-                $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
+                $('#specialTeamsMenu').removeClass(MODULES.Constants.SHOW_SPECIAL_TEAMS_CLASS);
             }
         };
         self.ChangePossession = function () {
@@ -862,7 +849,7 @@ var gameDice = {
             diceSum += randInt;
         }
 
-        _diceSumTotal = diceSum;
+        MODULES.GameVariables.DiceSumTotal = diceSum;
 
         //display results:    
         gameDice.display(dice, diceSum);
@@ -901,7 +888,7 @@ var playMaker = {
 
     display: function (playText) {
         $("#playResult").text(playText);
-        $("#playCount").text(_totalPlayCount);
+        $("#playCount").text(MODULES.GameVariables.TotalPlayCount);
     },
 
     getPlayResult: function (playSelected) {
@@ -921,10 +908,10 @@ var playMaker = {
 
         //TODO: add chance for fumbles and interceptions
         //TODO: add chance for muffed punt or punt block/return or field goal block/return
-        if (_diceSumTotal >= 7)
+        if (MODULES.GameVariables.DiceSumTotal >= 7)
             _positiveYards = true;
 
-        if (_diceSumTotal <= 3)
+        if (MODULES.GameVariables.DiceSumTotal <= 3)
             _negativeYards = true;
 
         //HANDLE EXTRA POINT (after touchdown) PLAYS:
@@ -934,9 +921,9 @@ var playMaker = {
             self.SetupKickoff();
 
             //TWO POINT CONVERSION:
-            if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION && _diceSumTotal >= 6) {
+            if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION && MODULES.GameVariables.DiceSumTotal >= 6) {
                 _yards = getRandomInt(1, 4); //need two yards for 2 point conversion
-                if (_yards >= TWO_POINT_CONVERSION_SPOT) {
+                if (_yards >= MODULES.Constants.TWO_POINT_CONVERSION_SPOT) {
                     _playResultText = _playResultText + ' SUCCESSFUL';
                     playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
                 }
@@ -1008,7 +995,7 @@ var playMaker = {
         }
 
         console.log('YARDS: ' + _yards);
-        let playResult = new PlayResult(_yards, _playResultText, turnover, playSelected);
+        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected);
 
         //set the new position of the ball (if not kicking fieldgoal, extrapoint, or two point conversion):
         if (playSelected !== 'fieldGoal' && playSelected !== 'extraPoint' && playSelected !== 'twoPointConversion') {
@@ -1041,7 +1028,7 @@ var playMaker = {
         let _yards = convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle);
         let _returnYards = 0;
         let _kickoffResultText = UTILITIES.splitAndTitleCase(kickoffType);
-        let ballKickOffSpot = KICKOFF_SPOT; //set ball Spot Start at 35 yard line        
+        let ballKickOffSpot = MODULES.Constants.KICKOFF_SPOT; //set ball Spot Start at 35 yard line        
         let isTouchback = false; //flag to determine when touchback occurs
         let isPenalty = false; //flag to determine when there is a penalty on the kickoff
         let isReturnTypeKickoff = kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.PUNT || kickoffType === KICKOFF_TYPES.SAFETY;
@@ -1054,10 +1041,10 @@ var playMaker = {
             ballKickOffSpot = self.currentBallSpot();
         }
         if (self.isSafety()) {
-            ballKickOffSpot = SAFETY_KICKOFF_SPOT;
+            ballKickOffSpot = MODULES.Constants.SAFETY_KICKOFF_SPOT;
         }
         if (self.isExtraPointKick()) {
-            ballKickOffSpot = EXTRA_POINT_KICK_SPOT;
+            ballKickOffSpot = MODULES.Constants.EXTRA_POINT_KICK_SPOT;
         }
         
         let totalMaxKickWithoutTouchback = 100 - ballKickOffSpot; //variable used in calculations below for determining max return yards etc.
@@ -1135,7 +1122,7 @@ var playMaker = {
             //handle field goals and extra point kicks very similarly
             if (chanceOfBlock > 6) {
                 //need 25 yards for good extra point
-                if (_yards > totalMaxKickWithoutTouchback + END_ZONE_YARDS) {
+                if (_yards > totalMaxKickWithoutTouchback + MODULES.Constants.END_ZONE_YARDS) {
                     _kickoffResultText += ' GOOD';                    
                     playMaker.addScore(kickoffType);
                 }
@@ -1200,7 +1187,7 @@ var playMaker = {
         console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
 
         //create a play result and record it in the play history
-        let kickoffResult = new PlayResult(_yards, _kickoffResultText);
+        let kickoffResult = new MODULES.Constructors.PlayResult(_yards, _kickoffResultText);
 
         //record/show play results       
         self.currentTeamWithBall(kickingTeam); //set current team with ball to kickoff team briefly to record the correct team name in the history
@@ -1215,7 +1202,7 @@ var playMaker = {
                 if (isTouchback) {
                     _returnPlayText += ' - TOUCHBACK';
                     //set ball at 20 yard line when a touchback occurs
-                    _yards = TOUCHBACK_YARD_LINE;
+                    _yards = MODULES.Constants.TOUCHBACK_YARD_LINE;
                 }
 
                 ////home is left end-zone, away is right
@@ -1240,7 +1227,7 @@ var playMaker = {
             //TODO: Handle return for Touchdown 
 
             //create a play result and record it in the play history
-            let returnResult = new PlayResult(_returnYards, _returnPlayText);
+            let returnResult = new MODULES.Constructors.PlayResult(_returnYards, _returnPlayText);
             self.currentTeamWithBall(receivingTeam); //set back to receiving team for proper team in play history
             playMaker.recordPlay(returnResult);
         }
@@ -1297,7 +1284,7 @@ var playMaker = {
     },
 
     recordPlay: function (thisPlaysResult) {
-        let team = $.grep(_teams, function (team) { return team.teamId === self.currentTeamWithBall(); })[0]; //get the current team making the play
+        let team = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === self.currentTeamWithBall(); })[0]; //get the current team making the play
         let pluralizer = 's';
 
         if (thisPlaysResult.yards === 1 || thisPlaysResult.yards === -1)
@@ -1306,8 +1293,8 @@ var playMaker = {
         let yardsText = thisPlaysResult.yards.toString() + " Yard" + pluralizer;
         console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
-        //PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot
-        self.AddPlayHistory(new PlayHistory(self.teamPlayHistory().length + 1, self.currentTeamWithBall(),
+        //MODULES.Constructors.PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot
+        self.AddPlayHistory(new MODULES.Constructors.PlayHistory(self.teamPlayHistory().length + 1, self.currentTeamWithBall(),
             team.teamName(),
             HELPERS.getDownText(self.currentDown(), self.yardsToFirst()),
             self.playCountForPossession(),
@@ -1325,7 +1312,7 @@ var playMaker = {
     },
 
     recordGameStats: function (team, thisPlaysResult) {
-        let playStatsRecord = new GamePlayStatRecord(team.teamId, team.teamName, 1, 0, 0, self.timeOfPossession(), 0, 0); //construct new GamePlayStatRecord
+        let playStatsRecord = new MODULES.Constructors.GamePlayStatRecord(team.teamId, team.teamName, 1, 0, 0, self.timeOfPossession(), 0, 0); //construct new GamePlayStatRecord
 
         if (thisPlaysResult.playType === GAME_PLAY_TYPES.RUN) {
             playStatsRecord.totalYardsRushing = thisPlaysResult.yards;
@@ -1353,7 +1340,7 @@ var playMaker = {
 
             playMaker.recordPlay(thisPlaysResult);
 
-            _totalPlayCount += 1;
+            MODULES.GameVariables.TotalPlayCount += 1;
         } else {
             self.hasRolled(true);
             alert('Choose a play');
@@ -1362,7 +1349,7 @@ var playMaker = {
 
     playAfterTouchdown: function () {
         let playSelected = $('input[name=afterTDPlay]:checked').val();
-        let spot = EXTRA_POINT_KICK_SPOT;
+        let spot = MODULES.Constants.EXTRA_POINT_KICK_SPOT;
 
         self.yardsTraveled(0); //reset yards traveled since team already got TD
         self.pointAttemptAfterTouchDown(false); //reset point after attempt flag
@@ -1373,7 +1360,7 @@ var playMaker = {
             self.SetupKickoff();
         }
         else if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
-            spot = TWO_POINT_CONVERSION_SPOT;
+            spot = MODULES.Constants.TWO_POINT_CONVERSION_SPOT;
         }
 
         self.ballSpotStart(spot);
@@ -1513,9 +1500,9 @@ function convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle) {
         //max kickoff before touchback = 65yds
         let distanceToEndZone = function () {
             if (kickoffType === KICKOFF_TYPES.SAFETY)
-                return 100 - SAFETY_KICKOFF_SPOT;
+                return 100 - MODULES.Constants.SAFETY_KICKOFF_SPOT;
             else
-                return 100 - KICKOFF_SPOT;
+                return 100 - MODULES.Constants.KICKOFF_SPOT;
         }();
         
         //normal kickoff with a power greater than 80 will result in touchback
@@ -1555,18 +1542,6 @@ function convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle) {
     console.log('KICKOFF: Type: %s, Power: %s, Angle: %s, Angle subtractor: %s, Yards: ', kickoffType, kickoffPower, kickoffAngle, angleSubtractor, kickoffYards);
 
     return kickoffYards - angleSubtractor;
-}
-
-function getFullTeamName(teamName, teamId) {
-    if (!teamName)
-        return '';
-
-    if (self.awayTeamID() === teamId) {
-        return teamName + ' (away)';
-    }
-    else {
-        return teamName + ' (home)';
-    }
 }
 
 //STORAGE FUNCTIONS Source: https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API

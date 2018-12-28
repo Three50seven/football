@@ -30,7 +30,7 @@
     self.gameBoxScore = ko.observableArray();
     self.needCoinToss = ko.observable(true); //determines when coin toss is needed        
     self.CloseSpecialTeamsMenu = function () {
-        $('#specialTeamsMenu').removeClass(SHOW_SPECIAL_TEAMS_CLASS);
+        $('#specialTeamsMenu').removeClass(MODULES.Constants.SHOW_SPECIAL_TEAMS_CLASS);
     };
     self.ClearCoinColors = function () {
         //clear class on current coin

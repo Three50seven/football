@@ -37,5 +37,16 @@
     },
     splitAndTitleCase: function (str) {
         return UTILITIES.titleCase(UTILITIES.splitCamelCase(str));
+    },
+    getFullTeamName: function (teamName, teamId) {
+        if (!teamName)
+            return '';
+
+        if (self.awayTeamID() === teamId) {
+            return teamName + ' (away)';
+        }
+        else {
+            return teamName + ' (home)';
+        }
     }
 };

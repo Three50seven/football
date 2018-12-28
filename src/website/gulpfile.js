@@ -198,7 +198,7 @@ function BundleJS(newerOnly) {
                         }
                     })
                     .pipe(concat(dest))
-                    .pipe(uglify())
+                    .pipe(uglify()) //COMMENT OUT pipe(uglify()) SECTION TO PREVENT MINIFYING OF JAVASCRIPT FILES (MIGHT HAVE TO DELETE MIN FILE IN wwwroot\content\js\ SUB-DIRECTORIES
                         .on('error', function (e) {
                             console.log(e);
                         })
@@ -220,7 +220,7 @@ function BundleJS(newerOnly) {
 gulp.task("bundle-js", function () {
 
     var bundlingArguments = {
-        // flag to only updated bundle files if the script file is newer
+        // flag to only update bundle files if the script file is newer
         // defaulted to "true" for quicker local builds
         // process.argv.newerOnly is an optional parameter to set this value - intended as part of CI/build process
         NewerOnly: new BoolArgument(process.argv, "--newerOnly", true)

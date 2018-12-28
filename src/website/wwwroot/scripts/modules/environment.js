@@ -1,4 +1,4 @@
-﻿//TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
+//TODO: 11/5/2018 - THIS IS NOT CUSTOMIZED FOR THIS PROJECT
 MODULES.Environment = (function () {
 
     function IsDebug() {

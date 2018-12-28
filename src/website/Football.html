@@ -13,9 +13,8 @@ internet zone change to: url=(0014)about:internet-->
         <link rel="stylesheet" type="text/css" href="wwwroot/content/css/styles.min.css"
         media="screen" />
         <title>Football: A Game of American Football in JavaScript</title>
-        <!--Football:
-        A Game of American Football in JavaScript-->
-        <!--initialize objects for JavaScript-->
+        <!--initialize
+        objects for JavaScript-->
         <script type="text/javascript">
             var MODULES = {}; MODULES.UI = {}; var COMPONENTS = {}; var USER = {};
         </script>
@@ -109,7 +108,7 @@ internet zone change to: url=(0014)about:internet-->
                         </div>
                         <!--EMBELISH: Maybe animate selections: something like: https://www.w3schools.com/jquery/tryit.asp?filename=tryjquery_animation2
                         -->
-                        <div class="team-select-container" data-bind="foreach: _teams">
+                        <div class="team-select-container" data-bind="foreach: MODULES.GameVariables.Teams">
                             <div class="team-name-select" data-bind="class: teamBgColor()">
                                 <!--TODO/EMBELISH: Make team selected more noticeable - maybe add animation
                                 to selected-team class-->

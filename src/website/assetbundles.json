@@ -13,6 +13,7 @@
       "scripts/modules/constants.js",
       "scripts/modules/environment.js",
       "scripts/modules/constructors.js",
+      "scripts/modules/game.variables.js",
       "scripts/modules/lookup.types.js"
     ]
   },

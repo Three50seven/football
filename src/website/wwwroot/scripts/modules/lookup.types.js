@@ -1,4 +1,4 @@
-﻿//LOOKUP TYPES:
+//LOOKUP TYPES:
 //TODO: Use these instead of relying on 'magic' strings
 var KICKOFF_TYPES = {
     KICKOFF: 'kickoff',
