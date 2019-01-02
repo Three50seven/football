@@ -10,7 +10,7 @@
         if (self.yardsToTouchdown() <= self.yardsToFirst())
             yardsToFirstText = 'GOAL';
 
-        return getNumberWithEnding(playAttempt) + ' & ' + yardsToFirstText;
+        return UTILITIES.getNumberWithEnding(playAttempt) + ' & ' + yardsToFirstText;
     },
 
     getYardText: function () {

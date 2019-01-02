@@ -31,7 +31,8 @@
     "name": "knockout-bundle",
     "subpath": "lib",
     "files": [
-      "scripts/libraries/Knockout/knockout-3.4.2.js"
+      "scripts/libraries/Knockout/knockout-3.4.2.js",
+      "scripts/custom-bindings/knockout/knockout.bindings.js"
     ]
   },
   {
@@ -45,15 +46,73 @@
     "name": "utilities-bundle",
     "subpath": "utilities",
     "files": [
-      "scripts/utilities/game.helpers.js",
-      "scripts/utilities/utilities.js"
+      "scripts/utilities/utilities.js",
+      "scripts/utilities/game.helpers.js"
+    ]
+  },
+  {
+    "name": "team-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/team/hometeam.model.js",
+      "scripts/view-models/team/awayteam.model.js"
+    ]
+  },
+  {
+    "name": "dice-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/dice/dice.js",
+      "scripts/view-models/dice/dice.model.js"
+    ]
+  },
+  {
+    "name": "game-stat-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/game-stats/boxscore.model.js",
+      "scripts/view-models/game-stats/stats.model.js"
+    ]
+  },
+  {
+    "name": "play-maker-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/play-maker/playmaker.js",
+      "scripts/view-models/play-maker/playmaker.model.js",
+      "scripts/view-models/play-maker/kickoff.js",
+      "scripts/view-models/play-maker/kickoff.model.js"
+    ]
+  },
+  {
+    "name": "field-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/field/field.model.js",
+      "scripts/view-models/field/ballposition.model.js"
+    ]
+  },
+  {
+    "name": "storage-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/storage/storage.js",
+      "scripts/view-models/storage/storage.model.js"
     ]
   },
   {
     "name": "main-game-bundle",
     "subpath": "viewmodels",
     "files": [
+      "team-bundle",
+      "field-bundle",
+      "scripts/view-models/coin/coin.model.js",
+      "scripts/view-models/timer/timer.model.js",
       "scripts/view-models/main.game.model.js",
+      "game-stat-bundle",
+      "dice-bundle",
+      "play-maker-bundle",
+      "storage-bundle",
       "scripts/view-models/football.js"
     ]
   }

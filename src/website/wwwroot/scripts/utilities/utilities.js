@@ -1,4 +1,23 @@
 ﻿var UTILITIES = {
+    getRandomInt: function(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    },
+    getNumberWithEnding: function(number) {
+        //just return 0 if anything less than 1 is passed in
+        if (number <= 0)
+            return 0;
+        //get the 'th' numbers first since this covers the majority:
+        if (number % 100 === 10 || number % 100 === 11 || number % 100 === 12 || number % 100 === 13
+            || number % 10 === 4 || number % 10 === 5 || number % 10 === 6 || number % 10 === 7
+            || number % 10 === 8 || number % 10 === 9 || number % 10 === 0)
+            return number.toString() + 'th';
+        if (number % 10 === 1)
+            return number.toString() + 'st';
+        if (number % 10 === 2)
+            return number.toString() + 'nd';
+        if (number % 10 === 3)
+            return number.toString() + 'rd';
+    },
     //note, only works for minutes/seconds as of writing of function and needs at the time
     getTimeDisplay: function (timeSeconds) {
         console.log('timeSeconds: %s', timeSeconds);
