@@ -243,7 +243,7 @@
             //handle field goals and extra point kicks very similarly
             if (chanceOfBlock > 6) {
                 //need 25 yards for good extra point
-                if (_yards > totalMaxKickWithoutTouchback + MODULES.Constants.END_ZONE_YARDS) {
+                if (_yards > ballKickOffSpot + MODULES.Constants.END_ZONE_YARDS) {
                     _kickoffResultText += ' GOOD';
                     playMaker.addScore(kickoffType);
                 }
