@@ -2,8 +2,8 @@
   {
     "name": "styles",
     "files": [
-      "content/css/main.css",
-      "content/css/team-colors.css"
+      "styles/main.css",
+      "styles/team-colors.css"
     ]
   },
   {
@@ -20,7 +20,7 @@
   {
     "name": "jquery-source",
     "subpath": "lib",
-    "filename": "jquery.min.js",
+    "outputfilename": "jquery.min.js",
     "referenceOnly": true,
     "staticOutputPath": "scripts/libraries/JQuery/jquery-3.3.1.min.js",
     "files": [
