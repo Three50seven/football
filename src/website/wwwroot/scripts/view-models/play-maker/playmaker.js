@@ -35,7 +35,7 @@
         if (MODULES.GameVariables.DiceSumTotal <= 3)
             _negativeYards = true;
 
-        //HANDLE EXTRA POINT (after touchdown) PLAYS:
+        //HANDLE TWO POINT CONVERSION (after touchdown) PLAYS:
         if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
             turnover = true; //always change possession after extra point attempts
             self.isKickoff(true);
@@ -239,7 +239,7 @@
                 }
             }
         }
-        else if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {
+        else if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {            
             //handle field goals and extra point kicks very similarly
             if (chanceOfBlock > 6) {
                 //need 25 yards for good extra point
@@ -358,6 +358,14 @@
 
         //setup for next kickoff
         playMaker.resetKickoffFlags(kickoffType);
+
+        //if it's an extrapoint or fieldgoal, we need to kick the ball off after the attempt:
+        if (!isReturnTypeKickoff) {
+            self.yardsToFirst(10); //reset yards to first for next set of downs
+            self.currentDown(1); //reset to first down
+            self.isKickoff(true);
+            self.SetupKickoff();
+        }
     },
 
     resetKickoffFlags: function (kickoffType) {
