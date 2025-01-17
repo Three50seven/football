@@ -567,6 +567,11 @@ input[type="radio"][name="selectCoinTossWinner"] {
     border-radius: 50%;
 }
 
+.team-tiny-img {
+    width: 20px;
+    height: 20px;
+}
+
 .selected-team {
     font-size: 42px;
     /*outline: 1px solid #4CAF50;*/

@@ -4,7 +4,8 @@
     //GENERAL GAME VARIABLES:
     self.gameStarted = ko.observable(false); //flag, when true, indicates all game setup is complete (e.g. teams selected, etc.)    
     self.currentDown = ko.observable(1);    
-    self.playCountForPossession = ko.observable(1);    
+    self.playCountForPossession = ko.observable(1); 
+    self.gameSimulated = ko.observable(false);
     
     //GENERAL GAME FUNCTIONS:
     self.teamsPicked = ko.computed(function () {
@@ -51,6 +52,7 @@
         self.ClearCoinColors();
         self.homeTeamID(0);
         self.awayTeamID(0);
+        self.gameSimulated(false);
         console.log('TEAMS RESET');
     };
     self.CloseSpecialTeamsMenu = function () {

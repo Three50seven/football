@@ -85,6 +85,14 @@
     ]
   },
   {
+    "name": "sim-bundle",
+    "subpath": "viewmodels",
+    "files": [
+      "scripts/view-models/sim/sim.js",
+      "scripts/view-models/sim/sim.model.js"
+    ]
+  },
+  {
     "name": "field-bundle",
     "subpath": "viewmodels",
     "files": [
@@ -113,6 +121,7 @@
       "dice-bundle",
       "play-maker-bundle",
       "storage-bundle",
+      "sim-bundle",
       "scripts/view-models/football.js"
     ]
   }

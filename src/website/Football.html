@@ -99,12 +99,10 @@ internet zone change to: url=(0014)about:internet-->
                     <div data-bind="visible: !coinTossValue() > 0">
                         <div class="teams-picked">Teams Picked:
                             <br />
-                            <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0"
-                            /> <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : '[Pick the Away Team]'"></span>at
-                            <span
-                            data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : '[Pick the Home Team]'"></span>
-                                <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"
-                                />
+                            <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0"/>                             <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : '[Pick the Away Team]'"></span>
+                            <span> at </span>
+                            <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : '[Pick the Home Team]'"></span>
+                            <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
                         </div>
                         <!--EMBELISH: Maybe animate selections: something like: https://www.w3schools.com/jquery/tryit.asp?filename=tryjquery_animation2
                         -->
@@ -122,26 +120,55 @@ internet zone change to: url=(0014)about:internet-->
                     <div data-bind="visible: teamsPicked()">
                         <div data-bind="visible: !coinTossValue() > 0">
                             <button class="btn-default" style="margin-top:5px" id="resetTeams" data-bind="click: ResetTeams">Reset Teams</button>
+                            <button class="btn-default" style="margin-top:5px" data-bind="click: SimGame">Sim Game</button>
                             <br />
-                            <br /> <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span>,
-                            choose heads or tails:
-                            <br>
-                            <label>
-                                <input type="radio" name="selectCoinSide" value="1" checked="checked"
-                                data-bind="click: ChooseCoinSide">Heads</label>
-                            <label>
-                                <input type="radio" name="selectCoinSide" value="2" data-bind="click: ChooseCoinSide">Tails</label>
-                            <br />
-                            <br />
-                            <div id="coinBox">
-                                <div id="coin" data-bind="click: TossCoin">
-                                    <div class="side-a">
-                                        <br />
-                                        <br /><span class="side-txt" id="side-a-txt"></span> (heads)</div>
-                                    <div class="side-b">
-                                        <br />
-                                        <br /><span class="side-txt" id="side-b-txt"></span> (tails)</div>
+                            <div data-bind="visible: !gameSimulated()">
+                                <br /> <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span>,
+                                choose heads or tails:
+                                <br>
+                                <label>
+                                    <input type="radio" name="selectCoinSide" value="1" checked="checked"
+                                           data-bind="click: ChooseCoinSide">Heads
+                                </label>
+                                <label>
+                                    <input type="radio" name="selectCoinSide" value="2" data-bind="click: ChooseCoinSide">Tails
+                                </label>
+                                <br />
+                                <br />
+                                <div id="coinBox">
+                                    <div id="coin" data-bind="click: TossCoin">
+                                        <div class="side-a">
+                                            <br />
+                                            <br /><span class="side-txt" id="side-a-txt"></span> (heads)
+                                        </div>
+                                        <div class="side-b">
+                                            <br />
+                                            <br /><span class="side-txt" id="side-b-txt"></span> (tails)
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+                            <div data-bind="visible: gameSimulated()">
+                                <h2>Simulation Results:</h2>
+                                <br />
+                                <table>                                   
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0" />
+                                                <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span> :
+                                                <span data-bind="text: awayTeamScore()"></span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0" />
+                                                <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : 'Home team'"></span> :
+                                                <span data-bind="text: homeTeamScore()"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         <div data-bind="visible: coinTossValue() > 0"> <span class="coin-toss-result" data-bind="text: coinTossResultText"></span>
