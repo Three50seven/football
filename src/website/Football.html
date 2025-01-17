@@ -148,27 +148,56 @@ internet zone change to: url=(0014)about:internet-->
                                     </div>
                                 </div>
                             </div>
-                            <div data-bind="visible: gameSimulated()">
-                                <h2>Simulation Results:</h2>
-                                <br />
-                                <table>                                   
-                                    <tbody>
+                            <div data-bind="visible: gameSimulated()">                                
+                                <br><span class="white">Sim Box Score:</span>
+                                <table class="football-stats">
+                                    <thead>
                                         <tr>
-                                            <td>
-                                                <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0" />
-                                                <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span> :
-                                                <span data-bind="text: awayTeamScore()"></span>
-                                            </td>
+                                            <th>Team</th>
+                                            <th>
+                                                1<sup>st</sup>
+                                            </th>
+                                            <th>
+                                                2<sup>nd</sup>
+                                            </th>
+                                            <th>
+                                                3<sup>rd</sup>
+                                            </th>
+                                            <th>
+                                                4<sup>th</sup>
+                                            </th>
+                                            <th>OT</th>
+                                            <th>TOTAL SCORE</th>
                                         </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: simBoxScore">
                                         <tr>
                                             <td>
-                                                <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0" />
-                                                <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : 'Home team'"></span> :
-                                                <span data-bind="text: homeTeamScore()"></span>
+                                                <img class="team-tiny-img" data-bind="attr:{src: teamImagePath}" />
+                                                <span data-bind="text: fullTeamName"></span>
+                                            </td>
+                                            <td>
+                                                <span data-bind="text: firstQuarterScore"></span>
+                                            </td>
+                                            <td>
+                                                <span data-bind="text: secondQuarterScore"></span>
+                                            </td>
+                                            <td>
+                                                <span data-bind="text: thirdQuarterScore"></span>
+                                            </td>
+                                            <td>
+                                                <span data-bind="text: fourthQuarterScore"></span>
+                                            </td>
+                                            <td>
+                                                <span data-bind="text: overtimeScore"></span>
+                                            </td>
+                                            <td>
+                                                <span data-bind="text: totalScore"></span>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
+                                <br />
                             </div>
                         </div>
                         <div data-bind="visible: coinTossValue() > 0"> <span class="coin-toss-result" data-bind="text: coinTossResultText"></span>
@@ -443,7 +472,7 @@ internet zone change to: url=(0014)about:internet-->
                                             </td>
                                             <td><span data-bind="text: overtimeScore"></span>
                                             </td>
-                                            <td><span data-bind="text: totalScore()"></span>
+                                            <td><span data-bind="text: totalScore"></span>
                                             </td>
                                         </tr>
                                     </tbody>

@@ -1,8 +1,9 @@
 (function ($) {
     var self = this;    
+    self.simBoxScore = ko.observableArray();
 
     self.SimGame = function () {
         self.gameSimulated(true);
-        sim.init();
+        sim.simGame();
     };
 })(jQuery);

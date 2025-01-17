@@ -67,5 +67,16 @@
         else {
             return teamName + ' (home)';
         }
+    },
+    getTeamImagePath: function (teamId) {
+        if (!teamId)
+            return '';
+
+        if (self.awayTeamID() === teamId) {
+            return self.awayTeamInfo().teamImage();
+        }
+        else {
+            return self.homeTeamInfo().teamImage();
+        }
     }
 };

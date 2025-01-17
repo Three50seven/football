@@ -8,12 +8,12 @@
         let homeBoxScore = new MODULES.Constructors.GameBoxScoreRecord(
             self.homeTeamID(),
             self.homeTeamInfo().teamName(),
-            0, 0, 0, 0, 0
+            0, 0, 0, 0, 0, 0
         );
         let awayBoxScore = new MODULES.Constructors.GameBoxScoreRecord(
             self.awayTeamID(),
             self.awayTeamInfo().teamName(),
-            0, 0, 0, 0, 0
+            0, 0, 0, 0, 0, 0
         );
 
         self.gameBoxScore.push(homeBoxScore);

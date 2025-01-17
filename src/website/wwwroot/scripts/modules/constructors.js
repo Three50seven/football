@@ -13,7 +13,7 @@ MODULES.Constructors = (function () {
             this.fullTeamName = UTILITIES.getFullTeamName(this.teamName, this.teamId);
             this.totalTimePossessionDisplay = UTILITIES.getTimeDisplay(this.totalTimePossession); //TODO: BUG, Not correctly displaying time as 00:00
         },
-        GameBoxScoreRecord: function (teamId, teamName, firstQuarterScore, secondQuarterScore, thirdQuarterScore, fourthQuarterScore, overtimeScore) {
+        GameBoxScoreRecord: function (teamId, teamName, firstQuarterScore, secondQuarterScore, thirdQuarterScore, fourthQuarterScore, overtimeScore, totalScore) {
             this.teamId = teamId;
             this.teamName = teamName;
             this.firstQuarterScore = firstQuarterScore;
@@ -22,16 +22,8 @@ MODULES.Constructors = (function () {
             this.fourthQuarterScore = fourthQuarterScore;
             this.overtimeScore = overtimeScore;
             this.fullTeamName = UTILITIES.getFullTeamName(this.teamName, this.teamId);
-            this.totalScore = function () { //TODO: BUG, ADDING SINGLE SCORE FOR EACH QUARTER INSTEAD OF GETTING TOTAL
-                let first = this.firstQuarterScore ? this.firstQuarterScore : 0;
-                let second = this.firstQuarterScore ? this.firstQuarterScore : 0;
-                let third = this.firstQuarterScore ? this.firstQuarterScore : 0;
-                let fourth = this.firstQuarterScore ? this.firstQuarterScore : 0;
-                let ot = this.firstQuarterScore ? this.firstQuarterScore : 0;
-
-                //return sum of all quarters for total
-                return first + second + third + fourth + ot;
-            };
+            this.totalScore = totalScore;
+            this.teamImagePath = UTILITIES.getTeamImagePath(this.teamId);
         },
         PlayResult: function (yards, playText, isTurnover = false, playType = '') {
             this.yards = yards;
