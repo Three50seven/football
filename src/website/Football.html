@@ -99,7 +99,8 @@ internet zone change to: url=(0014)about:internet-->
                     <div data-bind="visible: !coinTossValue() > 0">
                         <div class="teams-picked">Teams Picked:
                             <br />
-                            <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0"/>                             <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : '[Pick the Away Team]'"></span>
+                            <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0"/> 
+                            <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : '[Pick the Away Team]'"></span>
                             <span> at </span>
                             <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : '[Pick the Home Team]'"></span>
                             <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
@@ -148,7 +149,7 @@ internet zone change to: url=(0014)about:internet-->
                                     </div>
                                 </div>
                             </div>
-                            <div data-bind="visible: gameSimulated()">                                
+                            <div data-bind="visible: gameSimulated()">
                                 <br><span class="white">Sim Box Score:</span>
                                 <table class="football-stats">
                                     <thead>
@@ -197,6 +198,10 @@ internet zone change to: url=(0014)about:internet-->
                                         </tr>
                                     </tbody>
                                 </table>
+                                <br />
+                                <!--<span class="white">Game Summary:</span>
+                                <br />
+                                <span data-bind="html: simGameSummary"></span>-->
                                 <br />
                             </div>
                         </div>

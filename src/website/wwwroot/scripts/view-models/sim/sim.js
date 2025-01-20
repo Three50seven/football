@@ -5,12 +5,11 @@ var sim = {
         //show results        
         let gameScore = sim.simScore();
 
-        self.homeTeamScore(gameScore.team1.total);
-        self.awayTeamScore(gameScore.team2.total);
+        self.homeTeamScore(gameScore.homeTeam.total);
+        self.awayTeamScore(gameScore.awayTeam.total);
 
         sim.displayBoxScore(gameScore);
-        console.log(`Home Team: (${self.homeTeamInfo().teamCityAndName()}): ${gameScore.team1.total}, Quarters: ${gameScore.team1.quarters}, Overtime: ${gameScore.team1.overtime}`);
-        console.log(`Away Team: (${self.awayTeamInfo().teamCityAndName()}): ${gameScore.team2.total}, Quarters: ${gameScore.team2.quarters}, Overtime: ${gameScore.team2.overtime}`);
+        sim.generateGameSummary(gameScore);
     },
     simScore: function () {
         // Helper function to generate a random number based on a normal distribution and average score (per 2024 season)
@@ -80,47 +79,47 @@ var sim = {
         }
 
         // Generate scores for both teams
-        let team1Quarters = generateQuarterScores();
-        let team2Quarters = generateQuarterScores();
+        let homeTeamQuarters = generateQuarterScores();
+        let awayTeamQuarters = generateQuarterScores();
 
         // Apply home team advantage to each quarter
-        team1Quarters = team1Quarters.map(score => score + Math.round(score * homeTeamAdvantage));
+        homeTeamQuarters = homeTeamQuarters.map(score => score + Math.round(score * homeTeamAdvantage));
 
         // Calculate total scores
-        let team1Score = team1Quarters.reduce((a, b) => a + b, 0);
-        let team2Score = team2Quarters.reduce((a, b) => a + b, 0);
+        let homeTeamScore = homeTeamQuarters.reduce((a, b) => a + b, 0);
+        let awayTeamScore = awayTeamQuarters.reduce((a, b) => a + b, 0);
 
         // Check for overtime
         let overtime = null;
-        if (team1Score === team2Score) {
-            let tieBreaker = UTILITIES.getRandomInt(1, 2) === 1;
+        if (homeTeamScore === awayTeamScore) {
+            let tieBreaker = UTILITIES.getRandomInt(1, 2);
             overtime = {
-                team1: generateOvertimeScore(),
-                team2: generateOvertimeScore()
+                homeTeam: generateOvertimeScore(),
+                awayTeam: generateOvertimeScore()
             };
             // Ensure non-negative overtime scores and prevent 1 or both teams from having 6, use tie breaker if both teams have 6 since they can't both score a touchdown
-            if (overtime.team1 === 1) overtime.team1 = 3;
-            if (overtime.team2 === 1) overtime.team2 = 3;
-            if ((overtime.team1 === 6 && overtime.team2 === 6) ||
-                (overtime.team1 === 2 && overtime.team2 === 2)){ //if a team scores a safety, the same is over as well
+            if (overtime.homeTeam === 1) overtime.homeTeam = 3;
+            if (overtime.awayTeam === 1) overtime.awayTeam = 3;
+            if ((overtime.homeTeam === 6 && overtime.awayTeam === 6) ||
+                (overtime.homeTeam === 2 && overtime.awayTeam === 2)){ //if a team scores a safety, the game is over as well
                 if (tieBreaker === 1) {
-                    overtime.team2 = 0;
+                    overtime.awayTeam = 0;
                 } else {
-                    overtime.team1 = 0;
+                    overtime.homeTeam = 0;
                 }
             }
         }
 
         return {
-            team1: {
-                total: team1Score + (overtime ? overtime.team1 : 0),
-                quarters: team1Quarters,
-                overtime: overtime ? overtime.team1 : null
+            homeTeam: {
+                total: homeTeamScore + (overtime ? overtime.homeTeam : 0),
+                quarters: homeTeamQuarters,
+                overtime: overtime ? overtime.homeTeam : null
             },
-            team2: {
-                total: team2Score + (overtime ? overtime.team2 : 0),
-                quarters: team2Quarters,
-                overtime: overtime ? overtime.team2 : null
+            awayTeam: {
+                total: awayTeamScore + (overtime ? overtime.awayTeam : 0),
+                quarters: awayTeamQuarters,
+                overtime: overtime ? overtime.awayTeam : null
             }
         };
     },
@@ -131,28 +130,115 @@ var sim = {
         boxScore.push(new MODULES.Constructors.GameBoxScoreRecord(
             self.homeTeamID(),
             self.homeTeamInfo().teamName(),
-            simResult.team1.quarters[0],
-            simResult.team1.quarters[1],
-            simResult.team1.quarters[2],
-            simResult.team1.quarters[3],
-            simResult.team1.overtime,
-            simResult.team1.total
+            simResult.homeTeam.quarters[0],
+            simResult.homeTeam.quarters[1],
+            simResult.homeTeam.quarters[2],
+            simResult.homeTeam.quarters[3],
+            simResult.homeTeam.overtime,
+            simResult.homeTeam.total
         ));
 
         // Add Team 2 (AWAY) scores
         boxScore.push(new MODULES.Constructors.GameBoxScoreRecord(
             self.awayTeamID(),
             self.awayTeamInfo().teamName(),
-            simResult.team2.quarters[0],
-            simResult.team2.quarters[1],
-            simResult.team2.quarters[2],
-            simResult.team2.quarters[3],
-            simResult.team2.overtime,
-            simResult.team2.total
+            simResult.awayTeam.quarters[0],
+            simResult.awayTeam.quarters[1],
+            simResult.awayTeam.quarters[2],
+            simResult.awayTeam.quarters[3],
+            simResult.awayTeam.overtime,
+            simResult.awayTeam.total
         ));
 
         self.simBoxScore(boxScore);
+    },
+    generateGameSummary: function (simResult) {
+        let homeTeam = self.homeTeamInfo().teamName();
+        let awayTeam = self.awayTeamInfo().teamName();
+        let totalHomeScore = simResult.homeTeam.total;
+        let totalAwayScore = simResult.awayTeam.total;
+        let summary = `Final Score: ${homeTeam} ${simResult.homeTeam.total} - ${awayTeam} ${simResult.awayTeam.total}<br />`;       
 
-        console.log('SIM BOX SCORE:', self.simBoxScore());
+        const homeWinSummaries = [
+            `The ${homeTeam} emerged victorious with a strong performance, especially in the crucial moments of the game.`,
+            `The ${homeTeam} dominated the field, securing a well-deserved win.`,
+            `The ${homeTeam} outplayed ${awayTeam} with a stellar performance.`,
+            `The ${homeTeam} clinched the victory with a last-minute surge.`,
+            `The ${homeTeam} showed great resilience to come out on top.`,
+            `The ${homeTeam} secured the win with a solid defense and strategic plays.`,
+            `The ${homeTeam} triumphed with an impressive display of skill.`,
+            `The ${homeTeam} took control of the game and never looked back.`,
+            `The ${homeTeam} delivered a commanding performance to win the game.`,
+            `The ${homeTeam} outscored ${awayTeam} in a thrilling match.`,
+            `The ${homeTeam} emerged as the clear winner with consistent scoring.`,
+            `The ${homeTeam} pulled off a remarkable victory with teamwork and determination.`,
+            `The ${homeTeam} edged out ${awayTeam} in a closely contested game.`,
+            `The ${homeTeam} prevailed with a strong finish in the final quarter.`,
+            `The ${homeTeam} secured the win with a balanced attack and solid defense.`,
+            `The ${homeTeam} outlasted ${awayTeam} in a hard-fought battle.`,
+            `The ${homeTeam} came out on top with a well-executed game plan.`,
+            `The ${homeTeam} won the game with a combination of skill and strategy.`,
+            `The ${homeTeam} emerged victorious with a dominant performance.`,
+            `The ${homeTeam} clinched the win with a decisive play in the final moments.`
+        ];
+
+        const awayWinSummaries = [
+            `The ${awayTeam} clinched the win with consistent scoring and a solid defense.`,
+            `The ${awayTeam} outperformed ${homeTeam} to secure the victory.`,
+            `The ${awayTeam} dominated the game with a strong offensive showing.`,
+            `The ${awayTeam} emerged victorious with a well-rounded performance.`,
+            `The ${awayTeam} took control of the game and never let go.`,
+            `The ${awayTeam} secured the win with a balanced attack and solid defense.`,
+            `The ${awayTeam} outscored ${homeTeam} in a thrilling match.`,
+            `The ${awayTeam} delivered a commanding performance to win the game.`,
+            `The ${awayTeam} showed great resilience to come out on top.`,
+            `The ${awayTeam} triumphed with an impressive display of skill.`,
+            `The ${awayTeam} outlasted ${homeTeam} in a hard-fought battle.`,
+            `The ${awayTeam} prevailed with a strong finish in the final quarter.`,
+            `The ${awayTeam} pulled off a remarkable victory with teamwork and determination.`,
+            `The ${awayTeam} emerged as the clear winner with consistent scoring.`,
+            `The ${awayTeam} took control of the game and never looked back.`,
+            `The ${awayTeam} won the game with a combination of skill and strategy.`,
+            `The ${awayTeam} secured the win with a solid defense and strategic plays.`,
+            `The ${awayTeam} edged out ${homeTeam} in a closely contested game.`,
+            `The ${awayTeam} emerged victorious with a dominant performance.`,
+            `The ${awayTeam} clinched the win with a decisive play in the final moments.`
+        ];
+
+        const tieSummaries = [
+            `The game ended in a thrilling tie, showcasing the evenly matched skills of both teams.`,
+            `Both teams fought hard, resulting in an exciting tie.`,
+            `The match concluded in a draw, reflecting the balanced competition.`,
+            `Neither team could pull ahead, ending the game in a tie.`,
+            `The game was a nail-biter, finishing in a well-deserved tie.`,
+            `Both teams displayed great effort, resulting in a tie.`,
+            `The evenly matched teams ended the game in a thrilling tie.`,
+            `The game concluded in a draw, with both teams showing equal prowess.`,
+            `A hard-fought battle ended in a tie, highlighting the teams' equal strengths.`,
+            `The game was a showcase of skill, ending in a balanced tie.`,
+            `Both teams gave it their all, resulting in an exciting tie.`,
+            `The match ended in a draw, with neither team able to secure the win.`,
+            `A thrilling game concluded in a tie, reflecting the teams' equal abilities.`,
+            `The game was a testament to both teams' skills, ending in a tie.`,
+            `Neither team could claim victory, resulting in a well-fought tie.`,
+            `The match ended in a draw, showcasing the teams' balanced competition.`,
+            `Both teams played exceptionally well, concluding the game in a tie.`,
+            `The game was a close contest, ending in a thrilling tie.`,
+            `A hard-fought match ended in a tie, highlighting the teams' equal strengths.`,
+            `The game concluded in a draw, with both teams showing equal prowess.`
+        ];
+
+        if (totalHomeScore > totalAwayScore) {
+            const randomIndex = Math.floor(Math.random() * homeWinSummaries.length);
+            summary += `<br />${homeWinSummaries[randomIndex]}`;
+        } else if (totalHomeScore < totalAwayScore) {
+            const randomIndex = Math.floor(Math.random() * awayWinSummaries.length);
+            summary += `<br />${awayWinSummaries[randomIndex]}`;
+        } else {
+            const randomIndex = Math.floor(Math.random() * tieSummaries.length);
+            summary += `<br />${tieSummaries[randomIndex]}`;
+        }
+
+        self.simGameSummary(summary);
     }
 };
