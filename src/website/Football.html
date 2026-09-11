@@ -455,16 +455,20 @@ internet zone change to: url=(0014)about:internet-->
                             <table id="playHistory" class="football-stats alt-color-tr">
                                 <thead>
                                     <tr>
+                                        <th>Quarter</th>
                                         <th>Team</th>
                                         <th>Down</th>
                                         <th># of Plays in Drive</th>
                                         <th>Total Yards for Play</th>
                                         <th>Play Result</th>
                                         <th>Spot of Ball</th>
+                                        <th>Time of Possession</th>
                                     </tr>
                                 </thead>
                                 <tbody data-bind="foreach: teamPlayHistory">
                                     <tr>
+                                        <td><span data-bind="text: quarter"></span>
+                                        </td>
                                         <td><span data-bind="text: fullTeamName"></span>
                                         </td>
                                         <td><span data-bind="text: down"></span>
@@ -476,6 +480,8 @@ internet zone change to: url=(0014)about:internet-->
                                         <td><span data-bind="text: playResult"></span>
                                         </td>
                                         <td><span data-bind="text: ballSpot"></span>
+                                        </td>
+                                        <td><span data-bind="text: timeOfPossessionDisplay"></span>
                                         </td>
                                     </tr>
                                 </tbody>

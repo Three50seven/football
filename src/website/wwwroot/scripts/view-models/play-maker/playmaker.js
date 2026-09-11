@@ -531,19 +531,21 @@
         let yardsText = thisPlaysResult.yards.toString() + " Yard" + pluralizer;
         console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
-        //MODULES.Constructors.PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot
+        //RECORD TIME OF POSSESSION (before logging, so the play history shows this play's time)
+        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards);
+
+        //MODULES.Constructors.PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession
         self.AddPlayHistory(new MODULES.Constructors.PlayHistory(self.teamPlayHistory().length + 1, self.currentTeamWithBall(),
             team.teamName(),
             HELPERS.getDownText(self.currentDown(), self.yardsToFirst()),
             self.playCountForPossession(),
             yardsText,
             thisPlaysResult.playResultText,
-            HELPERS.getYardText())); //Spot of Ball text in Play History
+            HELPERS.getYardText(), //Spot of Ball text in Play History
+            self.currentQuarter(),
+            self.timeOfPossession()));
 
         playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer);
-
-        //RECORD TIME OF POSSESSION
-        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards);
 
         //now record stats for this play
         this.recordGameStats(team, thisPlaysResult);
