@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "serve football site",
+            "type": "npm",
+            "script": "start",
+            "path": "src/website",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "> vite",
+                    "endsPattern": "Local:.*http://localhost:8080"
+                }
+            }
+        }
+    ]
+}
