@@ -136,6 +136,7 @@
         self.currentDown(1);
         self.playCountForPossession(1); //reset play count for possession
         self.timeOfPossession(0); //reset time of possession
+        self.consecutiveDelayOfGamePenalties(0); //new team taking over gets a clean slate
 
         //change possession of ball
         if (self.currentTeamWithBall() === self.awayTeamID())

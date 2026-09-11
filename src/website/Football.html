@@ -317,6 +317,7 @@ internet zone change to: url=(0014)about:internet-->
                     </div>
                     <div id="currentQuarter" class="white" data-bind="text: currentQuarterDisplay()"></div>
                     <div id="timeRemainingInQuarter" class="gold" data-bind="text: remainingTimeDisplay"></div>
+                    <div id="playClock" class="gold" data-bind="visible: !showKickoffControls() && !pointAttemptAfterTouchDown()">Play Clock: <span data-bind="text: playClockDisplay()"></span></div>
                     <div id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"
                     class="white"></div>
                     <div id="currentBallSpot" data-bind="text: HELPERS.getYardText()"
@@ -407,6 +408,9 @@ internet zone change to: url=(0014)about:internet-->
                         <br />
                         <button type="button" id="homeTimeout" class="btn-default" data-bind="click: CallHomeTimeout">Home Timeout (<span data-bind="text: homeTeamTimeOuts()"></span>)</button>
                         <button type="button" id="awayTimeout" class="btn-default" data-bind="click: CallAwayTimeout">Away Timeout (<span data-bind="text: awayTeamTimeOuts()"></span>)</button>
+                        <br />
+                        <br />
+                        <button type="button" id="spikeBall" class="btn-default" data-bind="click: SpikeBall">Spike the Ball (Stop Clock)</button>
                     </div>
                     <br />
                     <div class="play-controls" data-bind="visible:hasRolled()">

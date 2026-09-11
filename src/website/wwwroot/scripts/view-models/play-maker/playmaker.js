@@ -23,6 +23,7 @@
         let isKickoffAlreadySetup = false; //true once a safety/2pt conversion has already placed the ball for the next kickoff
 
         self.playCountForPossession(self.playCountForPossession() + 1);
+        self.consecutiveDelayOfGamePenalties(0); //the ball was snapped, so the delay of game streak is broken
 
         //Chance of a big yard play is increased
         if (bigYardPlay)
@@ -153,6 +154,8 @@
     },
 
     kickoff: function (kickoffPower, kickoffAngle) {
+        self.StartCounter(); //the quarter clock starts the moment the ball is kicked
+
         let kickoffType = getKickoffType();
         let _yards = convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle);
         let _returnYards = 0;
@@ -391,8 +394,91 @@
             self.isPunt(false);
     },
 
+    //the offense spikes the ball (intentional incomplete pass) to stop the clock, at the cost of a down
+    spike: function () {
+        self.playCountForPossession(self.playCountForPossession() + 1);
+        self.consecutiveDelayOfGamePenalties(0); //the ball was legally snapped, so the delay of game streak is broken
+
+        let playResultText = 'Spiked the ball to stop the clock - Incomplete';
+        let turnover = self.currentDown() === 4;
+
+        if (!turnover)
+            self.currentDown(self.currentDown() + 1); //spike always gains 0 yards, so distance to go is unchanged
+
+        let playResult = new MODULES.Constructors.PlayResult(0, playResultText, turnover, GAME_PLAY_TYPES.PASS);
+
+        if (turnover) {
+            playResult.playResultText = playResultText + ' Change of Possession';
+            playMaker.recordPlay(playResult);
+            self.ballSpotStart(self.yardsToTouchdown());
+            self.yardsTraveled(0);
+            self.ChangePossession();
+        }
+        else {
+            playMaker.recordPlay(playResult);
+        }
+
+        self.ShowHideSpecialTeamsMenu();
+    },
+
+    //the play clock expired before the snap - whistle the play dead and assess a 5 yard delay of game penalty
+    delayOfGamePenalty: function () {
+        if (self.gameOver() || self.showKickoffControls() || self.pointAttemptAfterTouchDown())
+            return;
+
+        self.hasRolled(false); //whistle dead - any play in progress before the clock expired does not count
+        $('#diceValues').empty();
+
+        let offendingTeam = self.currentTeamWithBall();
+        self.consecutiveDelayOfGamePenalties(self.consecutiveDelayOfGamePenalties() + 1);
+
+        //REPEATED VIOLATIONS: an endless loop of delay of game penalties is treated as unsportsmanlike conduct, and ultimately a forfeit
+        if (self.consecutiveDelayOfGamePenalties() >= MODULES.Constants.MAX_CONSECUTIVE_DELAY_OF_GAME_PENALTIES) {
+            playMaker.forfeitGame(offendingTeam);
+            return;
+        }
+
+        self.playCountForPossession(self.playCountForPossession() + 1);
+        self.yardsTraveled(self.yardsTraveled() - MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS); //push the offense back from the spot of the ball
+        self.yardsToFirst(self.yardsToFirst() + MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS); //penalty yardage is added to the distance needed for a first down
+
+        let penaltyText = 'Delay of Game - 5 Yard Penalty';
+        let penaltyYards = MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS;
+
+        if (self.consecutiveDelayOfGamePenalties() === 2) {
+            //a second straight delay of game is also assessed as unsportsmanlike conduct
+            self.yardsTraveled(self.yardsTraveled() - MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
+            self.yardsToFirst(self.yardsToFirst() + MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
+            penaltyYards += MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS;
+            penaltyText += ' + Unsportsmanlike Conduct - 15 Yard Penalty';
+            alert('DELAY OF GAME - repeated violation! An additional 15 yard unsportsmanlike conduct penalty has been assessed. One more delay of game will result in a forfeit.');
+        }
+        else {
+            alert('DELAY OF GAME - the offense failed to snap the ball in time. 5 yard penalty.');
+        }
+
+        self.SetBallPosition();
+
+        let playResult = new MODULES.Constructors.PlayResult(-penaltyYards, penaltyText, false, GAME_PLAY_TYPES.PENALTY);
+        playMaker.recordPlay(playResult);
+    },
+
+    //the offending team's repeated delay of game violations are ruled an unfair act, ending the game in a forfeit
+    forfeitGame: function (offendingTeamId) {
+        self.StopCounter();
+        self.StopPlayClock();
+        self.gameOver(true);
+
+        let winningTeam = offendingTeamId === self.homeTeamID() ? self.awayTeamInfo() : self.homeTeamInfo();
+        let offendingTeamInfo = offendingTeamId === self.homeTeamID() ? self.homeTeamInfo() : self.awayTeamInfo();
+
+        alert('FORFEIT - ' + offendingTeamInfo.teamName() + ' repeatedly failed to snap the ball in time. ' +
+            'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.');
+    },
+
     recordTimeOfPossession: function (typeOfPlay, yards) {
         let timeSpentWithBall = 0; //represents seconds off the game clock for this play
+        let nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_NORMAL; //40s, unless the clock was stopped by this play
         //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
 
         if (typeOfPlay === GAME_PLAY_TYPES.RUN) {
@@ -400,11 +486,22 @@
             timeSpentWithBall = 30 + Math.max(Math.round(yards / 2), 0);
         }
         else if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
-            //an incomplete pass (0 yards) stops the clock, so far less time comes off than a completed pass
-            timeSpentWithBall = yards === 0 ? 20 : 25 + Math.max(Math.round(yards / 5), 0);
+            //an incomplete pass (or a spike) stops the clock almost immediately and shortens the next play clock
+            if (yards === 0) {
+                timeSpentWithBall = 4;
+                nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
+            }
+            else {
+                timeSpentWithBall = 25 + Math.max(Math.round(yards / 5), 0);
+            }
+        }
+        else if (typeOfPlay === GAME_PLAY_TYPES.PENALTY) {
+            timeSpentWithBall = 0; //whistle blown before the snap - no game clock runs off
+            nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
         }
         else {
             timeSpentWithBall = 10; //kickoffs, returns, and other special teams plays
+            nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
         }
 
         console.log('TIME SPENT WITH BALL THIS PLAY: %s seconds', timeSpentWithBall);
@@ -416,6 +513,7 @@
             self.StartCounter();
 
         self.AdvanceTime(timeSpentWithBall);
+        self.StartPlayClock(nextPlayClockSeconds);
     },
 
     recordPlay: function (thisPlaysResult) {
@@ -442,7 +540,7 @@
         playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer);
 
         //RECORD TIME OF POSSESSION
-        this.recordTimeOfPossession(thisPlaysResult.playSelected, thisPlaysResult.yards);
+        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards);
 
         //now record stats for this play
         this.recordGameStats(team, thisPlaysResult);

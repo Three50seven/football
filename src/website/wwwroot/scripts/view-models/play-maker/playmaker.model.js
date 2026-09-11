@@ -16,6 +16,11 @@
         $('input[name=selectPlay][value=pass]').prop('checked', 'checked');//reset play selector to default
     };
 
+    self.SpikeBall = function () {
+        playMaker.spike();
+        MODULES.GameVariables.TotalPlayCount += 1;
+    };
+
     self.MakePlayAfterTD = function () {
         //handles plays after a touchdown (point after attempt or 2 point conversion)
         playMaker.initPlayAfterTouchdown();

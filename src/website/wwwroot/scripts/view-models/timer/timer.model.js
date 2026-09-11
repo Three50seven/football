@@ -12,6 +12,9 @@
     self.isRunning = ko.observable(false);
     self.gameOver = ko.observable(false);
     self.lastTimeoutTeam = ko.observable(0); //tracks the team that most recently called a timeout, prevents back-to-back timeouts by the same team
+    self.playClockTimerId = 0;
+    self.playClockRemaining = ko.observable(MODULES.Constants.PLAY_CLOCK_NORMAL);
+    self.consecutiveDelayOfGamePenalties = ko.observable(0); //tracks repeated delay of game violations by the team currently snapping the ball
 
     //FUNCTIONS
     self.currentQuarterDisplay = ko.computed(function () {
@@ -23,6 +26,9 @@
     //display time source: https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
     self.remainingTimeDisplay = ko.computed(function () {
         return UTILITIES.getTimeDisplay(self.remainingTime());
+    });
+    self.playClockDisplay = ko.computed(function () {
+        return Math.max(self.playClockRemaining(), 0);
     });
     self.StartCounter = function () {
         //self.elapsedTime(0); //do not reset the counter each time counter is started
@@ -38,6 +44,27 @@
     self.StopCounter = function () {
         clearInterval(self.timerId);
         self.isRunning(false);
+    };
+    //starts (or restarts) the play clock the offense has to snap the ball; 40s after a normal play, 25s after an administrative stoppage
+    self.StartPlayClock = function (seconds) {
+        clearInterval(self.playClockTimerId);
+        self.playClockRemaining(seconds);
+
+        self.playClockTimerId = window.setInterval(function () {
+            //pause the play clock while special teams/point-after formations are being set up
+            if (self.gameOver() || self.showKickoffControls() || self.pointAttemptAfterTouchDown())
+                return;
+
+            self.playClockRemaining(self.playClockRemaining() - 1);
+
+            if (self.playClockRemaining() <= 0) {
+                clearInterval(self.playClockTimerId);
+                playMaker.delayOfGamePenalty();
+            }
+        }, MODULES.GameVariables.TimeIntervalCountDown);
+    };
+    self.StopPlayClock = function () {
+        clearInterval(self.playClockTimerId);
     };
     //moves the game clock forward by the given number of seconds and handles the end of a quarter/game when time expires
     self.AdvanceTime = function (seconds) {
@@ -102,6 +129,7 @@
 
         self.lastTimeoutTeam(teamId);
         self.StopCounter(); //timeout stops the clock until the next snap
+        self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT); //administrative stoppage - next snap only gets 25 seconds
     };
     self.CallHomeTimeout = function () {
         self.CallTeamTimeout(self.homeTeamID());
