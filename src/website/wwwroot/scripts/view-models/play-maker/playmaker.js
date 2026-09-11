@@ -111,13 +111,16 @@
         }
 
         //DETERMINE DOWN
+        let isTurnoverOnDowns = false;
         if (_yards >= self.yardsToFirst() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             self.yardsToFirst(10); //reset yards to first for next set of downs
             self.currentDown(1); //reset to first down
         }
         else {
-            if (self.currentDown() === 4)
+            if (self.currentDown() === 4) {
                 turnover = true;
+                isTurnoverOnDowns = true;
+            }
             else {
                 self.yardsToFirst(self.yardsToFirst() - _yards); //subtract the yards from the current yards to First Down
                 self.currentDown(self.currentDown() + 1);  //increment the current Down
@@ -132,7 +135,7 @@
         //TURNOVER
         if (turnover) {
             //before turning over the ball, record the play of the team turning over the ball
-            _playResultText = _playResultText + ' Change of Possession';
+            _playResultText = _playResultText + (isTurnoverOnDowns ? ' - TURNOVER ON DOWNS' : ' Change of Possession');
             playResult.playResultText = _playResultText;
             playMaker.recordPlay(playResult);
 
