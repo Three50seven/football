@@ -683,5 +683,7 @@
 
         //update the box score
         self.UpdateBoxScore();
+
+        self.StopCounter(); //the clock stops after any score, until the next kickoff/snap
     }
 };
