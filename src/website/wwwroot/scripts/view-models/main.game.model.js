@@ -47,6 +47,7 @@
         self.gameStarted(true);
         self.InitializeBoxScore();
         self.InitializeGameStats();
+        self.StartCounter(); //start the quarter clock now that the game has begun
     };
     self.ResetTeams = function () {
         self.ClearCoinColors();
@@ -54,6 +55,11 @@
         self.awayTeamID(0);
         self.gameSimulated(false);
         self.simHistory([]);
+        self.StopCounter();
+        self.currentQuarter(1);
+        self.elapsedTime(0);
+        self.gameOver(false);
+        self.lastTimeoutTeam(0);
         console.log('TEAMS RESET');
     };
     self.CloseSpecialTeamsMenu = function () {

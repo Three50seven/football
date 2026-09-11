@@ -321,8 +321,9 @@ internet zone change to: url=(0014)about:internet-->
                     class="white"></div>
                     <div id="currentBallSpot" data-bind="text: HELPERS.getYardText()"
                     class="white"></div>
+                    <div id="finalScoreBanner" class="white" data-bind="visible: gameOver">GAME OVER - Final Score: <span data-bind="text: homeTeamInfo().teamName()"></span> <span data-bind="text: homeTeamScore()"></span> - <span data-bind="text: awayTeamInfo().teamName()"></span> <span data-bind="text: awayTeamScore()"></span></div>
                 </div>
-                <section id="stopWatch" data-bind="visible: gameStarted">
+                <section id="stopWatch" data-bind="visible: gameStarted() && !gameOver()">
                     <!--<input id="initialTime" style="width:100px;height:20" data-bind="value:
                     initialTime" /> <span id="remainingTime" data-bind="text: remainingTime"></span> second(s)-->
                     <button
@@ -334,7 +335,7 @@ internet zone change to: url=(0014)about:internet-->
                 <p class="last-play-container" data-bind="visible: gameStarted()"># Total Plays in Game: <span id="playCount">0</span>
                     <br>Play result: <span id="playResult">0</span>
                 </p>
-                <div id="kickoffPlays" data-bind="visible:showKickoffControls() && gameStarted"
+                <div id="kickoffPlays" data-bind="visible:showKickoffControls() && gameStarted() && !gameOver()"
                 align="center">
                     <br>Click sliders or buttons to select power and angle of kick:
                     <br>
@@ -372,7 +373,7 @@ internet zone change to: url=(0014)about:internet-->
                     <br />
                     <br />
                 </div>
-                <div id="mainPlaySelection" data-bind="visible:!showKickoffControls()"
+                <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()"
                 align="center">
                     <div data-bind="visible:pointAttemptAfterTouchDown()">
                         <button type="button" id="diceRoller" class="btn-default" data-bind="click: MakePlayAfterTD">Make Attempt</button>
@@ -404,7 +405,8 @@ internet zone change to: url=(0014)about:internet-->
                         <br />
                         <br />
                         <br />
-                        <button type="button" id="callTimeout" class="btn-default" data-bind="click: CallTimeout">Call Timeout</button>
+                        <button type="button" id="homeTimeout" class="btn-default" data-bind="click: CallHomeTimeout">Home Timeout (<span data-bind="text: homeTeamTimeOuts()"></span>)</button>
+                        <button type="button" id="awayTimeout" class="btn-default" data-bind="click: CallAwayTimeout">Away Timeout (<span data-bind="text: awayTeamTimeOuts()"></span>)</button>
                     </div>
                     <br />
                     <div class="play-controls" data-bind="visible:hasRolled()">

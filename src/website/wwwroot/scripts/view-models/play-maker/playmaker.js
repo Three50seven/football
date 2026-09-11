@@ -20,6 +20,7 @@
         let bigYardPlay = UTILITIES.getRandomInt(1, 100) >= 85;
         let yardageMax = 15;
         let turnover = false;
+        let isKickoffAlreadySetup = false; //true once a safety/2pt conversion has already placed the ball for the next kickoff
 
         self.playCountForPossession(self.playCountForPossession() + 1);
 
@@ -40,6 +41,7 @@
             turnover = true; //always change possession after extra point attempts
             self.isKickoff(true);
             self.SetupKickoff();
+            isKickoffAlreadySetup = true;
 
             //TWO POINT CONVERSION:
             if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION && MODULES.GameVariables.DiceSumTotal >= 6) {
@@ -85,8 +87,13 @@
             _playResultText = _playResultText + ' for no gain';
         }
 
+        //apply this play's yardage to the field position first so the scoring checks below reflect the new spot of the ball
+        if (playSelected !== 'fieldGoal' && playSelected !== 'extraPoint' && playSelected !== 'twoPointConversion') {
+            self.yardsTraveled(self.yardsTraveled() + _yards);
+        }
+
         //TOUCHDOWN
-        if (_yards >= self.yardsToTouchdown() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+        if (self.yardsToTouchdown() <= 0 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             _playResultText = SCORE_TYPES.TOUCHDOWN.toUpperCase();
             playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
             self.pointAttemptAfterTouchDown(true);
@@ -98,6 +105,7 @@
             playMaker.addScore(SCORE_TYPES.SAFETY);
             self.isSafety(true);
             self.SetupKickoff();
+            isKickoffAlreadySetup = true;
             turnover = true;
         }
 
@@ -118,22 +126,22 @@
         console.log('YARDS: ' + _yards);
         let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected);
 
-        //set the new position of the ball (if not kicking fieldgoal, extrapoint, or two point conversion):
-        if (playSelected !== 'fieldGoal' && playSelected !== 'extraPoint' && playSelected !== 'twoPointConversion') {
-            self.yardsTraveled(self.yardsTraveled() + _yards);
-        }
         self.SetBallPosition();
 
         //TURNOVER
         if (turnover) {
-            //before turning over the ball, record the play of team turning over the ball
+            //before turning over the ball, record the play of the team turning over the ball
+            _playResultText = _playResultText + ' Change of Possession';
+            playResult.playResultText = _playResultText;
             playMaker.recordPlay(playResult);
 
             //now handle turnover events
             _yards = 0;
-            self.ballSpotStart(self.yardsToTouchdown());
+            //a safety/2pt conversion above already placed the ball for the next kickoff - don't overwrite it here
+            if (!isKickoffAlreadySetup) {
+                self.ballSpotStart(self.yardsToTouchdown());
+            }
             self.yardsTraveled(0); //reset yards traveled for possession
-            _playResultText = _playResultText + ' Change of Possession';
 
             self.ChangePossession();
         }
@@ -384,37 +392,37 @@
     },
 
     recordTimeOfPossession: function (typeOfPlay, yards) {
-        let timeSpentWithBall = 0; //represents second team spent with ball
+        let timeSpentWithBall = 0; //represents seconds off the game clock for this play
         //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
-        //nfl avgerages (time of possession) = avg. time of possession / avg. number of plays 
-        //~26.20s / play on high end
-        //~28.40s / play on low end
-        //27.3 rounded up to 27 even = time per play
 
-        timeSpentWithBall += 5; //automatically add 5 seconds for setting up play etc.
-
-        //(TODO: Subtract time from clock based on yards and type of play)
-        if (typeOfPlay === GAME_PLAY_TYPES.RUN)
-            timeSpentWithBall += Math.round(yards / 2); //run 2 yards/second
-
-        if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
-            timeSpentWithBall += 2; //automatically add 2 seconds for time to throw.
-            timeSpentWithBall += Math.round(yards / 10); //pass 10 yards/second
-            timeSpentWithBall += Math.round(yards / 4 / 2); //count about 1/4 of the pass yards as a catch and run, so use part of the 2yards/s calc. for 1/4 of the yards
+        if (typeOfPlay === GAME_PLAY_TYPES.RUN) {
+            //huddle/play clock plus time for the run itself, roughly 1-2 minutes from play call to the whistle
+            timeSpentWithBall = 30 + Math.max(Math.round(yards / 2), 0);
+        }
+        else if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
+            //an incomplete pass (0 yards) stops the clock, so far less time comes off than a completed pass
+            timeSpentWithBall = yards === 0 ? 20 : 25 + Math.max(Math.round(yards / 5), 0);
+        }
+        else {
+            timeSpentWithBall = 10; //kickoffs, returns, and other special teams plays
         }
 
-        console.log('TIME OF POSSESSION: %s', self.timeOfPossession());
-
-        timeSpentWithBall = Math.round(timeSpentWithBall);
+        console.log('TIME SPENT WITH BALL THIS PLAY: %s seconds', timeSpentWithBall);
 
         self.timeOfPossession(timeSpentWithBall); //record time of possession in seconds
 
-        //TODO: Handle SETTING THE REMAINING TIME in a game-wide time management function that changes the quarter etc.
+        //resume the game clock at the snap (e.g. after a timeout), then skip the clock ahead realistically for this play
+        if (!self.isRunning())
+            self.StartCounter();
+
+        self.AdvanceTime(timeSpentWithBall);
     },
 
     recordPlay: function (thisPlaysResult) {
         let team = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === self.currentTeamWithBall(); })[0]; //get the current team making the play
         let pluralizer = 's';
+
+        self.lastTimeoutTeam(0); //a completed play clears the "no consecutive timeouts" restriction
 
         if (thisPlaysResult.yards === 1 || thisPlaysResult.yards === -1)
             pluralizer = '';
@@ -467,7 +475,10 @@
 
             let thisPlaysResult = playMaker.getPlayResult(playSelected);
 
-            playMaker.recordPlay(thisPlaysResult);
+            //turnover plays are already recorded (with the correct pre-turnover team/down) inside getPlayResult
+            if (!thisPlaysResult.isTurnover) {
+                playMaker.recordPlay(thisPlaysResult);
+            }
 
             MODULES.GameVariables.TotalPlayCount += 1;
         } else {
@@ -510,7 +521,8 @@
             case SCORE_TYPES.EXTRAPOINT:
                 score = 1;
                 break;
-            case SCORE_TYPES.SAFETY, SCORE_TYPES.TWOPOINTCONVERSION:
+            case SCORE_TYPES.SAFETY:
+            case SCORE_TYPES.TWOPOINTCONVERSION:
                 score = 2;
                 break;
         }
