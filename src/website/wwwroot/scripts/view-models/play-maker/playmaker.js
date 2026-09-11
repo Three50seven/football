@@ -21,13 +21,15 @@
         let yardageMax = 15;
         let turnover = false;
         let isKickoffAlreadySetup = false; //true once a safety/2pt conversion has already placed the ball for the next kickoff
+        let distanceToGoalLine = self.yardsToTouchdown(); //distance needed for a touchdown before this play's yardage is applied
+        let isOverthrownIncomplete = false; //a pass thrown beyond the back of the end zone is incomplete, not a touchdown
 
         self.playCountForPossession(self.playCountForPossession() + 1);
         self.consecutiveDelayOfGamePenalties(0); //the ball was snapped, so the delay of game streak is broken
 
         //Chance of a big yard play is increased
         if (bigYardPlay)
-            yardageMax = self.yardsToTouchdown();
+            yardageMax = distanceToGoalLine;
 
         //TODO: add chance for fumbles and interceptions
         //TODO: add chance for muffed punt or punt block/return or field goal block/return
@@ -63,12 +65,26 @@
 
         //POSITIVE YARDAGE PLAYS
         if (_positiveYards && playSelected === GAME_PLAY_TYPES.PASS) {
-
             _yards = UTILITIES.getRandomInt(1, yardageMax);
-            _playResultText = _playResultText + ' Complete';
+
+            //a pass thrown past the goal line plus the depth of the end zone sails out the back - ruled incomplete
+            if (distanceToGoalLine > 0 && _yards >= distanceToGoalLine + MODULES.Constants.END_ZONE_YARDS) {
+                _yards = 0;
+                isOverthrownIncomplete = true;
+                _playResultText = _playResultText + ' Incomplete - Overthrown';
+            }
+            else {
+                _playResultText = _playResultText + ' Complete';
+            }
         }
         if (_positiveYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _yards = UTILITIES.getRandomInt(1, yardageMax);
+
+            //a run can't gain more than the distance to the goal line - the play ends the instant the ball crosses it
+            if (distanceToGoalLine > 0 && _yards > distanceToGoalLine) {
+                _yards = distanceToGoalLine;
+            }
+
             _playResultText = _playResultText + ' Successful';
         }
         //NEGATIVE YARDAGE PLAYS
@@ -81,7 +97,7 @@
             _playResultText = _playResultText + ' - tackled for a loss';
         }
         //NO GAIN PLAYS
-        if (!_positiveYards && !_negativeYards && playSelected === GAME_PLAY_TYPES.PASS) {
+        if (!_positiveYards && !_negativeYards && !isOverthrownIncomplete && playSelected === GAME_PLAY_TYPES.PASS) {
             _playResultText = _playResultText + ' Incomplete';
         }
         if (!_positiveYards && !_negativeYards && playSelected === GAME_PLAY_TYPES.RUN) {
