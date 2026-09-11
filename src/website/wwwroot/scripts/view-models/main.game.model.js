@@ -53,6 +53,7 @@
         self.homeTeamID(0);
         self.awayTeamID(0);
         self.gameSimulated(false);
+        self.simHistory([]);
         console.log('TEAMS RESET');
     };
     self.CloseSpecialTeamsMenu = function () {

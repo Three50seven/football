@@ -415,7 +415,11 @@ nav > ul {
 	overflow-y: auto;
 	height: 400px;
 }
-	
+
+.sim-history-entry {
+	margin-bottom: 15px;
+}
+
 /*BUTTON STYLES*/
 .btn-default, .btn-default:visited, input[type="submit"].btn-default {
   background-color: #0568ae;

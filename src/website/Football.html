@@ -203,6 +203,73 @@ internet zone change to: url=(0014)about:internet-->
                                 <br />
                                 <span data-bind="html: simGameSummary"></span>-->
                                 <br />
+                                <div id="simMatchupTally" data-bind="visible: simHistory().length > 0" align="center">
+                                    <span class="white">Matchup Record:</span>
+                                    <br />
+                                    <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}" />
+                                    <span data-bind="text: homeTeamInfo().teamCityAndName()"></span>
+                                    <span data-bind="text: simMatchupRecord().wins"></span> - <span data-bind="text: simMatchupRecord().losses"></span> - <span data-bind="text: simMatchupRecord().ties"></span>
+                                    <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" />
+                                    <span data-bind="text: awayTeamInfo().teamCityAndName()"></span>
+                                </div>
+                                <br />
+                                <div id="simHistory" data-bind="visible: simHistory().length > 0" align="center">
+                                    <span class="white">Sim History:</span>
+                                    <div id="simHistoryScroller" class="scroller">
+                                        <!-- ko foreach: simHistory -->
+                                        <div class="sim-history-entry">
+                                            <span class="white">Sim <span data-bind="text: simNumber"></span>:</span>
+                                            <table class="football-stats">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Team</th>
+                                                        <th>
+                                                            1<sup>st</sup>
+                                                        </th>
+                                                        <th>
+                                                            2<sup>nd</sup>
+                                                        </th>
+                                                        <th>
+                                                            3<sup>rd</sup>
+                                                        </th>
+                                                        <th>
+                                                            4<sup>th</sup>
+                                                        </th>
+                                                        <th>OT</th>
+                                                        <th>TOTAL SCORE</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody data-bind="foreach: boxScore">
+                                                    <tr>
+                                                        <td>
+                                                            <img class="team-tiny-img" data-bind="attr:{src: teamImagePath}" />
+                                                            <span data-bind="text: fullTeamName"></span>
+                                                        </td>
+                                                        <td>
+                                                            <span data-bind="text: firstQuarterScore"></span>
+                                                        </td>
+                                                        <td>
+                                                            <span data-bind="text: secondQuarterScore"></span>
+                                                        </td>
+                                                        <td>
+                                                            <span data-bind="text: thirdQuarterScore"></span>
+                                                        </td>
+                                                        <td>
+                                                            <span data-bind="text: fourthQuarterScore"></span>
+                                                        </td>
+                                                        <td>
+                                                            <span data-bind="text: overtimeScore"></span>
+                                                        </td>
+                                                        <td>
+                                                            <span data-bind="text: totalScore"></span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- /ko -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div data-bind="visible: coinTossValue() > 0"> <span class="coin-toss-result" data-bind="text: coinTossResultText"></span>
