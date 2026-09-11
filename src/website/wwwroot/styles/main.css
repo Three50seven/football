@@ -343,6 +343,15 @@ nav > ul {
 	color: white;	
 }
 
+#playClock {
+	display: inline-block;
+	border: 1px solid gold;
+	border-radius: 3px;
+	padding: 0px 6px;
+	margin-left: 6px;
+	font-size: 0.85em;
+}
+
 /*source: https://www.w3schools.com/howto/howto_css_circles.asp*/
 .hasBall {
 	height: 10px;
