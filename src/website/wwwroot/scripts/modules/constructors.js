@@ -1,7 +1,7 @@
 //CONSTRUCTORS
 MODULES.Constructors = (function () {
     return {
-        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns) {
+        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenaltyYards = 0) {
             this.teamId = teamId;
             this.teamName = teamName;
             this.totalPlayCount = totalPlayCount;
@@ -10,8 +10,9 @@ MODULES.Constructors = (function () {
             this.totalTimePossession = totalTimePossession;
             this.totalTurnovers = totalTurnovers;
             this.totalFirstDowns = totalFirstDowns;
+            this.totalPenaltyYards = totalPenaltyYards;
             this.fullTeamName = UTILITIES.getFullTeamName(this.teamName, this.teamId);
-            this.totalTimePossessionDisplay = UTILITIES.getTimeDisplay(this.totalTimePossession); //TODO: BUG, Not correctly displaying time as 00:00
+            this.totalTimePossessionDisplay = UTILITIES.getTimeDisplay(this.totalTimePossession);
         },
         GameBoxScoreRecord: function (teamId, teamName, firstQuarterScore, secondQuarterScore, thirdQuarterScore, fourthQuarterScore, overtimeScore, totalScore) {
             this.teamId = teamId;
@@ -25,11 +26,12 @@ MODULES.Constructors = (function () {
             this.totalScore = totalScore;
             this.teamImagePath = UTILITIES.getTeamImagePath(this.teamId);
         },
-        PlayResult: function (yards, playText, isTurnover = false, playType = '') {
+        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false) {
             this.yards = yards;
             this.playResultText = playText;
             this.isTurnover = isTurnover;
             this.playType = playType;
+            this.isFirstDown = isFirstDown;
         },
         PlayHistory: function (playId, teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession) {
             this.playId = playId;

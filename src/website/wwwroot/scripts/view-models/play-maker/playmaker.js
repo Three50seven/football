@@ -94,10 +94,12 @@
         }
 
         //TOUCHDOWN
+        let isTouchdown = false;
         if (self.yardsToTouchdown() <= 0 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             _playResultText = SCORE_TYPES.TOUCHDOWN.toUpperCase();
             playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
             self.pointAttemptAfterTouchDown(true);
+            isTouchdown = true;
         }
 
         //SAFETY
@@ -112,9 +114,11 @@
 
         //DETERMINE DOWN
         let isTurnoverOnDowns = false;
+        let isFirstDown = false;
         if (_yards >= self.yardsToFirst() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             self.yardsToFirst(10); //reset yards to first for next set of downs
             self.currentDown(1); //reset to first down
+            isFirstDown = !isTouchdown; //a touchdown is recorded as a score, not a first down
         }
         else {
             if (self.currentDown() === 4) {
@@ -128,7 +132,7 @@
         }
 
         console.log('YARDS: ' + _yards);
-        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected);
+        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown);
 
         self.SetBallPosition();
 
@@ -562,8 +566,15 @@
             playStatsRecord.totalYardsPassing = thisPlaysResult.yards;
         }
 
+        if (thisPlaysResult.playType === GAME_PLAY_TYPES.PENALTY) {
+            playStatsRecord.totalPenaltyYards = thisPlaysResult.yards; //already a negative value (e.g. -5)
+        }
+
         if (thisPlaysResult.isTurnover)
             playStatsRecord.totalTurnovers = 1;
+
+        if (thisPlaysResult.isFirstDown)
+            playStatsRecord.totalFirstDowns = 1;
 
         self.UpdateGameStat(playStatsRecord);
     },

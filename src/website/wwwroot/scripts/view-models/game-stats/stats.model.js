@@ -30,6 +30,8 @@
             team.totalTimePossession += teamStatUpdates.totalTimePossession;
             team.totalTurnovers += teamStatUpdates.totalTurnovers;
             team.totalFirstDowns += teamStatUpdates.totalFirstDowns;
+            team.totalPenaltyYards += teamStatUpdates.totalPenaltyYards;
+            team.totalTimePossessionDisplay = UTILITIES.getTimeDisplay(team.totalTimePossession); //recalculate display text since it isn't an observable
 
             self.gamePlayStats.refresh(team);
         }
