@@ -14,7 +14,8 @@ MODULES.Constants = (function () {
         PLAY_CLOCK_SHORT: 25, //seconds the offense has to snap after an administrative stoppage (penalty, timeout, etc.)
         DELAY_OF_GAME_PENALTY_YARDS: 5,
         UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS: 15,
-        MAX_CONSECUTIVE_DELAY_OF_GAME_PENALTIES: 3 //a 3rd straight delay of game by the same team without a snap results in a forfeit
+        MAX_CONSECUTIVE_DELAY_OF_GAME_PENALTIES: 3, //a 3rd straight delay of game by the same team without a snap results in a forfeit
+        SPIKE_YARDS_LOST: 2
     };
 
 })();

@@ -488,6 +488,11 @@ input[type="submit"].btn-default.btn-default-gray:hover, input[type="submit"].bt
     margin: 0 !important;
 }
 
+.btn-default.btn-default-small {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+}
+
 input[type="submit"].btn-default:disabled {
     background-color: #666666;
     color: #fff;

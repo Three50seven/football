@@ -380,7 +380,10 @@ internet zone change to: url=(0014)about:internet-->
                             <input type="radio" name="afterTDPlay" value="twoPointConversion">2 Point Conversion</label>
                     </div>
                     <div data-bind="visible:!hasRolled() && !pointAttemptAfterTouchDown()">
-                        <button type="button" id="diceRoller" class="btn-default" data-bind="click: RollDice">Roll Dice</button>
+                        <button type="button" id="diceRoller" class="btn-default" data-bind="click: RollDice">Roll Dice</button>                        
+                        <br />
+                        <br />
+                        <button type="button" id="spikeBall" class="btn-default btn-default-small" data-bind="click: SpikeBall">Spike the Ball (Stop Clock)</button>
                         <br />
                         <br />
                         <nav>
@@ -402,9 +405,7 @@ internet zone change to: url=(0014)about:internet-->
                         <br />
                         <button type="button" id="homeTimeout" class="btn-default" data-bind="click: CallHomeTimeout">Home Timeout (<span data-bind="text: homeTeamTimeOuts()"></span>)</button>
                         <button type="button" id="awayTimeout" class="btn-default" data-bind="click: CallAwayTimeout">Away Timeout (<span data-bind="text: awayTeamTimeOuts()"></span>)</button>
-                        <br />
-                        <br />
-                        <button type="button" id="spikeBall" class="btn-default" data-bind="click: SpikeBall">Spike the Ball (Stop Clock)</button>
+                        
                     </div>
                     <br />
                     <div class="play-controls" data-bind="visible:hasRolled()">

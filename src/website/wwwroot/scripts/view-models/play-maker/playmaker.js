@@ -425,13 +425,19 @@
         self.playCountForPossession(self.playCountForPossession() + 1);
         self.consecutiveDelayOfGamePenalties(0); //the ball was legally snapped, so the delay of game streak is broken
 
+        let spikeYards = -MODULES.Constants.SPIKE_YARDS_LOST;
         let playResultText = 'Spiked the ball to stop the clock - Incomplete';
         let turnover = self.currentDown() === 4;
 
-        if (!turnover)
-            self.currentDown(self.currentDown() + 1); //spike always gains 0 yards, so distance to go is unchanged
+        self.yardsTraveled(self.yardsTraveled() + spikeYards); //spiking the ball costs 2 yards
+        self.yardsToFirst(self.yardsToFirst() - spikeYards); //the lost yards are added to the distance needed for a first down
 
-        let playResult = new MODULES.Constructors.PlayResult(0, playResultText, turnover, GAME_PLAY_TYPES.PASS);
+        if (!turnover)
+            self.currentDown(self.currentDown() + 1);
+
+        let playResult = new MODULES.Constructors.PlayResult(spikeYards, playResultText, turnover, GAME_PLAY_TYPES.PASS);
+
+        self.SetBallPosition();
 
         if (turnover) {
             playResult.playResultText = playResultText + ' Change of Possession';
@@ -443,6 +449,8 @@
         else {
             playMaker.recordPlay(playResult);
         }
+
+        self.StopCounter(); //a spike stops the main game clock until the next snap
 
         self.ShowHideSpecialTeamsMenu();
     },
