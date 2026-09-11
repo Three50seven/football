@@ -353,17 +353,20 @@
                 //}
             }
             else {
-                let ballSpotTotal = 100 - ballKickOffSpot + _yards - _returnYards;
-                console.log('BALL SPOT TOTAL: %s', ballSpotTotal);
+                //distance from the receiving team's own goal line: how far the kick traveled past the kick spot, minus the return yards
+                let newFieldPosition = 100 - (ballKickOffSpot + _yards) + _returnYards;
+                console.log('NEW FIELD POSITION: %s', newFieldPosition);
 
-                //if (self.currentTeamWithBall() === self.awayTeamID()) {
-                //    self.ballSpotStart(100 - ballSpotTotal); //add the yards kicked, and subtract the yards returned from the ball kickoff spot to get new ball start.
-                //}
-                //else {
-                self.ballSpotStart(100 - ballSpotTotal);
-                //}
+                self.ballSpotStart(newFieldPosition);
             }
             //TODO: Handle return for Touchdown 
+
+            //the receiving team starts a fresh set of downs at the new spot of the ball
+            self.yardsTraveled(0);
+            self.yardsToFirst(10);
+            self.currentDown(1);
+            self.playCountForPossession(1);
+            self.timeOfPossession(0);
 
             //create a play result and record it in the play history
             let returnResult = new MODULES.Constructors.PlayResult(_returnYards, _returnPlayText);
