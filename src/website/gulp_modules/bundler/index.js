@@ -3,7 +3,7 @@
 const { src, dest, series } = require("gulp");
 
 let concat = require("gulp-concat"),
-    cssmin = require("gulp-cssmin"),
+    cleanCss = require("gulp-clean-css"),
     newer = require("gulp-newer"),
     terser = require("gulp-terser-js"),
     PluginError = require('plugin-error'),
@@ -315,7 +315,7 @@ function PerformBundleProcess(options, onComplete) {
             Log("** Minifying CSS Files **");
 
             src(dir + "/**/*.min.css")
-                .pipe(cssmin())
+                .pipe(cleanCss())
                 .pipe(dest(dir))
                 .on("end", function () {
                     Log("** CSS Files Minified **");

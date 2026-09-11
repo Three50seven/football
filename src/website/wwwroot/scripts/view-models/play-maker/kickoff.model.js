@@ -53,6 +53,7 @@
     };
     self.SetupKickoff = function () {
         self.showKickoffControls(true); //used to show kickoff controls
+        self.StopCounter(); //the quarter clock does not run while the kick is being set up
 
         let min = 0;
         let max = 100;

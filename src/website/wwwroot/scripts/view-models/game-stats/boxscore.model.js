@@ -48,6 +48,7 @@
             }
 
             self.gameBoxScore.refresh(homeTeam);
+            self.gameBoxScore.refresh(awayTeam);
         }
         else {
             console.log('ERROR: gameBoxScore array was never initialized. Initializing...');

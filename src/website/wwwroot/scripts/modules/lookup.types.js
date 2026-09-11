@@ -14,7 +14,8 @@ var GAME_PLAY_TYPES = {
     PASS: 'pass',
     EXTRAPOINT: 'extraPoint',
     TWOPOINTCONVERSION: 'twoPointConversion',
-    FIELDGOAL: 'fieldGoal'
+    FIELDGOAL: 'fieldGoal',
+    PENALTY: 'penalty'
 };
 
 var SCORE_TYPES = {

@@ -47,12 +47,22 @@
         self.gameStarted(true);
         self.InitializeBoxScore();
         self.InitializeGameStats();
+        self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_NORMAL); //offense has 40 seconds to snap the first play
     };
     self.ResetTeams = function () {
         self.ClearCoinColors();
         self.homeTeamID(0);
         self.awayTeamID(0);
         self.gameSimulated(false);
+        self.simHistory([]);
+        self.StopCounter();
+        self.StopPlayClock();
+        self.playClockRemaining(MODULES.Constants.PLAY_CLOCK_NORMAL);
+        self.currentQuarter(1);
+        self.elapsedTime(0);
+        self.gameOver(false);
+        self.lastTimeoutTeam(0);
+        self.consecutiveDelayOfGamePenalties(0);
         console.log('TEAMS RESET');
     };
     self.CloseSpecialTeamsMenu = function () {

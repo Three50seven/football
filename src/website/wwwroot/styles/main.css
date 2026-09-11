@@ -343,6 +343,15 @@ nav > ul {
 	color: white;	
 }
 
+#playClock {
+	display: inline-block;
+	border: 1px solid gold;
+	border-radius: 3px;
+	padding: 0px 6px;
+	margin-left: 6px;
+	font-size: 0.85em;
+}
+
 /*source: https://www.w3schools.com/howto/howto_css_circles.asp*/
 .hasBall {
 	height: 10px;
@@ -415,7 +424,11 @@ nav > ul {
 	overflow-y: auto;
 	height: 400px;
 }
-	
+
+.sim-history-entry {
+	margin-bottom: 15px;
+}
+
 /*BUTTON STYLES*/
 .btn-default, .btn-default:visited, input[type="submit"].btn-default {
   background-color: #0568ae;
@@ -473,6 +486,11 @@ input[type="submit"].btn-default.btn-default-gray:hover, input[type="submit"].bt
 
 .btn-default.btn-default-small.btn-default-solo {
     margin: 0 !important;
+}
+
+.btn-default.btn-default-small {
+    font-size: 0.85rem;
+    padding: 4px 8px;
 }
 
 input[type="submit"].btn-default:disabled {

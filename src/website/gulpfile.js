@@ -1,6 +1,7 @@
 /// <binding Clean='BuildAssets' ProjectOpened='ProjectOpen' />
 "use strict";
 
+const fs = require("fs");
 const { src, dest, watch, series } = require("gulp");
 
 let bundler = require("./gulp_modules/bundler"),
@@ -9,8 +10,6 @@ let bundler = require("./gulp_modules/bundler"),
     transformer = require("json-config-transform"),
     sass = require('gulp-sass')(require('sass')),
     sassGlob = require("./gulp_modules/sassGlobber"),
-    sourcemaps = require('gulp-sourcemaps'),
-    imagemin = require('gulp-imagemin'),
     autoprefixer = require('gulp-autoprefixer');
 
 function Clean(onComplete) {
@@ -47,7 +46,13 @@ function BundleAssets(options, onComplete) {
 
 function CopyProjectFiles(source, destination) {
     console.log("Copying Project Files: " + source + " -> " + destination);
-    return src(source).pipe(dest(destination));
+    let sourceRoot = source.split("*")[0];
+    if (sourceRoot && !fs.existsSync(sourceRoot)) {
+        console.log("Skipping missing source: " + sourceRoot);
+        return Promise.resolve();
+    }
+
+    return src(source, { allowEmpty: true }).pipe(dest(destination));
 }
 
 // TODO - is jquery ui static css still needed?
@@ -76,11 +81,9 @@ function SassCompile(sourceFile, destinationFolder) {
     console.log("Compiling Sass: " + sourceFile + " -> " + destinationFolder);
 
     return src(sourceFile)
-        .pipe(sourcemaps.init())
         .pipe(sassGlob())
         .pipe(sass({ outputStyle: 'expanded' }).on('error', console.log))
         .pipe(autoprefixer())
-        .pipe(sourcemaps.write('./'))
         .pipe(dest(destinationFolder));
 }
 

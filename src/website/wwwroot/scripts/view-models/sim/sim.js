@@ -151,6 +151,9 @@ var sim = {
         ));
 
         self.simBoxScore(boxScore);
+
+        let simNumber = self.simHistory().length + 1;
+        self.simHistory.unshift({ simNumber: simNumber, boxScore: boxScore });
     },
     generateGameSummary: function (simResult) {
         let homeTeam = self.homeTeamInfo().teamName();
