@@ -1,7 +1,7 @@
 [build]
   base = "src/website"
   command = "npm run build"
-  publish = "dist"
+  publish = "src/website/dist"
 
 [build.environment]
   NODE_VERSION = "22"
