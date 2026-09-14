@@ -273,20 +273,30 @@
                 }
             }
         }
-        else if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {            
-            //handle field goals and extra point kicks very similarly
-            if (chanceOfBlock > 6) {
-                //need 25 yards for good extra point
-                if (_yards > ballKickOffSpot + MODULES.Constants.END_ZONE_YARDS) {
-                    _kickoffResultText += ' GOOD';
-                    playMaker.addScore(kickoffType);
-                }
-                else {
-                    _kickoffResultText += ' NO GOOD';
-                }
+        else if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {
+            //Field goals and extra points have a very small chance of being blocked.
+            let isBlocked = chanceOfBlock <= 2;
+            let isGoodKick = _yards > ballKickOffSpot + MODULES.Constants.END_ZONE_YARDS;
+
+            if (!isBlocked && isGoodKick) {
+                _kickoffResultText += ' GOOD';
+                playMaker.addScore(kickoffType);
+            }
+            else if (isBlocked) {
+                _kickoffResultText += ' Blocked';
             }
             else {
-                _kickoffResultText += ' Blocked';
+                _kickoffResultText += ' NO GOOD';
+            }
+
+            if (kickoffType === KICKOFF_TYPES.FIELDGOAL && (isBlocked || !isGoodKick)) {
+                playMaker.handleFailedFieldGoal(_kickoffResultText, isBlocked);
+                return;
+            }
+
+            if (kickoffType === KICKOFF_TYPES.EXTRAPOINT && isBlocked) {
+                playMaker.handleBlockedExtraPoint(_kickoffResultText);
+                return;
             }
         }
         else {
@@ -418,6 +428,60 @@
             self.isFieldGoal(false);
         else if (kickoffType === KICKOFF_TYPES.PUNT)
             self.isPunt(false);
+    },
+
+    //A missed or blocked field goal gives the defense a new drive at the physical spot of the kick.
+    handleFailedFieldGoal: function (kickResultText, isBlocked) {
+        let attemptingTeam = self.currentTeamWithBall();
+        let defensiveTeam = attemptingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+        let kickResult = new MODULES.Constructors.PlayResult(0, kickResultText, true, GAME_PLAY_TYPES.FIELDGOAL);
+
+        playMaker.recordPlay(kickResult);
+        playMaker.resetKickoffFlags(KICKOFF_TYPES.FIELDGOAL);
+        self.ballSpotStart(self.yardsToTouchdown());
+        self.yardsTraveled(0);
+        self.ChangePossession();
+
+        //A block return touchdown is deliberately rarer than the block itself.
+        if (isBlocked && UTILITIES.getRandomInt(1, 100) === 1) {
+            let returnResult = new MODULES.Constructors.PlayResult(0, 'Blocked Field Goal Return TOUCHDOWN', false, GAME_PLAY_TYPES.FIELDGOAL);
+            playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
+            playMaker.recordPlay(returnResult);
+
+            //No extra point attempt follows a defensive field-goal return touchdown.
+            self.currentTeamWithBall(attemptingTeam);
+            self.isKickoff(true);
+            self.SetupKickoff();
+            return;
+        }
+
+        self.currentTeamWithBall(defensiveTeam);
+        self.SetBallPosition();
+    },
+
+    //A blocked extra point may be returned for two points; no extra point follows the return score.
+    handleBlockedExtraPoint: function (kickResultText) {
+        let attemptingTeam = self.currentTeamWithBall();
+        let defensiveTeam = attemptingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+        let kickResult = new MODULES.Constructors.PlayResult(0, kickResultText, true, GAME_PLAY_TYPES.EXTRAPOINT);
+
+        playMaker.recordPlay(kickResult);
+
+        if (UTILITIES.getRandomInt(1, 100) === 1) {
+            self.currentTeamWithBall(defensiveTeam);
+            playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
+            playMaker.recordPlay(new MODULES.Constructors.PlayResult(0, 'Blocked Extra Point Return for 2 Points', false, GAME_PLAY_TYPES.EXTRAPOINT));
+
+            //The scoring defense receives the ensuing kickoff after a returned blocked extra point.
+            self.currentTeamWithBall(defensiveTeam);
+        }
+        else {
+            self.currentTeamWithBall(attemptingTeam);
+        }
+
+        self.isExtraPointKick(false);
+        self.isKickoff(true);
+        self.SetupKickoff();
     },
 
     //the offense spikes the ball (intentional incomplete pass) to stop the clock, at the cost of a down
