@@ -47,6 +47,9 @@
                 awayTeam.overtimeScore = self.awayTeamScore() - awayTeam.firstQuarterScore - awayTeam.secondQuarterScore - awayTeam.thirdQuarterScore - awayTeam.fourthQuarterScore;
             }
 
+            homeTeam.totalScore = self.homeTeamScore();
+            awayTeam.totalScore = self.awayTeamScore();
+
             self.gameBoxScore.refresh(homeTeam);
             self.gameBoxScore.refresh(awayTeam);
         }

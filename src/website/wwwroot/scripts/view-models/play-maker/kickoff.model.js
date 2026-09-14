@@ -21,6 +21,13 @@
     self.kickoffPower = -1;
     self.kickoffAngle = -1;
 
+    self.StopKickoffSliders = function () {
+        clearInterval(self.kickoffPowerSliderIntervalId);
+        clearInterval(self.kickoffAngleSliderIntervalId);
+        self.kickoffPowerSliderIntervalId = 0;
+        self.kickoffAngleSliderIntervalId = 0;
+    };
+
     self.GetKickoffPower = function () {
         var power = parseInt($("#kickoffPower").val(), 10);
         $("#kickoffPower").prop('disabled', true);
@@ -52,6 +59,7 @@
         }
     };
     self.SetupKickoff = function () {
+        self.StopKickoffSliders();
         self.showKickoffControls(true); //used to show kickoff controls
         self.StopCounter(); //the quarter clock does not run while the kick is being set up
 

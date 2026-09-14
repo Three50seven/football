@@ -31,7 +31,8 @@
         }
         return true; //return true so radio button is checked
     };
-    self.coinTossValue = ko.observable(0).extend({ throttle: 4000 }); //delay updating coin toss value until after 5 seconds (to allow coin animation to finish)
+    self.coinTossValue = ko.observable(0);
+    self.coinTossTimerId = 0;
     self.coinTossWinner = ko.observable(0); //stores team id of coin toss winner
     self.coinTossLoser = ko.observable(0); //stores team id of coin toss loser
     self.coinTossWinningOption = ko.observable('receive'); //stores value of the option chosen by the coin-toss winning team        
@@ -66,7 +67,10 @@
             }
         }, 100);
 
-        self.coinTossValue(coinValue);
+        clearTimeout(self.coinTossTimerId);
+        self.coinTossTimerId = setTimeout(function () {
+            self.coinTossValue(coinValue);
+        }, 4000); //show the result after the coin animation has completed
 
         //visiting team always gets to choose coin toss option (heads or tails)
         if (coinValue === coinSideSelected) {

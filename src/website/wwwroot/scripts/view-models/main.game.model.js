@@ -6,6 +6,7 @@
     self.currentDown = ko.observable(1);    
     self.playCountForPossession = ko.observable(1); 
     self.gameSimulated = ko.observable(false);
+    self.completedGameAddedToHistory = ko.observable(false);
     
     //GENERAL GAME FUNCTIONS:
     self.teamsPicked = ko.computed(function () {
@@ -49,20 +50,60 @@
         self.InitializeGameStats();
         self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_NORMAL); //offense has 40 seconds to snap the first play
     };
+    self.ResetGameMetrics = function () {
+        self.StopCounter();
+        self.StopPlayClock();
+        self.StopKickoffSliders();
+        self.gameStarted(false);
+        self.gameOver(false);
+        self.currentQuarter(1);
+        self.elapsedTime(0);
+        self.playClockRemaining(MODULES.Constants.PLAY_CLOCK_NORMAL);
+        self.currentDown(1);
+        self.playCountForPossession(1);
+        self.timeOfPossession(0);
+        self.currentTeamWithBall(0);
+        self.ballSpotStart(0);
+        self.yardsTraveled(0);
+        self.yardsToFirst(10);
+        self.homeTeamScore(0);
+        self.awayTeamScore(0);
+        self.homeTeamTimeOuts(3);
+        self.awayTeamTimeOuts(3);
+        self.gameBoxScore([]);
+        self.gamePlayStats([]);
+        self.teamPlayHistory([]);
+        self.pointAttemptAfterTouchDown(false);
+        self.showKickoffControls(true);
+        self.isKickoff(false);
+        self.isSafety(false);
+        self.isPunt(false);
+        self.isFieldGoal(false);
+        self.isExtraPointKick(false);
+        self.isBeginningOfHalf = true;
+        self.lastTimeoutTeam(0);
+        self.consecutiveDelayOfGamePenalties(0);
+        self.completedGameAddedToHistory(false);
+    };
+    self.ResetGameForCoinToss = function () {
+        self.ResetGameMetrics();
+        self.gameSimulated(false);
+        clearTimeout(self.coinTossTimerId);
+        self.coinTossValue(0);
+        self.coinTossWinner(0);
+        self.coinTossLoser(0);
+        self.coinTossWinningOption('receive');
+        self.teamReceivingInitialKickoff(0);
+        $('#coin').removeClass('heads tails');
+        self.ChooseCoinSide();
+        $('#coin').off('click').on('click', self.TossCoin);
+    };
     self.ResetTeams = function () {
         self.ClearCoinColors();
         self.homeTeamID(0);
         self.awayTeamID(0);
-        self.gameSimulated(false);
         self.simHistory([]);
-        self.StopCounter();
-        self.StopPlayClock();
-        self.playClockRemaining(MODULES.Constants.PLAY_CLOCK_NORMAL);
-        self.currentQuarter(1);
-        self.elapsedTime(0);
-        self.gameOver(false);
-        self.lastTimeoutTeam(0);
-        self.consecutiveDelayOfGamePenalties(0);
+        self.ResetGameForCoinToss();
         console.log('TEAMS RESET');
     };
     self.CloseSpecialTeamsMenu = function () {

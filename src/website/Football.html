@@ -149,7 +149,7 @@ internet zone change to: url=(0014)about:internet-->
                                     </div>
                                 </div>
                             </div>
-                            <div data-bind="visible: gameSimulated()">
+                            <div data-bind="visible: simHistory().length > 0">
                                 <br><span class="white">Sim Box Score:</span>
                                 <table class="football-stats">
                                     <thead>
@@ -270,9 +270,11 @@ internet zone change to: url=(0014)about:internet-->
                                         <!-- /ko -->
                                     </div>
                                 </div>
+                                <br />
+                                <button class="btn-default" data-bind="click: ResetGameForCoinToss">Start New Game</button>
                             </div>
                         </div>
-                        <div data-bind="visible: coinTossValue() > 0"> <span class="coin-toss-result" data-bind="text: coinTossResultText"></span>
+                        <div data-bind="visible: coinTossValue() > 0 && coinTossWinner() > 0"> <span class="coin-toss-result" data-bind="text: coinTossResultText"></span>
                             <br
                             />The <span data-bind="text: coinTossWinnerInfo() ? coinTossWinnerInfo().teamCityAndName() : '[Error - coin toss winner not determined.]'"></span> won
                             the coin toss.
@@ -325,6 +327,8 @@ internet zone change to: url=(0014)about:internet-->
                     <div id="currentBallSpot" data-bind="text: HELPERS.getYardText()"
                     class="white"></div>
                     <div id="finalScoreBanner" class="white" data-bind="visible: gameOver">GAME OVER - Final Score: <span data-bind="text: homeTeamInfo().teamName()"></span> <span data-bind="text: homeTeamScore()"></span> - <span data-bind="text: awayTeamInfo().teamName()"></span> <span data-bind="text: awayTeamScore()"></span></div>
+                    <button class="btn-default btn-default-small" data-bind="click: SimGame, visible: gameStarted() && !gameOver()">Sim Remaining Game</button>
+                    <button class="btn-default btn-default-small" data-bind="click: ResetGameForCoinToss, visible: gameOver">Start New Game</button>
                 </div>
                 <br>
                 <p class="last-play-container" data-bind="visible: gameStarted()"># Total Plays in Game: <span id="playCount">0</span>

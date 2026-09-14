@@ -566,6 +566,7 @@
         self.StopCounter();
         self.StopPlayClock();
         self.gameOver(true);
+        sim.addCompletedGameToHistory();
 
         let winningTeam = offendingTeamId === self.homeTeamID() ? self.awayTeamInfo() : self.homeTeamInfo();
         let offendingTeamInfo = offendingTeamId === self.homeTeamID() ? self.homeTeamInfo() : self.awayTeamInfo();
