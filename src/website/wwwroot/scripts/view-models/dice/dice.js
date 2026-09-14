@@ -20,12 +20,12 @@
     },
 
     display: function (dice, diceSum) {
-        //clear results in list of die values
         $("#diceValues").empty();
 
         for (var i = 0, len = dice.length; i < len; i++) {
             let die = dice[i];
-            let listItem = document.createElement("li");
+            let listItem = document.createElement("span");
+            listItem.className = "die-result";
             let dieText =
                 "Die " + (i + 1) + " = " + die.valueRolled;
 
@@ -33,6 +33,11 @@
             $("#diceTotal").text(diceSum);
             $("#diceValues").append(listItem);
         }
+
+        $("#diceValues").removeClass("dice-rolling").addClass("dice-rolling");
+        window.setTimeout(function () {
+            $("#diceValues").removeClass("dice-rolling");
+        }, 650);
     },
 
     roll: function () {

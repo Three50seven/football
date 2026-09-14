@@ -51,10 +51,14 @@
         self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_NORMAL); //offense has 40 seconds to snap the first play
     };
     self.ResetGameMetrics = function () {
+        self.ResetField();
         self.StopCounter();
         self.StopPlayClock();
         self.StopKickoffSliders();
         self.gameStarted(false);
+        self.isGamePaused(false);
+        self.wasGameClockRunningBeforePause = false;
+        self.wasPlayClockRunningBeforePause = false;
         self.gameOver(false);
         self.currentQuarter(1);
         self.elapsedTime(0);

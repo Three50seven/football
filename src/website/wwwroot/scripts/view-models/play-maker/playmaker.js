@@ -211,6 +211,12 @@
         //if it's the first quarter, the team receiving should be set to the currentTeam with the ball
         let receivingTeam = self.awayTeamID();
         let kickingTeam = self.homeTeamID();
+        let teamWithBallBeforeKick = self.currentTeamWithBall();
+
+        if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {
+            kickingTeam = teamWithBallBeforeKick;
+            receivingTeam = kickingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+        }
 
         if (self.isBeginningOfHalf && self.teamReceivingInitialKickoff() === self.homeTeamID()) {
             receivingTeam = self.homeTeamID();
@@ -639,7 +645,9 @@
             thisPlaysResult.playResultText,
             HELPERS.getYardText(), //Spot of Ball text in Play History
             self.currentQuarter(),
-            self.timeOfPossession()));
+            self.timeOfPossession(),
+            self.homeTeamScore() + ' - ' + self.awayTeamScore(),
+            self.remainingTimeDisplay()));
 
         playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer);
 

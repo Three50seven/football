@@ -33,7 +33,7 @@ MODULES.Constructors = (function () {
             this.playType = playType;
             this.isFirstDown = isFirstDown;
         },
-        PlayHistory: function (playId, teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession) {
+        PlayHistory: function (playId, teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession, score, gameClock) {
             this.playId = playId;
             this.totalPlayCount = MODULES.GameVariables.TotalPlayCount;
             this.teamId = teamId;
@@ -45,6 +45,8 @@ MODULES.Constructors = (function () {
             this.ballSpot = ballSpot;
             this.quarter = quarter;
             this.timeOfPossessionDisplay = UTILITIES.getTimeDisplay(timeOfPossession);
+            this.score = score;
+            this.gameClock = gameClock;
             this.fullTeamName = UTILITIES.getFullTeamName(this.teamName, this.teamId);
         },
         TeamArrayRecord: function (teamId, teamColor, teamCity, teamMascot) {
