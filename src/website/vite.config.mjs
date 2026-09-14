@@ -31,6 +31,10 @@ export default defineConfig({
         {
           src: "wwwroot",
           dest: "."
+        },
+        {
+          src: "favicon.ico",
+          dest: "."
         }
       ]
     })
