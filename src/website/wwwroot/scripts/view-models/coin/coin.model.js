@@ -95,4 +95,27 @@
         else
             self.teamReceivingInitialKickoff(self.coinTossLoser());
     };
+    self.RecordCoinTossHistory = function () {
+        let winningTeam = self.coinTossWinnerInfo();
+        let receivingTeam = self.teamReceivingInitialKickoffInfo();
+
+        if (!winningTeam || !receivingTeam)
+            return;
+
+        let optionText = self.coinTossWinningOption() === 'kickoff' ? 'kickoff' : 'receive';
+        let resultText = 'Coin Toss: ' + winningTeam.teamCityAndName() + ' won and elected to ' + optionText + '. ' + receivingTeam.teamCityAndName() + ' will receive the opening kickoff.';
+
+        self.AddPlayHistory(new MODULES.Constructors.PlayHistory(self.teamPlayHistory().length + 1,
+            self.coinTossWinner(),
+            winningTeam.teamName(),
+            'Coin Toss',
+            0,
+            '0 Yards',
+            resultText,
+            '',
+            self.currentQuarter(),
+            0,
+            self.homeTeamScore() + ' - ' + self.awayTeamScore(),
+            self.remainingTimeDisplay()));
+    };
 })(jQuery);

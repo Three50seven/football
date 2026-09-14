@@ -117,6 +117,296 @@ nav > ul {
 }
 /*END Drop Down Menu Items */
 
+.dice-roll-button {
+    align-items: center;
+    background: linear-gradient(180deg, #FFB84A 0%, #F17918 48%, #A93B0D 100%);
+    border: 1px solid #FFD28A;
+    border-radius: 7px;
+    box-shadow: 0 10px 0 #6D2309, 0 18px 24px rgba(0, 0, 0, 0.35);
+    color: #1E1106;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 24px;
+    font-weight: bold;
+    gap: 10px;
+    justify-content: center;
+    min-width: 210px;
+    padding: 14px 22px 13px;
+    text-transform: uppercase;
+}
+
+.dice-roll-button:hover,
+.dice-roll-button:focus {
+    background: linear-gradient(180deg, #FFD06D 0%, #FE9428 48%, #B94A12 100%);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.dice-roll-button:active {
+    box-shadow: 0 5px 0 #6D2309, 0 10px 18px rgba(0, 0, 0, 0.35);
+    transform: translateY(5px);
+}
+
+.dice-roll-icon {
+    fill: currentColor;
+    height: 30px;
+    stroke: currentColor;
+    stroke-width: 3px;
+    width: 30px;
+}
+
+.dice-roll-icon rect {
+    fill: #1E1106;
+    stroke: #1E1106;
+}
+
+.dice-roll-icon circle {
+    fill: #FFD28A;
+    stroke: none;
+}
+
+.play-ready-panel {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin: 0 auto;
+    max-width: 720px;
+}
+
+.possession-card {
+    align-items: center;
+    background: linear-gradient(180deg, rgba(7, 42, 55, 0.95) 0%, rgba(3, 23, 32, 0.95) 100%);
+    border: 1px solid rgba(126, 209, 251, 0.55);
+    border-radius: 7px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 20px rgba(0, 0, 0, 0.28);
+    color: #FFFFFF;
+    display: grid;
+    gap: 4px 10px;
+    grid-template-columns: 44px minmax(140px, 1fr) auto;
+    min-height: 64px;
+    min-width: 300px;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.possession-kicker {
+    color: #7ED1FB;
+    font-size: 11px;
+    font-weight: bold;
+    grid-column: 2 / 4;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.possession-team-icon {
+    grid-row: 1 / 3;
+    max-height: 42px;
+    max-width: 42px;
+}
+
+.possession-team-name {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1.15;
+}
+
+.possession-ball-marker {
+    align-self: center;
+    background: #FE9428;
+    border-radius: 4px;
+    color: #1E1106;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 7px;
+    text-transform: uppercase;
+}
+
+.last-play-container {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.last-play-kicker {
+    color: #7ED1FB;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.last-play-summary {
+    align-items: center;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    justify-content: center;
+}
+
+.last-play-team-icon {
+    display: none;
+    max-height: 28px;
+    max-width: 28px;
+}
+
+.last-play-team-name {
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+.last-play-separator {
+    color: #FE9428;
+    display: none;
+    font-weight: bold;
+}
+
+.quick-play-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 0 auto;
+    max-width: 560px;
+}
+
+.quick-play-button {
+    background: linear-gradient(180deg, #0F4C66 0%, #082D3D 100%);
+    border: 1px solid #25C7E8;
+    border-radius: 6px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    color: #FFFFFF;
+    cursor: pointer;
+    min-width: 150px;
+    padding: 10px 14px;
+    text-align: left;
+}
+
+.quick-play-button:hover,
+.quick-play-button:focus {
+    background: linear-gradient(180deg, #126985 0%, #0A3B4F 100%);
+    border-color: #FE9428;
+    outline: none;
+}
+
+.quick-play-kicker {
+    color: #7ED1FB;
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.quick-play-label {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 3px;
+}
+
+.play-call-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin: 0 auto 12px;
+    max-width: 420px;
+}
+
+.play-call-button {
+    background: linear-gradient(180deg, #114D2F 0%, #092D1E 100%);
+    border: 1px solid #5FE09B;
+    border-radius: 6px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    color: #FFFFFF;
+    cursor: pointer;
+    min-width: 160px;
+    padding: 12px 16px;
+    text-align: left;
+}
+
+.play-call-button:hover,
+.play-call-button:focus {
+    background: linear-gradient(180deg, #17663F 0%, #0B3A26 100%);
+    border-color: #FE9428;
+    outline: none;
+}
+
+.game-utility-controls {
+    align-items: center;
+    background: rgba(4, 26, 37, 0.8);
+    border: 1px solid rgba(126, 209, 251, 0.35);
+    border-radius: 7px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 20px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    justify-content: center;
+    margin: 4px auto 0;
+    max-width: 620px;
+    padding: 12px;
+}
+
+.utility-control-button {
+    background: linear-gradient(180deg, #314961 0%, #17293A 100%);
+    border: 1px solid #7ED1FB;
+    border-radius: 6px;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+    min-width: 145px;
+    padding: 10px 13px;
+}
+
+.utility-control-button:hover,
+.utility-control-button:focus {
+    background: linear-gradient(180deg, #3F6682 0%, #1B3A4F 100%);
+    border-color: #FE9428;
+    outline: none;
+}
+
+.utility-control-button-pause {
+    background: linear-gradient(180deg, #7C3943 0%, #431D26 100%);
+    border-color: #FF9D9D;
+}
+
+.utility-control-button-pause:hover,
+.utility-control-button-pause:focus {
+    background: linear-gradient(180deg, #9E4B55 0%, #552532 100%);
+}
+
+@media (max-width: 520px) {
+    .play-ready-panel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .possession-card {
+        min-width: 0;
+    }
+
+    .quick-play-actions,
+    .play-call-actions,
+    .game-utility-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .quick-play-button,
+    .play-call-button,
+    .utility-control-button,
+    .dice-roll-button {
+        min-width: 0;
+        text-align: center;
+        width: 100%;
+    }
+}
+
 .main-site-link {
     font-size: 32px;
     color: #FE9428;
