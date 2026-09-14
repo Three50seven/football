@@ -7,6 +7,7 @@
     self.playCountForPossession = ko.observable(1); 
     self.gameSimulated = ko.observable(false);
     self.completedGameAddedToHistory = ko.observable(false);
+    self.pointAttemptTeamId = 0;
     
     //GENERAL GAME FUNCTIONS:
     self.teamsPicked = ko.computed(function () {
@@ -67,6 +68,7 @@
         self.playCountForPossession(1);
         self.timeOfPossession(0);
         self.currentTeamWithBall(0);
+        self.pointAttemptTeamId = 0;
         self.ballSpotStart(0);
         self.yardsTraveled(0);
         self.yardsToFirst(10);

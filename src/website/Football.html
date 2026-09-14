@@ -99,8 +99,8 @@ internet zone change to: url=(0014)about:internet-->
                                     <path d="M 210 48 V 55"></path>
                                 </g>
                                 <g class="goal-line-hashes">
-                                    <path d="M 16 48 V 55"></path>
-                                    <path d="M 204 48 V 55"></path>
+                                    <path d="M 22 48 V 55"></path>
+                                    <path d="M 198 48 V 55"></path>
                                 </g>
                                 <g class="field-numbers">
                                     <text x="38" y="25">10</text><text x="56" y="25">20</text><text x="74" y="25">30</text><text x="92" y="25">40</text><text x="110" y="25">50</text>
@@ -384,6 +384,21 @@ internet zone change to: url=(0014)about:internet-->
                     <div class="pause-dialog" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
                         <h2 id="pauseTitle">Game Paused</h2>
                         <p>The game clock and play clock are stopped.</p>
+                        <div id="pauseScoreboard">
+                            <div><span data-bind="text: homeTeamInfo().teamName()"></span> <strong data-bind="text: homeTeamScore"></strong></div>
+                            <div><span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong></div>
+                            <div><span data-bind="text: currentQuarterDisplay"></span> <span data-bind="text: remainingTimeDisplay"></span> <span data-bind="text: playClockDisplay"></span></div>
+                            <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
+                            <div data-bind="text: HELPERS.getYardText()"></div>
+                        </div>
+                        <div id="pauseHistory" class="scroller">
+                            <table class="football-stats">
+                                <thead><tr><th>Team</th><th>Play</th><th>Score</th><th>Clock</th></tr></thead>
+                                <tbody data-bind="foreach: teamPlayHistory">
+                                    <tr><td data-bind="text: fullTeamName"></td><td data-bind="text: playResult"></td><td data-bind="text: score"></td><td data-bind="text: gameClock"></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <button type="button" class="btn-default" data-bind="click: ResumeGame">Resume Game</button>
                     </div>
                 </div>

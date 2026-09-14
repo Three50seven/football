@@ -17,7 +17,10 @@
     self.currentTeamWithBall = ko.observable(0);
     self.SetupKickoffBallSpot = function () {
         console.log('SETTING UP KICKOFF BALL SPOT');
-        console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', isExtraPointKick(), isKickoff(), isSafety());
+        let extraPointKickActive = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick();
+        let kickoffActive = typeof self.isKickoff === 'function' && self.isKickoff();
+        let safetyKickActive = typeof self.isSafety === 'function' && self.isSafety();
+        console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', extraPointKickActive, kickoffActive, safetyKickActive);
         //if (isExtraPointKick() || isKickoff() || isSafety()) {
         //    //set spot depending on type of kick, default is normal kickoff
         //    let spot = MODULES.Constants.KICKOFF_SPOT;
@@ -61,20 +64,20 @@
 
         //    console.log('AFTER KICKOFF SPOT SET => Home Team: %s, Away Team: %s, Kicking Team %s, Spot: %s', self.homeTeamID(), self.awayTeamID(), kickingTeam, spot);
         //}
-        if (isExtraPointKick() || isKickoff() || isSafety()) {
+        if (extraPointKickActive || kickoffActive || safetyKickActive) {
             //set spot depending on type of kick, default is normal kickoff
             let spot = MODULES.Constants.KICKOFF_SPOT;
 
-            if (isKickoff()) {
+            if (kickoffActive) {
                 console.log('SPOT BEFORE CHANGE (KICKOFF): %s', spot);
                 spot = spot + 30;
             }
-            if (isSafety()) {
+            if (safetyKickActive) {
                 spot = MODULES.Constants.SAFETY_KICKOFF_SPOT;
                 console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot);
                 spot = spot + 60;
             }
-            if (isExtraPointKick()) {
+            if (extraPointKickActive) {
                 spot = MODULES.Constants.EXTRA_POINT_KICK_SPOT;
                 console.log('SPOT BEFORE CHANGE (EXTRA POINT): %s', spot);
             }
@@ -96,7 +99,16 @@
         let fieldScale = $('#field-img').width() / 220 || 1;
         let ratio = 1.8 * fieldScale; //180 divided by 100, scaled to the responsive field width
 
-        if (self.currentTeamWithBall() === self.homeTeamID()) {
+        let isExtraPoint = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick() && self.pointAttemptTeamId;
+        if (isExtraPoint) {
+            // The point-after is placed at the scoring team's opponent's 15-yard line.
+            isHomeTeam = self.pointAttemptTeamId === self.awayTeamID();
+        }
+        else if (self.currentTeamWithBall() === self.homeTeamID()) {
+            isHomeTeam = true;
+        }
+
+        if (isHomeTeam) {
             isHomeTeam = true;
             min = 20 * fieldScale; //left goal line in the responsive field coordinate system
             //max = 175; //max for home team i.e. TOUCHDOWN

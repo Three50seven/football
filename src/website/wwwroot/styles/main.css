@@ -1349,3 +1349,44 @@ input[type="submit"].btn-default:hover {
     margin: 0 0 20px;
     color: var(--broadcast-muted);
 }
+
+#pauseScoreboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 0 0 18px;
+    padding: 12px;
+    border: 1px solid var(--broadcast-line);
+    border-radius: 6px;
+    background: var(--broadcast-panel-raised);
+    text-align: left;
+}
+
+#pauseScoreboard > div:nth-child(n + 3) {
+    grid-column: span 2;
+    color: var(--broadcast-muted);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+#pauseScoreboard strong {
+    float: right;
+    color: var(--broadcast-accent);
+    font-size: 1.2rem;
+}
+
+#pauseHistory {
+    height: 180px;
+    margin-bottom: 20px;
+}
+
+#pauseHistory .football-stats {
+    min-width: 0;
+    margin: 0;
+    font-size: 0.72rem;
+}
+
+#pauseHistory .football-stats td,
+#pauseHistory .football-stats th {
+    padding: 7px;
+}

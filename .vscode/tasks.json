@@ -2,11 +2,20 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "build football assets",
+            "type": "npm",
+            "script": "bundle",
+            "path": "src/website",
+            "problemMatcher": []
+        },
+        {
             "label": "serve football site",
             "type": "npm",
             "script": "start",
             "path": "src/website",
             "isBackground": true,
+            "dependsOn": "build football assets",
+            "dependsOrder": "sequence",
             "problemMatcher": {
                 "owner": "custom",
                 "pattern": {

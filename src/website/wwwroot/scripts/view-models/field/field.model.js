@@ -21,8 +21,7 @@
     };
     self.SetBallPosition = function () {
         console.log('SETTING BALL POSITION');
-        //$('#ball-position').css('margin-left', self.ballSpot() + 'px'); //195 is max for right position, 0 is max left
-        $('#ball-position-img').css('margin-left', self.ballSpot() + 'px');
+        self.ballSpot();
 
         //TODO: REMOVE BELOW AFTER TESTING (uncomment $('#ball-position-img').css('margin-left', self.ballSpot() + 'px'); ABOVE)
         //TEST TRAIL:

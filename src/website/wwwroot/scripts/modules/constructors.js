@@ -76,13 +76,13 @@ MODULES.Constructors = (function () {
                 if (!this.teamColor)
                     return '';
 
-                return MODULES.Constants.TeamImageRoot + 'thumbs/' + this.teamColor + '.png';
+                return MODULES.Constants.TeamImageRoot + 'svgs/' + this.teamColor + '.svg';
             };
             this.teamImage = function () {
                 if (!this.teamColor)
                     return '';
 
-                return MODULES.Constants.TeamImageRoot + 'large/' + this.teamColor + '.png';
+                return MODULES.Constants.TeamImageRoot + 'svgs/' + this.teamColor + '.svg';
             };
         }
     };
