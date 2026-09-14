@@ -7,6 +7,7 @@
     self.playCountForPossession = ko.observable(1); 
     self.gameSimulated = ko.observable(false);
     self.completedGameAddedToHistory = ko.observable(false);
+    self.pointAttemptTeamId = 0;
     
     //GENERAL GAME FUNCTIONS:
     self.teamsPicked = ko.computed(function () {
@@ -51,10 +52,14 @@
         self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_NORMAL); //offense has 40 seconds to snap the first play
     };
     self.ResetGameMetrics = function () {
+        self.ResetField();
         self.StopCounter();
         self.StopPlayClock();
         self.StopKickoffSliders();
         self.gameStarted(false);
+        self.isGamePaused(false);
+        self.wasGameClockRunningBeforePause = false;
+        self.wasPlayClockRunningBeforePause = false;
         self.gameOver(false);
         self.currentQuarter(1);
         self.elapsedTime(0);
@@ -63,6 +68,7 @@
         self.playCountForPossession(1);
         self.timeOfPossession(0);
         self.currentTeamWithBall(0);
+        self.pointAttemptTeamId = 0;
         self.ballSpotStart(0);
         self.yardsTraveled(0);
         self.yardsToFirst(10);

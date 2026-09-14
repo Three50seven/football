@@ -34,14 +34,14 @@ MODULES.GameVariables = (function () {
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(22, 'saints', 'New Orleans', 'Saints'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(23, 'giants', 'New York', 'Giants'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(24, 'jets', 'New York', 'Jets'));
-        teamArray.push(new MODULES.Constructors.TeamArrayRecord(25, 'raiders', 'Oakland', 'Raiders'));
+        teamArray.push(new MODULES.Constructors.TeamArrayRecord(25, 'raiders', 'Las Vegas', 'Raiders'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(26, 'eagles', 'Philadelphia', 'Eagles'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(27, 'steelers', 'Pittsburgh', 'Steelers'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(28, 'forty-niners', 'San Francisco', '49ers'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(29, 'seahawks', 'Seattle', 'Seahawks'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(30, 'buccaneers', 'Tampa Bay', 'Buccaneers'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(31, 'titans', 'Tennessee', 'Titans'));
-        teamArray.push(new MODULES.Constructors.TeamArrayRecord(32, 'redskins', 'Washington', 'Redskins'));
+        teamArray.push(new MODULES.Constructors.TeamArrayRecord(32, 'commanders', 'Washington', 'Commanders'));
 
         return teamArray;
     }

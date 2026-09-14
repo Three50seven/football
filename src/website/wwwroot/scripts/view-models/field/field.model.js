@@ -1,12 +1,19 @@
 ﻿(function ($) {
     var self = this;
 
+    self.ResetField = function () {
+        $('#end-zone-left-img, #end-zone-right-img').removeClass();
+        $('#field-img .field-endzone-home').css('fill', '#a71930');
+        $('#field-img .field-endzone-away').css('fill', '#241773');
+    };
+
     self.SetupField = function () {
         console.log('SETTING UP FIELD');
-        //$('#end-zone-left').addClass(self.homeTeamInfo().teamBgColor());            
-        //$('#end-zone-right').addClass(self.awayTeamInfo().teamBgColor());
+        self.ResetField();
         $('#end-zone-left-img').addClass(self.homeTeamInfo().teamBgColor());
         $('#end-zone-right-img').addClass(self.awayTeamInfo().teamBgColor());
+        $('#field-img .field-endzone-home').css('fill', $('#end-zone-left-img').css('background-color'));
+        $('#field-img .field-endzone-away').css('fill', $('#end-zone-right-img').css('background-color'));
         //adjust the team names based on length of characters:
         $('#end-zone-left-txt').css('top', self.GetHomeTeamTextPosition(self.homeTeamInfo().teamName().length) + '%');
         $('#end-zone-right-txt').css('top', self.GetAwayTeamTextPosition(self.awayTeamInfo().teamName().length) + '%');
@@ -14,8 +21,7 @@
     };
     self.SetBallPosition = function () {
         console.log('SETTING BALL POSITION');
-        //$('#ball-position').css('margin-left', self.ballSpot() + 'px'); //195 is max for right position, 0 is max left
-        $('#ball-position-img').css('margin-left', self.ballSpot() + 'px');
+        self.ballSpot();
 
         //TODO: REMOVE BELOW AFTER TESTING (uncomment $('#ball-position-img').css('margin-left', self.ballSpot() + 'px'); ABOVE)
         //TEST TRAIL:
@@ -69,6 +75,12 @@
         //END TEST BALL MOVEMENT:
         //TODO: REMOVE ABOVE AFTER TESTING
     };
+
+    $(window).on('resize', function () {
+        if (self.gameStarted && self.gameStarted()) {
+            self.SetBallPosition();
+        }
+    });
     self.GetHomeTeamTextPosition = function (teamNameLength) {
         let topPercentage = 58;
         switch (teamNameLength) {

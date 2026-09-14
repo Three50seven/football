@@ -14,6 +14,9 @@
     self.lastTimeoutTeam = ko.observable(0); //tracks the team that most recently called a timeout, prevents back-to-back timeouts by the same team
     self.playClockTimerId = 0;
     self.playClockRemaining = ko.observable(MODULES.Constants.PLAY_CLOCK_NORMAL);
+    self.isGamePaused = ko.observable(false);
+    self.wasGameClockRunningBeforePause = false;
+    self.wasPlayClockRunningBeforePause = false;
     self.consecutiveDelayOfGamePenalties = ko.observable(0); //tracks repeated delay of game violations by the team currently snapping the ball
 
     //FUNCTIONS
@@ -65,6 +68,27 @@
     };
     self.StopPlayClock = function () {
         clearInterval(self.playClockTimerId);
+        self.playClockTimerId = 0;
+    };
+    self.PauseGame = function () {
+        if (!self.gameStarted() || self.gameOver() || self.isGamePaused())
+            return;
+
+        self.wasGameClockRunningBeforePause = self.isRunning();
+        self.wasPlayClockRunningBeforePause = self.playClockTimerId !== 0;
+        self.StopCounter();
+        self.StopPlayClock();
+        self.isGamePaused(true);
+    };
+    self.ResumeGame = function () {
+        if (!self.isGamePaused())
+            return;
+
+        self.isGamePaused(false);
+        if (self.wasGameClockRunningBeforePause)
+            self.StartCounter();
+        if (self.wasPlayClockRunningBeforePause)
+            self.StartPlayClock(self.playClockRemaining());
     };
     //moves the game clock forward by the given number of seconds and handles the end of a quarter/game when time expires
     self.AdvanceTime = function (seconds) {

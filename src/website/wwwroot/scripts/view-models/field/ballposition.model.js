@@ -17,7 +17,10 @@
     self.currentTeamWithBall = ko.observable(0);
     self.SetupKickoffBallSpot = function () {
         console.log('SETTING UP KICKOFF BALL SPOT');
-        console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', isExtraPointKick(), isKickoff(), isSafety());
+        let extraPointKickActive = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick();
+        let kickoffActive = typeof self.isKickoff === 'function' && self.isKickoff();
+        let safetyKickActive = typeof self.isSafety === 'function' && self.isSafety();
+        console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', extraPointKickActive, kickoffActive, safetyKickActive);
         //if (isExtraPointKick() || isKickoff() || isSafety()) {
         //    //set spot depending on type of kick, default is normal kickoff
         //    let spot = MODULES.Constants.KICKOFF_SPOT;
@@ -46,7 +49,6 @@
         //        console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot);
         //        if (kickingTeam === self.awayTeamID()) {
         //            spot = spot + 62;
-        //        }
         //    }
 
         //    if (isExtraPointKick()) {
@@ -62,20 +64,20 @@
 
         //    console.log('AFTER KICKOFF SPOT SET => Home Team: %s, Away Team: %s, Kicking Team %s, Spot: %s', self.homeTeamID(), self.awayTeamID(), kickingTeam, spot);
         //}
-        if (isExtraPointKick() || isKickoff() || isSafety()) {
+        if (extraPointKickActive || kickoffActive || safetyKickActive) {
             //set spot depending on type of kick, default is normal kickoff
             let spot = MODULES.Constants.KICKOFF_SPOT;
 
-            if (isKickoff()) {
+            if (kickoffActive) {
                 console.log('SPOT BEFORE CHANGE (KICKOFF): %s', spot);
                 spot = spot + 30;
             }
-            if (isSafety()) {
+            if (safetyKickActive) {
                 spot = MODULES.Constants.SAFETY_KICKOFF_SPOT;
                 console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot);
                 spot = spot + 60;
             }
-            if (isExtraPointKick()) {
+            if (extraPointKickActive) {
                 spot = MODULES.Constants.EXTRA_POINT_KICK_SPOT;
                 console.log('SPOT BEFORE CHANGE (EXTRA POINT): %s', spot);
             }
@@ -92,36 +94,54 @@
         //front of football spot indicator is where ball is on field. e.g. 50yd line will be ~85px
         let isHomeTeam = false;
         let spot = 0;
-        let min = 180; //minimum for away team i.e. Starting on team's GOALLINE 100 yards to go
+        let min = 20; //left goal line in the responsive field coordinate system
         //let max = 2; //max for away team i.e. TOUCHDOWN 0 yards to go
-        let ratio = 1.8; //180 divided by 100 (number of pixels to travel across 100 yards)
+        let fieldScale = $('#field-img').width() / 220 || 1;
+        let ratio = 1.8 * fieldScale; //180 divided by 100, scaled to the responsive field width
 
-        if (self.currentTeamWithBall() === self.homeTeamID()) {
+        let isExtraPoint = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick() && self.pointAttemptTeamId;
+        if (isExtraPoint) {
+            // The point-after is placed at the scoring team's opponent's 15-yard line.
+            isHomeTeam = self.pointAttemptTeamId === self.awayTeamID();
+        }
+        else if (self.currentTeamWithBall() === self.homeTeamID()) {
             isHomeTeam = true;
-            min = -4; //minimum for home team i.e. Starting on team's GOALLINE
+        }
+
+        if (isHomeTeam) {
+            isHomeTeam = true;
+            min = 20 * fieldScale; //left goal line in the responsive field coordinate system
             //max = 175; //max for home team i.e. TOUCHDOWN
         }
 
         //calculate based on max and min, when home team, subtract from 100 to get correct start position on field:
-        spot = isHomeTeam ? min + (100 - self.yardsToTouchdown()) * ratio + 1 : self.yardsToTouchdown() * ratio - 1;
+        spot = isHomeTeam ? min + (100 - self.yardsToTouchdown()) * ratio : 200 * fieldScale - (100 - self.yardsToTouchdown()) * ratio;
 
         //show trail for team
-        let trailWidth = self.yardsTraveled() * ratio;
+        let ballWidth = 5 * fieldScale;
+        let trailWidth = Math.max(0, self.yardsTraveled() * ratio - ballWidth);
+        $('#home-team-trail, #away-team-trail').css('height', (10 * fieldScale) + 'px');
+        $('#ball-position-img').css({
+            height: (10 * fieldScale) + 'px',
+            width: ballWidth + 'px'
+        });
 
         if (isHomeTeam) {
             $('#away-team-trail').css('width', '0px');
-            $('#home-team-trail').css('background-image', 'linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1)');
+            $('#home-team-trail').css('background-image', 'linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1))');
             $('#home-team-trail').css('width', trailWidth + 'px');
-            $('#home-team-trail').css('margin-left', self.ballSpotStart() * ratio + 'px');
+            $('#home-team-trail').css('margin-left', 20 * fieldScale + self.ballSpotStart() * ratio + 'px');
+            $('#ball-position-img').css('margin-left', (spot - (5 * fieldScale)) + 'px');
             //console.log('HOME => yardsTraveled:' + self.yardsTraveled() + ' ballSpotStart:' + self.ballSpotStart() + ' trailWidth: ' + trailWidth);
         }
         else {
-            let marginWidth = 181 - trailWidth - self.ballSpotStart() * ratio;
+            let marginWidth = 200 * fieldScale - trailWidth - self.ballSpotStart() * ratio;
             //console.log('margin-width: ' + marginWidth);
             $('#home-team-trail').css('width', '0px');
-            $('#away-team-trail').css('background-image', 'linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,1)');
+            $('#away-team-trail').css('background-image', 'linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,1))');
             $('#away-team-trail').css('width', trailWidth + 'px');
             $('#away-team-trail').css('margin-left', marginWidth + 'px');
+            $('#ball-position-img').css('margin-left', spot + 'px');
             //console.log('AWAY => yardsTraveled:' + self.yardsTraveled() + ' ballSpotStart:' + self.ballSpotStart() + ' trailWidth: ' + trailWidth);
         }
 

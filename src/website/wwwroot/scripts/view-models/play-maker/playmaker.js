@@ -113,6 +113,7 @@
         let isTouchdown = false;
         if (self.yardsToTouchdown() <= 0 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             _playResultText = SCORE_TYPES.TOUCHDOWN.toUpperCase();
+            self.pointAttemptTeamId = self.currentTeamWithBall();
             playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
             self.pointAttemptAfterTouchDown(true);
             isTouchdown = true;
@@ -131,7 +132,11 @@
         //DETERMINE DOWN
         let isTurnoverOnDowns = false;
         let isFirstDown = false;
-        if (_yards >= self.yardsToFirst() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+        if (isTouchdown) {
+            self.yardsToFirst(10);
+            self.currentDown(1);
+        }
+        else if (_yards >= self.yardsToFirst() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             self.yardsToFirst(10); //reset yards to first for next set of downs
             self.currentDown(1); //reset to first down
             isFirstDown = !isTouchdown; //a touchdown is recorded as a score, not a first down
@@ -211,6 +216,16 @@
         //if it's the first quarter, the team receiving should be set to the currentTeam with the ball
         let receivingTeam = self.awayTeamID();
         let kickingTeam = self.homeTeamID();
+        let teamWithBallBeforeKick = self.currentTeamWithBall();
+        if (kickoffType === KICKOFF_TYPES.EXTRAPOINT && self.pointAttemptTeamId) {
+            teamWithBallBeforeKick = self.pointAttemptTeamId;
+            self.currentTeamWithBall(teamWithBallBeforeKick);
+        }
+
+        if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {
+            kickingTeam = teamWithBallBeforeKick;
+            receivingTeam = kickingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+        }
 
         if (self.isBeginningOfHalf && self.teamReceivingInitialKickoff() === self.homeTeamID()) {
             receivingTeam = self.homeTeamID();
@@ -221,7 +236,7 @@
         self.isBeginningOfHalf = false;
 
         //normal change of possession after kickoff
-        if (!self.isBeginningOfHalf) {
+        if (!self.isBeginningOfHalf && (kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.SAFETY)) {
             if (self.currentTeamWithBall() === self.homeTeamID()) {
                 receivingTeam = self.homeTeamID();
                 kickingTeam = self.awayTeamID();
@@ -411,6 +426,7 @@
             self.yardsToFirst(10); //reset yards to first for next set of downs
             self.currentDown(1); //reset to first down
             self.isKickoff(true);
+            self.currentTeamWithBall(receivingTeam);
             self.SetupKickoff();
         }
     },
@@ -639,7 +655,9 @@
             thisPlaysResult.playResultText,
             HELPERS.getYardText(), //Spot of Ball text in Play History
             self.currentQuarter(),
-            self.timeOfPossession()));
+            self.timeOfPossession(),
+            self.homeTeamScore() + ' - ' + self.awayTeamScore(),
+            self.remainingTimeDisplay()));
 
         playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer);
 
@@ -702,6 +720,7 @@
 
         //START_HERE
         if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT) {
+            self.currentTeamWithBall(self.pointAttemptTeamId);
             self.isExtraPointKick(true);
             self.SetupKickoff();
         }
