@@ -96,6 +96,7 @@
             }
             else {
                 self.gameOver(true);
+                sim.addCompletedGameToHistory();
                 alert('Game Over! Final Score: ' + self.homeTeamInfo().teamName() + ' ' + self.homeTeamScore() +
                     ' - ' + self.awayTeamInfo().teamName() + ' ' + self.awayTeamScore());
             }

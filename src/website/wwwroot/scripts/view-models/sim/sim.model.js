@@ -16,7 +16,6 @@
     });
 
     self.SimGame = function () {
-        self.gameSimulated(true);
         sim.simGame();
     };
 })(jQuery);

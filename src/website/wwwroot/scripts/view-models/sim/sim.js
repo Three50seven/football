@@ -1,15 +1,60 @@
 var sim = {
     simGame: function () {
-        //TODO: Sim each quarter for box score
-        //determine winner or tie based on score
-        //show results        
         let gameScore = sim.simScore();
+        let simmingActiveGame = self.gameStarted();
+
+        if (simmingActiveGame) {
+            gameScore = sim.completeCurrentGame(gameScore);
+        }
 
         self.homeTeamScore(gameScore.homeTeam.total);
         self.awayTeamScore(gameScore.awayTeam.total);
 
         sim.displayBoxScore(gameScore);
         sim.generateGameSummary(gameScore);
+
+        if (simmingActiveGame) {
+            self.ResetGameForCoinToss();
+        }
+        else {
+            self.ResetGameMetrics();
+            self.gameSimulated(true);
+        }
+    },
+    completeCurrentGame: function (simulatedScore) {
+        let homeBoxScore = $.grep(self.gameBoxScore(), function (team) { return team.teamId === self.homeTeamID(); })[0];
+        let awayBoxScore = $.grep(self.gameBoxScore(), function (team) { return team.teamId === self.awayTeamID(); })[0];
+        let currentQuarterIndex = Math.min(self.currentQuarter(), 4) - 1;
+        let homeCompletedScores = [homeBoxScore.firstQuarterScore, homeBoxScore.secondQuarterScore, homeBoxScore.thirdQuarterScore, homeBoxScore.fourthQuarterScore];
+        let awayCompletedScores = [awayBoxScore.firstQuarterScore, awayBoxScore.secondQuarterScore, awayBoxScore.thirdQuarterScore, awayBoxScore.fourthQuarterScore];
+
+        for (let index = 0; index < 4; index++) {
+            if (index < currentQuarterIndex) {
+                simulatedScore.homeTeam.quarters[index] = homeCompletedScores[index];
+                simulatedScore.awayTeam.quarters[index] = awayCompletedScores[index];
+            }
+            else if (index === currentQuarterIndex) {
+                simulatedScore.homeTeam.quarters[index] += homeCompletedScores[index];
+                simulatedScore.awayTeam.quarters[index] += awayCompletedScores[index];
+            }
+        }
+
+        simulatedScore.homeTeam.total = simulatedScore.homeTeam.quarters.reduce(function (total, score) { return total + score; }, 0) + (simulatedScore.homeTeam.overtime || 0);
+        simulatedScore.awayTeam.total = simulatedScore.awayTeam.quarters.reduce(function (total, score) { return total + score; }, 0) + (simulatedScore.awayTeam.overtime || 0);
+        return simulatedScore;
+    },
+    addCompletedGameToHistory: function () {
+        if (self.completedGameAddedToHistory() || self.gameBoxScore().length === 0)
+            return;
+
+        let boxScore = self.gameBoxScore().map(function (team) {
+            return new MODULES.Constructors.GameBoxScoreRecord(team.teamId, team.teamName,
+                team.firstQuarterScore, team.secondQuarterScore, team.thirdQuarterScore,
+                team.fourthQuarterScore, team.overtimeScore, team.totalScore);
+        });
+
+        self.simHistory.unshift({ simNumber: self.simHistory().length + 1, boxScore: boxScore });
+        self.completedGameAddedToHistory(true);
     },
     simScore: function () {
         // Helper function to generate a random number based on a normal distribution and average score (per 2024 season)
