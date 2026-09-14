@@ -197,7 +197,7 @@ nav > ul {
     height: 103px;
     width: 220px;
     background-color: lawngreen;
-    background-image: url('../images/FootballField_no_grass_mini_with_center_img.png');
+    background-image: url('/wwwroot/content/images/FootballField_no_grass_mini_with_center_img.png');
 }
 
 #end-zone-left-img {
@@ -645,11 +645,14 @@ input[type="radio"][name="selectCoinTossWinner"] {
 #coin {
     transition: -webkit-transform 1s ease-in;
     -webkit-transform-style: preserve-3d;
+    transition: transform 1s ease-in;
+    transform-style: preserve-3d;
 }
 
     #coin div {
         position: absolute;
         -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
 
 .side-a {
@@ -658,6 +661,7 @@ input[type="radio"][name="selectCoinTossWinner"] {
 
 .side-b {
     -webkit-transform: rotateY(-180deg);
+    transform: rotateY(-180deg);
 }
 
 #coin.heads {
@@ -698,6 +702,26 @@ input[type="radio"][name="selectCoinTossWinner"] {
     to {
         -webkit-transform: rotateY(1980deg);
         -moz-transform: rotateY(1980deg);
+        transform: rotateY(1980deg);
+    }
+}
+
+@keyframes flipHeads {
+    from {
+        transform: rotateY(0);
+    }
+
+    to {
+        transform: rotateY(1800deg);
+    }
+}
+
+@keyframes flipTails {
+    from {
+        transform: rotateY(0);
+    }
+
+    to {
         transform: rotateY(1980deg);
     }
 }
