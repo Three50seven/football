@@ -49,6 +49,7 @@
         self.gameStarted(true);
         self.InitializeBoxScore();
         self.InitializeGameStats();
+        self.RecordCoinTossHistory();
         self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_NORMAL); //offense has 40 seconds to snap the first play
     };
     self.ResetGameMetrics = function () {

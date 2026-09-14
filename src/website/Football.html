@@ -403,8 +403,14 @@ internet zone change to: url=(0014)about:internet-->
                     </div>
                 </div>
                 <br>
-                <p class="last-play-container" data-bind="visible: gameStarted()"># Total Plays in Game: <span id="playCount">0</span>
-                    <br>Play result: <span id="playResult">0</span>
+                <p class="last-play-container" data-bind="visible: gameStarted()">
+                    <span class="last-play-kicker">Last play</span>
+                    <span class="last-play-summary">
+                        <img id="lastPlayTeamIcon" class="last-play-team-icon" alt="" />
+                        <span id="lastPlayTeamName" class="last-play-team-name"></span>
+                        <span id="lastPlaySeparator" class="last-play-separator">-</span>
+                        <span id="playResult">0</span>
+                    </span>
                 </p>
                 <div id="kickoffPlays" data-bind="visible:showKickoffControls() && gameStarted() && !gameOver()"
                 align="center">
@@ -447,7 +453,7 @@ internet zone change to: url=(0014)about:internet-->
                 <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()"
                 align="center">
                     <div data-bind="visible:pointAttemptAfterTouchDown()">
-                        <button type="button" id="diceRoller" class="btn-default" data-bind="click: MakePlayAfterTD">Make Attempt</button>
+                        <button type="button" id="pointAfterAttempt" class="btn-default" data-bind="click: MakePlayAfterTD">Make Attempt</button>
                         <br />
                         <br />
                         <label>
@@ -456,50 +462,65 @@ internet zone change to: url=(0014)about:internet-->
                             <input type="radio" name="afterTDPlay" value="twoPointConversion">2 Point Conversion</label>
                     </div>
                     <div data-bind="visible:!hasRolled() && !pointAttemptAfterTouchDown()">
-                        <button type="button" id="diceRoller" class="btn-default" data-bind="click: RollDice">Roll Dice</button>                        
+                        <div class="play-ready-panel">
+                            <div class="possession-card">
+                                <span class="possession-kicker">Possession</span>
+                                <img class="possession-team-icon" data-bind="attr:{src: currentTeamWithBall() === homeTeamID() ? homeTeamInfo().teamImage() : awayTeamInfo().teamImage()}, visible: currentTeamWithBall() > 0" />
+                                <span class="possession-team-name" data-bind="text: currentTeamWithBall() === homeTeamID() ? homeTeamInfo().teamCityAndName() : awayTeamInfo().teamCityAndName()"></span>
+                                <span class="possession-ball-marker">Ball</span>
+                            </div>
+                            <button type="button" id="diceRoller" class="dice-roll-button" data-bind="click: RollDice">
+                                <svg class="dice-roll-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                                    <rect x="8" y="8" width="48" height="48" rx="10"></rect>
+                                    <circle cx="22" cy="22" r="4"></circle>
+                                    <circle cx="42" cy="22" r="4"></circle>
+                                    <circle cx="32" cy="32" r="4"></circle>
+                                    <circle cx="22" cy="42" r="4"></circle>
+                                    <circle cx="42" cy="42" r="4"></circle>
+                                </svg>
+                                <span>Roll Dice</span>
+                            </button>
+                        </div>
                         <br />
                         <br />
-                        <button type="button" id="spikeBall" class="btn-default btn-default-small" data-bind="click: SpikeBall">Spike the Ball (Stop Clock)</button>
-                        <br />
-                        <br />
-                        <nav>
-                            <ul>
-                                <li class="sub-menu-parent" tab-index="0"> <a href="#" data-bind="click: CloseSpecialTeamsMenu">Special Teams</a>
-                                    <ul
-                                    class="sub-menu" id="specialTeamsMenu">
-                                        <li><a href="#" data-bind="click: PuntBall">Punt</a>
-                                        </li>
-                                        <li><a href="#" data-bind="click: KickFieldGoal">Field Goal</a>
-                                        </li>
-                            </ul>
-                            </li>
-                            </ul>
-                        </nav>
+                        <div class="quick-play-actions" id="specialTeamsMenu" data-bind="css: { 'show-sub-menu': currentDown() === 4 }">
+                            <button type="button" id="spikeBall" class="quick-play-button" data-bind="click: SpikeBall">
+                                <span class="quick-play-kicker">Clock</span>
+                                <span class="quick-play-label">Spike Ball</span>
+                            </button>
+                            <button type="button" class="quick-play-button" data-bind="click: PuntBall">
+                                <span class="quick-play-kicker">Special Teams</span>
+                                <span class="quick-play-label">Punt</span>
+                            </button>
+                            <button type="button" class="quick-play-button" data-bind="click: KickFieldGoal">
+                                <span class="quick-play-kicker">Special Teams</span>
+                                <span class="quick-play-label">Field Goal</span>
+                            </button>
+                        </div>
                         <br />
                         <br />
                         <br />
                         <br />
-                        <button type="button" id="pauseGame" class="btn-default" data-bind="click: PauseGame, visible: gameStarted() && !gameOver() && !isGamePaused()">Pause Game</button>
-                        <br />
-                        <button type="button" id="homeTimeout" class="btn-default" data-bind="click: CallHomeTimeout">Home Timeout (<span data-bind="text: homeTeamTimeOuts()"></span>)</button>
-                        <button type="button" id="awayTimeout" class="btn-default" data-bind="click: CallAwayTimeout">Away Timeout (<span data-bind="text: awayTeamTimeOuts()"></span>)</button>
+                        <div class="game-utility-controls">
+                            <button type="button" id="pauseGame" class="utility-control-button utility-control-button-pause" data-bind="click: PauseGame, visible: gameStarted() && !gameOver() && !isGamePaused()">Pause Game</button>
+                            <button type="button" id="homeTimeout" class="utility-control-button" data-bind="click: CallHomeTimeout"><span data-bind="text: homeTeamInfo().teamName()"></span> Timeout (<span data-bind="text: homeTeamTimeOuts()"></span>)</button>
+                            <button type="button" id="awayTimeout" class="utility-control-button" data-bind="click: CallAwayTimeout"><span data-bind="text: awayTeamInfo().teamName()"></span> Timeout (<span data-bind="text: awayTeamTimeOuts()"></span>)</button>
+                        </div>
                         
                     </div>
                     <br />
                     <div class="play-controls" data-bind="visible:hasRolled()">
-                        <button type="button" id="makePlay" class="btn-default" data-bind="click: MakePlay">Make a Play</button>
-                        <br />
-                        <br />
+                        <div class="play-call-actions" data-bind="visible: !pointAttemptAfterTouchDown()">
+                            <button type="button" id="makePassPlay" class="play-call-button" data-bind="click: MakePassPlay">
+                                <span class="quick-play-kicker">Call Play</span>
+                                <span class="quick-play-label">Pass</span>
+                            </button>
+                            <button type="button" id="makeRunPlay" class="play-call-button" data-bind="click: MakeRunPlay">
+                                <span class="quick-play-kicker">Call Play</span>
+                                <span class="quick-play-label">Run</span>
+                            </button>
+                        </div>
                         <div>
-                            <br>Choose a play:
-                            <br>
-                            <!-- ko if: !pointAttemptAfterTouchDown() -->
-                            <label>
-                                <input type="radio" name="selectPlay" value="pass" checked="checked">Pass</label>
-                            <label>
-                                <input type="radio" name="selectPlay" value="run">Run</label>
-                            <!-- /ko -->
-                            <br>
                             <p style="display:none;">Play Recommendations:
                                 <br>Pass - 45% chance of making a complete pass for positive yards
                                 <br>Run - 95% chance of a run for positive yards

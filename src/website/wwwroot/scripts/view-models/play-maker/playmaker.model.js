@@ -11,9 +11,16 @@
         });
     };
 
-    self.MakePlay = function () {
-        playMaker.init();
-        $('input[name=selectPlay][value=pass]').prop('checked', 'checked');//reset play selector to default
+    self.MakePlay = function (playSelected) {
+        playMaker.init(playSelected);
+    };
+
+    self.MakePassPlay = function () {
+        self.MakePlay(GAME_PLAY_TYPES.PASS);
+    };
+
+    self.MakeRunPlay = function () {
+        self.MakePlay(GAME_PLAY_TYPES.RUN);
     };
 
     self.SpikeBall = function () {

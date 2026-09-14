@@ -1,15 +1,20 @@
 ﻿var playMaker = {
-    init: function () {
-        playMaker.play();
+    init: function (playSelected) {
+        playMaker.play(playSelected);
     },
 
     initPlayAfterTouchdown: function () {
         playMaker.playAfterTouchdown();
     },
 
-    display: function (playText) {
+    display: function (playText, team) {
+        if (team) {
+            $("#lastPlayTeamIcon").attr("src", team.teamImage()).show();
+            $("#lastPlayTeamName").text(team.teamCityAndName());
+            $("#lastPlaySeparator").show();
+        }
+
         $("#playResult").text(playText);
-        $("#playCount").text(MODULES.GameVariables.TotalPlayCount);
     },
 
     getPlayResult: function (playSelected) {
@@ -217,6 +222,7 @@
         let receivingTeam = self.awayTeamID();
         let kickingTeam = self.homeTeamID();
         let teamWithBallBeforeKick = self.currentTeamWithBall();
+        let isBeginningOfHalfKickoff = self.isBeginningOfHalf && (kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE);
         if (kickoffType === KICKOFF_TYPES.EXTRAPOINT && self.pointAttemptTeamId) {
             teamWithBallBeforeKick = self.pointAttemptTeamId;
             self.currentTeamWithBall(teamWithBallBeforeKick);
@@ -227,21 +233,19 @@
             receivingTeam = kickingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
         }
 
-        if (self.isBeginningOfHalf && self.teamReceivingInitialKickoff() === self.homeTeamID()) {
-            receivingTeam = self.homeTeamID();
-            kickingTeam = self.awayTeamID();
+        if (isBeginningOfHalfKickoff) {
+            receivingTeam = self.teamReceivingInitialKickoff();
+            kickingTeam = receivingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
         }
-
-        //set to false after kickoff TODO: reset to true when 2nd quarter begins
-        self.isBeginningOfHalf = false;
-
-        //normal change of possession after kickoff
-        if (!self.isBeginningOfHalf && (kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.SAFETY)) {
+        else if (kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.SAFETY) {
             if (self.currentTeamWithBall() === self.homeTeamID()) {
                 receivingTeam = self.homeTeamID();
                 kickingTeam = self.awayTeamID();
             }
         }
+
+        //set to false after kickoff TODO: reset to true when 2nd quarter begins
+        self.isBeginningOfHalf = false;
 
         if (kickoffType === KICKOFF_TYPES.ONSIDE) {
             let onsideSuccessful = false;
@@ -371,6 +375,10 @@
 
         //record/show play results       
         self.currentTeamWithBall(kickingTeam); //set current team with ball to kickoff team briefly to record the correct team name in the history
+        if (kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.SAFETY) {
+            self.ballSpotStart(ballKickOffSpot);
+            self.yardsTraveled(0);
+        }
         playMaker.recordPlay(kickoffResult);
 
         //show return of kick (if any), but only for kicks that allow for returns
@@ -535,6 +543,27 @@
         self.ShowHideSpecialTeamsMenu();
     },
 
+    applyOffensivePenaltyYards: function (penaltyYards) {
+        let distanceToOwnGoal = 100 - self.yardsToTouchdown();
+        let appliedPenaltyYards = penaltyYards;
+
+        if (penaltyYards >= distanceToOwnGoal) {
+            appliedPenaltyYards = Math.min(Math.ceil(distanceToOwnGoal / 2), Math.max(distanceToOwnGoal - 1, 0));
+        }
+
+        self.yardsTraveled(self.yardsTraveled() - appliedPenaltyYards);
+        self.yardsToFirst(self.yardsToFirst() + appliedPenaltyYards);
+
+        return appliedPenaltyYards;
+    },
+
+    getPenaltyText: function (appliedPenaltyYards, fullPenaltyYards) {
+        if (appliedPenaltyYards === 0)
+            return 'No Yardage - Ball at the 1 Yard Line';
+
+        return appliedPenaltyYards === fullPenaltyYards ? fullPenaltyYards + ' Yard Penalty' : appliedPenaltyYards + ' Yard Half-the-Distance Penalty';
+    },
+
     //the play clock expired before the snap - whistle the play dead and assess a 5 yard delay of game penalty
     delayOfGamePenalty: function () {
         if (self.gameOver() || self.showKickoffControls() || self.pointAttemptAfterTouchDown())
@@ -553,22 +582,21 @@
         }
 
         self.playCountForPossession(self.playCountForPossession() + 1);
-        self.yardsTraveled(self.yardsTraveled() - MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS); //push the offense back from the spot of the ball
-        self.yardsToFirst(self.yardsToFirst() + MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS); //penalty yardage is added to the distance needed for a first down
+        let penaltyYards = playMaker.applyOffensivePenaltyYards(MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS);
+        let delayPenaltyText = playMaker.getPenaltyText(penaltyYards, MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS);
+        let penaltyText = 'Delay of Game - ' + delayPenaltyText;
 
-        let penaltyText = 'Delay of Game - 5 Yard Penalty';
-        let penaltyYards = MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS;
 
         if (self.consecutiveDelayOfGamePenalties() === 2) {
             //a second straight delay of game is also assessed as unsportsmanlike conduct
-            self.yardsTraveled(self.yardsTraveled() - MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
-            self.yardsToFirst(self.yardsToFirst() + MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
-            penaltyYards += MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS;
-            penaltyText += ' + Unsportsmanlike Conduct - 15 Yard Penalty';
-            alert('DELAY OF GAME - repeated violation! An additional 15 yard unsportsmanlike conduct penalty has been assessed. One more delay of game will result in a forfeit.');
+            let unsportsmanlikePenaltyYards = playMaker.applyOffensivePenaltyYards(MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
+            let unsportsmanlikePenaltyText = playMaker.getPenaltyText(unsportsmanlikePenaltyYards, MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
+            penaltyYards += unsportsmanlikePenaltyYards;
+            penaltyText += ' + Unsportsmanlike Conduct - ' + unsportsmanlikePenaltyText;
+            alert('DELAY OF GAME - repeated violation! ' + unsportsmanlikePenaltyText + ' for unsportsmanlike conduct has been assessed. One more delay of game will result in a forfeit.');
         }
         else {
-            alert('DELAY OF GAME - the offense failed to snap the ball in time. 5 yard penalty.');
+            alert('DELAY OF GAME - the offense failed to snap the ball in time. ' + delayPenaltyText + '.');
         }
 
         self.SetBallPosition();
@@ -659,7 +687,7 @@
             self.homeTeamScore() + ' - ' + self.awayTeamScore(),
             self.remainingTimeDisplay()));
 
-        playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer);
+        playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer, team);
 
         //now record stats for this play
         this.recordGameStats(team, thisPlaysResult);
@@ -689,8 +717,8 @@
         self.UpdateGameStat(playStatsRecord);
     },
 
-    play: function () {
-        let playSelected = $('input[name=selectPlay]:checked').val();
+    play: function (playSelected) {
+        playSelected = playSelected || $('input[name=selectPlay]:checked').val();
         if (playSelected) {
             self.hasRolled(false); //reset flag so player has to roll before making next play
 
