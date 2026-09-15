@@ -14,10 +14,10 @@
     },
 
     getYardText: function () {
-        let yardText = self.homeTeamInfo().teamName();
-
-        if (self.currentTeamWithBall() === self.awayTeamID() && self.yardsToTouchdown() > 50)
-            yardText = self.awayTeamInfo().teamName();
+        let offenseIsHome = self.currentTeamWithBall() === self.homeTeamID();
+        let ballIsInOffenseTerritory = self.yardsToTouchdown() > 50;
+        let ballIsInHomeTerritory = offenseIsHome === ballIsInOffenseTerritory;
+        let yardText = ballIsInHomeTerritory ? self.homeTeamInfo().teamName() : self.awayTeamInfo().teamName();
 
         return yardText + ' ' + self.currentBallSpot();
     }

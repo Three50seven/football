@@ -117,5 +117,7 @@
             0,
             self.homeTeamScore() + ' - ' + self.awayTeamScore(),
             self.remainingTimeDisplay()));
+
+        playMaker.display(resultText, winningTeam);
     };
 })(jQuery);

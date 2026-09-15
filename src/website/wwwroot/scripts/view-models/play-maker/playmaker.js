@@ -15,6 +15,41 @@
         }
 
         $("#playResult").text(playText);
+
+        let lastPlay = $(".last-play-container");
+        lastPlay.removeClass("last-play-update");
+        if (lastPlay.length)
+            void lastPlay[0].offsetWidth;
+        lastPlay.addClass("last-play-update");
+    },
+
+    displayScore: function (score, type, team) {
+        let labels = {};
+        labels[SCORE_TYPES.TOUCHDOWN] = 'TOUCHDOWN';
+        labels[SCORE_TYPES.FIELDGOAL] = 'FIELD GOAL IS GOOD';
+        labels[SCORE_TYPES.EXTRAPOINT] = 'THE EXTRA POINT IS GOOD';
+        labels[SCORE_TYPES.TWOPOINTCONVERSION] = 'THE POINT CONVERSION IS GOOD';
+        labels[SCORE_TYPES.SAFETY] = 'SAFETY';
+
+        let feedback = $("#field-score-feedback");
+        let field = $("#field-img");
+        let ball = $("#ball-position-img");
+        if (!feedback.length || !field.length || !ball.length)
+            return;
+
+        feedback.text('+' + score + ' ' + labels[type] + ' - ' + team.teamCityAndName());
+        feedback.removeClass("field-score-feedback-active").css('left', '0px');
+
+        let ballLeft = parseFloat(ball.css('margin-left')) || 0;
+        let fieldWidth = field.width();
+        feedback.css('max-width', Math.max(fieldWidth * 0.72, 120) + 'px');
+        feedback.addClass("field-score-feedback-active");
+
+        let feedbackWidth = feedback.outerWidth();
+        let feedbackLeft = ballLeft + 10;
+        if (feedbackLeft + feedbackWidth > fieldWidth - 4)
+            feedbackLeft = Math.max(4, ballLeft - feedbackWidth - 10);
+        feedback.css('left', feedbackLeft + 'px');
     },
 
     getPlayResult: function (playSelected) {
@@ -46,26 +81,39 @@
 
         //HANDLE TWO POINT CONVERSION (after touchdown) PLAYS:
         if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
-            turnover = true; //always change possession after extra point attempts
+            let attemptingTeam = self.pointAttemptTeamId || self.currentTeamWithBall();
+            let defensiveTeam = attemptingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+            let defensiveReturn = UTILITIES.getRandomInt(1, 100) <= 2;
+
+            self.currentTeamWithBall(attemptingTeam);
+
+            if (defensiveReturn) {
+                self.currentTeamWithBall(defensiveTeam);
+                _playResultText = UTILITIES.getRandomInt(1, 2) === 1
+                    ? 'FUMBLE RECOVERED AND RETURNED FOR 2 POINTS'
+                    : 'INTERCEPTED AND RETURNED FOR 2 POINTS';
+                playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
+            }
+            else if (MODULES.GameVariables.DiceSumTotal >= 6 && UTILITIES.getRandomInt(1, 4) >= MODULES.Constants.TWO_POINT_CONVERSION_SPOT) {
+                _playResultText = 'TWO POINT CONVERSION GOOD';
+                playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
+            }
+            else {
+                _playResultText = 'TWO POINT CONVERSION FAILED';
+            }
+
+            let conversionResult = new MODULES.Constructors.PlayResult(0, _playResultText, true, playSelected);
+            playMaker.recordPlay(conversionResult);
+
+            self.currentTeamWithBall(defensiveTeam);
+            self.yardsTraveled(0);
+            self.yardsToFirst(10);
+            self.currentDown(1);
             self.isKickoff(true);
             self.SetupKickoff();
-            isKickoffAlreadySetup = true;
+            self.ShowHideSpecialTeamsMenu();
 
-            //TWO POINT CONVERSION:
-            if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION && MODULES.GameVariables.DiceSumTotal >= 6) {
-                _yards = UTILITIES.getRandomInt(1, 4); //need two yards for 2 point conversion
-                if (_yards >= MODULES.Constants.TWO_POINT_CONVERSION_SPOT) {
-                    _playResultText = _playResultText + ' SUCCESSFUL';
-                    playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
-                }
-                else {
-                    _playResultText = _playResultText + ' FAILED';
-                }
-            }
-            else if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
-                _playResultText = _playResultText + ' FAILED';
-            }
-
+            return conversionResult;
         }
 
         //POSITIVE YARDAGE PLAYS
@@ -162,6 +210,9 @@
 
         self.SetBallPosition();
 
+        if (isTouchdown)
+            $('#home-team-trail, #away-team-trail').css('width', '0px');
+
         //TURNOVER
         if (turnover) {
             //before turning over the ball, record the play of the team turning over the ball
@@ -202,7 +253,10 @@
         console.log('kickoffPower: %s, kickoffAngle: %s', kickoffPower, kickoffAngle);
 
         //determine spot of kick off
-        if (self.isPunt() || self.isFieldGoal()) {
+        if (self.isPunt()) {
+            ballKickOffSpot = 100 - self.yardsToTouchdown();
+        }
+        else if (self.isFieldGoal()) {
             ballKickOffSpot = self.currentBallSpot();
         }
         if (self.isSafety()) {
@@ -229,6 +283,10 @@
         }
 
         if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {
+            kickingTeam = teamWithBallBeforeKick;
+            receivingTeam = kickingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+        }
+        else if (kickoffType === KICKOFF_TYPES.PUNT) {
             kickingTeam = teamWithBallBeforeKick;
             receivingTeam = kickingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
         }
@@ -383,7 +441,7 @@
 
         //show return of kick (if any), but only for kicks that allow for returns
         if (isReturnTypeKickoff) {
-            let _returnPlayText = 'Kickoff Return';
+            let _returnPlayText = kickoffType === KICKOFF_TYPES.PUNT ? 'Punt Return' : 'Kickoff Return';
 
             //Handle new spot of ball
             if (isTouchback || isPenalty) {
@@ -779,6 +837,12 @@
                 score = 2;
                 break;
         }
+
+            let scoringTeamId = self.currentTeamWithBall();
+            if (type === SCORE_TYPES.SAFETY)
+                scoringTeamId = scoringTeamId === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+            let scoringTeam = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === scoringTeamId; })[0];
+
         if (currentTeamWithBall() === homeTeamID()) {
             //add score to home team, unless safety
             if (type === SCORE_TYPES.SAFETY)
@@ -795,6 +859,12 @@
 
         //update the box score
         self.UpdateBoxScore();
+
+        if (scoringTeam) {
+            setTimeout(function () {
+                playMaker.displayScore(score, type, scoringTeam);
+            }, 0);
+        }
 
         self.StopCounter(); //the clock stops after any score, until the next kickoff/snap
     }
