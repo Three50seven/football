@@ -1,4 +1,64 @@
 var sim = {
+    generateQuarterScore: function () {
+        const scores = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+            14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42];
+        const probabilities = [
+            0.15, 0.005, 0.15, 0.005, 0.005, 0.10, 0.15, 0.005, 0.005, 0.10,
+            0.005, 0.01, 0.01, 0.10, 0.01, 0.005, 0.005, 0.005, 0.005, 0.005,
+            0.005, 0.002, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001,
+            0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001,
+            0.001, 0.001, 0.001, 0.001, 0.001
+        ];
+        let random = Math.random();
+        let cumulativeProbability = 0;
+
+        for (let index = 0; index < scores.length; index++) {
+            cumulativeProbability += probabilities[index];
+            if (random < cumulativeProbability)
+                return scores[index];
+        }
+
+        return 0;
+    },
+    simQuarter: function () {
+        if (!self.gameStarted() || self.gameOver())
+            return;
+
+        self.StopCounter();
+        self.StopPlayClock();
+        self.StopKickoffSliders();
+        self.pointAttemptAfterTouchDown(false);
+        self.isTwoPointConversion(false);
+        self.isExtraPointKick(false);
+        self.isKickoff(false);
+        self.isSafety(false);
+        self.isPunt(false);
+        self.isFieldGoal(false);
+        self.showKickoffControls(false);
+        self.hasRolled(false);
+
+        let homePoints = sim.generateQuarterScore();
+        let awayPoints = sim.generateQuarterScore();
+        homePoints += Math.round(homePoints * 0.05);
+
+        if (self.currentQuarter() >= 5 && homePoints === awayPoints) {
+            if (UTILITIES.getRandomInt(1, 2) === 1)
+                homePoints += 3;
+            else
+                awayPoints += 3;
+        }
+
+        self.homeTeamScore(self.homeTeamScore() + homePoints);
+        self.awayTeamScore(self.awayTeamScore() + awayPoints);
+        self.UpdateBoxScore();
+
+        let quarterLabel = self.currentQuarter() >= 5 ? 'Overtime' : UTILITIES.getNumberWithEnding(self.currentQuarter()) + ' Quarter';
+        playMaker.display(quarterLabel + ' simulated: ' + self.homeTeamInfo().teamName() + ' +' + homePoints + ', ' +
+            self.awayTeamInfo().teamName() + ' +' + awayPoints);
+
+        self.EndQuarter();
+    },
     simGame: function () {
         let gameScore = sim.simScore();
         let simmingActiveGame = self.gameStarted();

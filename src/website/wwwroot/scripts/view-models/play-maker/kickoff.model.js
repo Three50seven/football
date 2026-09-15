@@ -8,7 +8,9 @@
     self.isPunt = ko.observable(false); //determines when kick is a punt
     self.isFieldGoal = ko.observable(false); //determines when kick is a field goal
     self.isExtraPointKick = ko.observable(false); //determines when kick is an extra point attempt
+    self.isTwoPointConversion = ko.observable(false);
     self.teamReceivingInitialKickoff = ko.observable(0); //stores value of team receiving ball at start of game
+    self.periodKickoffReceivingTeam = 0;
 
     self.teamReceivingInitialKickoffInfo = ko.computed(function () {
         if (self.teamReceivingInitialKickoff() === self.homeTeamID())
@@ -98,10 +100,16 @@
         }, MODULES.GameVariables.KickoffSliderDifficulty);
     };
     self.PuntBall = function () {
+        if (self.isTwoPointConversion())
+            return;
+
         self.isPunt(true);
         self.SetupKickoff();
     };
     self.KickFieldGoal = function () {
+        if (self.isTwoPointConversion())
+            return;
+
         self.isFieldGoal(true);
         self.SetupKickoff();
     };

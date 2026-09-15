@@ -65,6 +65,9 @@
         //    console.log('AFTER KICKOFF SPOT SET => Home Team: %s, Away Team: %s, Kicking Team %s, Spot: %s', self.homeTeamID(), self.awayTeamID(), kickingTeam, spot);
         //}
         if (extraPointKickActive || kickoffActive || safetyKickActive) {
+            self.yardsTraveled(0);
+            $('#home-team-trail, #away-team-trail').css('width', '0px');
+
             //set spot depending on type of kick, default is normal kickoff
             let spot = MODULES.Constants.KICKOFF_SPOT;
 
@@ -98,11 +101,14 @@
         //let max = 2; //max for away team i.e. TOUCHDOWN 0 yards to go
         let fieldScale = $('#field-img').width() / 220 || 1;
         let ratio = 1.8 * fieldScale; //180 divided by 100, scaled to the responsive field width
+        let fieldProgress = HELPERS.clampFieldProgress(100 - self.yardsToTouchdown());
+        let driveStart = HELPERS.clampFieldProgress(self.ballSpotStart());
 
-        let isExtraPoint = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick() && self.pointAttemptTeamId;
-        if (isExtraPoint) {
-            // The point-after is placed at the scoring team's opponent's 15-yard line.
-            isHomeTeam = self.pointAttemptTeamId === self.awayTeamID();
+        let isPointAttempt = self.pointAttemptTeamId &&
+            ((typeof self.isExtraPointKick === 'function' && self.isExtraPointKick()) ||
+                (typeof self.isTwoPointConversion === 'function' && self.isTwoPointConversion()));
+        if (isPointAttempt) {
+            isHomeTeam = self.pointAttemptTeamId === self.homeTeamID();
         }
         else if (self.currentTeamWithBall() === self.homeTeamID()) {
             isHomeTeam = true;
@@ -115,11 +121,12 @@
         }
 
         //calculate based on max and min, when home team, subtract from 100 to get correct start position on field:
-        spot = isHomeTeam ? min + (100 - self.yardsToTouchdown()) * ratio : 200 * fieldScale - (100 - self.yardsToTouchdown()) * ratio;
+        spot = isHomeTeam ? min + fieldProgress * ratio : 200 * fieldScale - fieldProgress * ratio;
 
         //show trail for team
         let ballWidth = 5 * fieldScale;
-        let trailWidth = Math.max(0, self.yardsTraveled() * ratio - ballWidth);
+        let trailWidth = Math.max(0, (fieldProgress - driveStart) * ratio - ballWidth);
+        let ballMargin = Math.max(0, Math.min(spot - (isHomeTeam ? ballWidth : 0), $('#field-img').width() - ballWidth));
         $('#home-team-trail, #away-team-trail').css('height', (10 * fieldScale) + 'px');
         $('#ball-position-img').css({
             height: (10 * fieldScale) + 'px',
@@ -130,18 +137,18 @@
             $('#away-team-trail').css('width', '0px');
             $('#home-team-trail').css('background-image', 'linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1))');
             $('#home-team-trail').css('width', trailWidth + 'px');
-            $('#home-team-trail').css('margin-left', 20 * fieldScale + self.ballSpotStart() * ratio + 'px');
-            $('#ball-position-img').css('margin-left', (spot - (5 * fieldScale)) + 'px');
+            $('#home-team-trail').css('margin-left', 20 * fieldScale + driveStart * ratio + 'px');
+            $('#ball-position-img').css('margin-left', ballMargin + 'px');
             //console.log('HOME => yardsTraveled:' + self.yardsTraveled() + ' ballSpotStart:' + self.ballSpotStart() + ' trailWidth: ' + trailWidth);
         }
         else {
-            let marginWidth = 200 * fieldScale - trailWidth - self.ballSpotStart() * ratio;
+            let marginWidth = 200 * fieldScale - trailWidth - driveStart * ratio;
             //console.log('margin-width: ' + marginWidth);
             $('#home-team-trail').css('width', '0px');
             $('#away-team-trail').css('background-image', 'linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,1))');
             $('#away-team-trail').css('width', trailWidth + 'px');
             $('#away-team-trail').css('margin-left', marginWidth + 'px');
-            $('#ball-position-img').css('margin-left', spot + 'px');
+            $('#ball-position-img').css('margin-left', ballMargin + 'px');
             //console.log('AWAY => yardsTraveled:' + self.yardsTraveled() + ' ballSpotStart:' + self.ballSpotStart() + ' trailWidth: ' + trailWidth);
         }
 

@@ -26,12 +26,13 @@ MODULES.Constructors = (function () {
             this.totalScore = totalScore;
             this.teamImagePath = UTILITIES.getTeamImagePath(this.teamId);
         },
-        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false) {
+        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '') {
             this.yards = yards;
             this.playResultText = playText;
             this.isTurnover = isTurnover;
             this.playType = playType;
             this.isFirstDown = isFirstDown;
+            this.displayText = displayText;
         },
         PlayHistory: function (playId, teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession, score, gameClock) {
             this.playId = playId;

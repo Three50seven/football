@@ -13,11 +13,51 @@
             $("#lastPlayTeamName").text(team.teamCityAndName());
             $("#lastPlaySeparator").show();
         }
+        else {
+            $("#lastPlayTeamIcon").attr("src", "").hide();
+            $("#lastPlayTeamName").text("");
+            $("#lastPlaySeparator").hide();
+        }
 
         $("#playResult").text(playText);
+
+        let lastPlay = $(".last-play-container");
+        lastPlay.removeClass("last-play-update");
+        if (lastPlay.length)
+            void lastPlay[0].offsetWidth;
+        lastPlay.addClass("last-play-update");
     },
 
-    getPlayResult: function (playSelected) {
+    displayScore: function (score, type, team) {
+        let labels = {};
+        labels[SCORE_TYPES.TOUCHDOWN] = 'TOUCHDOWN';
+        labels[SCORE_TYPES.FIELDGOAL] = 'FIELD GOAL IS GOOD';
+        labels[SCORE_TYPES.EXTRAPOINT] = 'THE EXTRA POINT IS GOOD';
+        labels[SCORE_TYPES.TWOPOINTCONVERSION] = 'THE POINT CONVERSION IS GOOD';
+        labels[SCORE_TYPES.SAFETY] = 'SAFETY';
+
+        let feedback = $("#field-score-feedback");
+        let field = $("#field-img");
+        let ball = $("#ball-position-img");
+        if (!feedback.length || !field.length || !ball.length)
+            return;
+
+        feedback.text('+' + score + ' ' + labels[type] + ' - ' + team.teamCityAndName());
+        feedback.removeClass("field-score-feedback-active").css('left', '0px');
+
+        let ballLeft = parseFloat(ball.css('margin-left')) || 0;
+        let fieldWidth = field.width();
+        feedback.css('max-width', Math.max(fieldWidth * 0.72, 120) + 'px');
+        feedback.addClass("field-score-feedback-active");
+
+        let feedbackWidth = feedback.outerWidth();
+        let feedbackLeft = ballLeft + 10;
+        if (feedbackLeft + feedbackWidth > fieldWidth - 4)
+            feedbackLeft = Math.max(4, ballLeft - feedbackWidth - 10);
+        feedback.css('left', feedbackLeft + 'px');
+    },
+
+    getPlayResult: function (playSelected, pointAttemptPlayType) {
         let _yards = 0;
         let _playResultText = UTILITIES.splitAndTitleCase(playSelected);
         let _positiveYards = false;
@@ -25,6 +65,7 @@
         let bigYardPlay = UTILITIES.getRandomInt(1, 100) >= 85;
         let yardageMax = 15;
         let turnover = false;
+        let isLiveBallTurnover = false;
         let isKickoffAlreadySetup = false; //true once a safety/2pt conversion has already placed the ball for the next kickoff
         let distanceToGoalLine = self.yardsToTouchdown(); //distance needed for a touchdown before this play's yardage is applied
         let isOverthrownIncomplete = false; //a pass thrown beyond the back of the end zone is incomplete, not a touchdown
@@ -36,8 +77,6 @@
         if (bigYardPlay)
             yardageMax = distanceToGoalLine;
 
-        //TODO: add chance for fumbles and interceptions
-        //TODO: add chance for muffed punt or punt block/return or field goal block/return
         if (MODULES.GameVariables.DiceSumTotal >= 7)
             _positiveYards = true;
 
@@ -46,26 +85,48 @@
 
         //HANDLE TWO POINT CONVERSION (after touchdown) PLAYS:
         if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
-            turnover = true; //always change possession after extra point attempts
+            let attemptingTeam = self.pointAttemptTeamId || self.currentTeamWithBall();
+            let defensiveTeam = attemptingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+            let defensiveReturn = UTILITIES.getRandomInt(1, 100) <= 2;
+            let conversionSucceeded = pointAttemptPlayType === GAME_PLAY_TYPES.PASS
+                ? MODULES.GameVariables.DiceSumTotal >= 7
+                : MODULES.GameVariables.DiceSumTotal >= 6;
+
+            self.currentTeamWithBall(attemptingTeam);
+
+            if (defensiveReturn) {
+                self.currentTeamWithBall(defensiveTeam);
+                _playResultText = UTILITIES.getRandomInt(1, 2) === 1
+                    ? 'FUMBLE RECOVERED AND RETURNED FOR 2 POINTS'
+                    : 'INTERCEPTED AND RETURNED FOR 2 POINTS';
+                playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
+            }
+            else if (conversionSucceeded) {
+                _yards = MODULES.Constants.TWO_POINT_CONVERSION_SPOT;
+                _playResultText = 'TWO POINT CONVERSION GOOD';
+                playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
+            }
+            else {
+                _playResultText = pointAttemptPlayType === GAME_PLAY_TYPES.PASS
+                    ? 'TWO POINT CONVERSION FAILED - PASS INCOMPLETE'
+                    : 'TWO POINT CONVERSION FAILED - RUN STOPPED';
+            }
+
+            let conversionResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, defensiveReturn, playSelected);
+            playMaker.recordPlay(conversionResult);
+            conversionResult.wasRecorded = true;
+
+            self.isTwoPointConversion(false);
+            self.currentTeamWithBall(defensiveTeam);
+            self.yardsTraveled(0);
+            self.yardsToFirst(10);
+            self.currentDown(1);
             self.isKickoff(true);
             self.SetupKickoff();
-            isKickoffAlreadySetup = true;
+            self.ShowHideSpecialTeamsMenu();
+            self.CompleteQuarterAfterTry();
 
-            //TWO POINT CONVERSION:
-            if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION && MODULES.GameVariables.DiceSumTotal >= 6) {
-                _yards = UTILITIES.getRandomInt(1, 4); //need two yards for 2 point conversion
-                if (_yards >= MODULES.Constants.TWO_POINT_CONVERSION_SPOT) {
-                    _playResultText = _playResultText + ' SUCCESSFUL';
-                    playMaker.addScore(SCORE_TYPES.TWOPOINTCONVERSION);
-                }
-                else {
-                    _playResultText = _playResultText + ' FAILED';
-                }
-            }
-            else if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
-                _playResultText = _playResultText + ' FAILED';
-            }
-
+            return conversionResult;
         }
 
         //POSITIVE YARDAGE PLAYS
@@ -84,11 +145,7 @@
         }
         if (_positiveYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _yards = UTILITIES.getRandomInt(1, yardageMax);
-
-            //a run can't gain more than the distance to the goal line - the play ends the instant the ball crosses it
-            if (distanceToGoalLine > 0 && _yards > distanceToGoalLine) {
-                _yards = distanceToGoalLine;
-            }
+            _yards = HELPERS.capRunYardsAtGoalLine(_yards, distanceToGoalLine);
 
             _playResultText = _playResultText + ' Successful';
         }
@@ -109,6 +166,22 @@
             _playResultText = _playResultText + ' for no gain';
         }
 
+        if (playSelected === GAME_PLAY_TYPES.PASS && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.INTERCEPTION_CHANCE_PERCENT) {
+            turnover = true;
+            isLiveBallTurnover = true;
+            _playResultText = 'Pass INTERCEPTED';
+        }
+        else {
+            let canFumble = playSelected === GAME_PLAY_TYPES.RUN ||
+                (playSelected === GAME_PLAY_TYPES.PASS && (_positiveYards || _negativeYards) && !isOverthrownIncomplete);
+
+            if (canFumble && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.FUMBLE_CHANCE_PERCENT) {
+                turnover = true;
+                isLiveBallTurnover = true;
+                _playResultText += ' - FUMBLE RECOVERED BY DEFENSE';
+            }
+        }
+
         //apply this play's yardage to the field position first so the scoring checks below reflect the new spot of the ball
         if (playSelected !== 'fieldGoal' && playSelected !== 'extraPoint' && playSelected !== 'twoPointConversion') {
             self.yardsTraveled(self.yardsTraveled() + _yards);
@@ -116,7 +189,7 @@
 
         //TOUCHDOWN
         let isTouchdown = false;
-        if (self.yardsToTouchdown() <= 0 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+        if (!turnover && self.yardsToTouchdown() <= 0 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             _playResultText = SCORE_TYPES.TOUCHDOWN.toUpperCase();
             self.pointAttemptTeamId = self.currentTeamWithBall();
             playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
@@ -125,7 +198,7 @@
         }
 
         //SAFETY
-        if (self.yardsToTouchdown() > 100 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+        if (!turnover && self.yardsToTouchdown() > 100 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             _playResultText = SCORE_TYPES.SAFETY.toUpperCase();
             playMaker.addScore(SCORE_TYPES.SAFETY);
             self.isSafety(true);
@@ -137,7 +210,11 @@
         //DETERMINE DOWN
         let isTurnoverOnDowns = false;
         let isFirstDown = false;
-        if (isTouchdown) {
+        if (turnover) {
+            self.yardsToFirst(10);
+            self.currentDown(1);
+        }
+        else if (isTouchdown) {
             self.yardsToFirst(10);
             self.currentDown(1);
         }
@@ -162,17 +239,28 @@
 
         self.SetBallPosition();
 
+        if (isTouchdown)
+            $('#home-team-trail, #away-team-trail').css('width', '0px');
+
         //TURNOVER
         if (turnover) {
+            let isDefensiveTouchback = isLiveBallTurnover && self.yardsToTouchdown() <= 0;
+
             //before turning over the ball, record the play of the team turning over the ball
-            _playResultText = _playResultText + (isTurnoverOnDowns ? ' - TURNOVER ON DOWNS' : ' Change of Possession');
+            if (isDefensiveTouchback)
+                _playResultText += ' - TOUCHBACK';
+            else if (!isLiveBallTurnover)
+                _playResultText = _playResultText + (isTurnoverOnDowns ? ' - TURNOVER ON DOWNS' : ' Change of Possession');
             playResult.playResultText = _playResultText;
             playMaker.recordPlay(playResult);
 
             //now handle turnover events
             _yards = 0;
             //a safety/2pt conversion above already placed the ball for the next kickoff - don't overwrite it here
-            if (!isKickoffAlreadySetup) {
+            if (isDefensiveTouchback) {
+                self.ballSpotStart(MODULES.Constants.TOUCHBACK_YARD_LINE);
+            }
+            else if (!isKickoffAlreadySetup) {
                 self.ballSpotStart(self.yardsToTouchdown());
             }
             self.yardsTraveled(0); //reset yards traveled for possession
@@ -187,22 +275,32 @@
     },
 
     kickoff: function (kickoffPower, kickoffAngle) {
-        self.StartCounter(); //the quarter clock starts the moment the ball is kicked
-
         let kickoffType = getKickoffType();
+        if (kickoffType === KICKOFF_TYPES.EXTRAPOINT)
+            self.StopCounter();
+        else
+            self.StartCounter(); //the quarter clock starts the moment the ball is kicked
+
         let _yards = convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle);
+        let recordedKickYards = _yards;
         let _returnYards = 0;
         let _kickoffResultText = UTILITIES.splitAndTitleCase(kickoffType);
         let ballKickOffSpot = MODULES.Constants.KICKOFF_SPOT; //set ball Spot Start at 35 yard line        
         let isTouchback = false; //flag to determine when touchback occurs
         let isPenalty = false; //flag to determine when there is a penalty on the kickoff
+        let isPuntBlocked = false;
+        let isMuffedPunt = false;
+        let isOnsideRecoveredByKickingTeam = false;
         let isReturnTypeKickoff = kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.PUNT || kickoffType === KICKOFF_TYPES.SAFETY;
         let chanceOfBlock = UTILITIES.getRandomInt(1, 100); //random number used for determining a chance of a block for kicks that can be blocked
 
         console.log('kickoffPower: %s, kickoffAngle: %s', kickoffPower, kickoffAngle);
 
         //determine spot of kick off
-        if (self.isPunt() || self.isFieldGoal()) {
+        if (self.isPunt()) {
+            ballKickOffSpot = 100 - self.yardsToTouchdown();
+        }
+        else if (self.isFieldGoal()) {
             ballKickOffSpot = self.currentBallSpot();
         }
         if (self.isSafety()) {
@@ -232,9 +330,13 @@
             kickingTeam = teamWithBallBeforeKick;
             receivingTeam = kickingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
         }
+        else if (kickoffType === KICKOFF_TYPES.PUNT) {
+            kickingTeam = teamWithBallBeforeKick;
+            receivingTeam = kickingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+        }
 
         if (isBeginningOfHalfKickoff) {
-            receivingTeam = self.teamReceivingInitialKickoff();
+            receivingTeam = self.periodKickoffReceivingTeam || self.teamReceivingInitialKickoff();
             kickingTeam = receivingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
         }
         else if (kickoffType === KICKOFF_TYPES.KICKOFF || kickoffType === KICKOFF_TYPES.ONSIDE || kickoffType === KICKOFF_TYPES.SAFETY) {
@@ -244,14 +346,16 @@
             }
         }
 
-        //set to false after kickoff TODO: reset to true when 2nd quarter begins
-        self.isBeginningOfHalf = false;
+        if (isBeginningOfHalfKickoff) {
+            self.isBeginningOfHalf = false;
+            self.periodKickoffReceivingTeam = 0;
+        }
 
         if (kickoffType === KICKOFF_TYPES.ONSIDE) {
             let onsideSuccessful = false;
 
             //onside kick must have power greater than 25 and a sharp angle, less than 21 or greater than 79
-            if (kickoffPower >= 25 && (kickOffAngle <= 20 || kickoffAngle >= 80)) {
+            if (kickoffPower >= 25 && (kickoffAngle <= 20 || kickoffAngle >= 80)) {
                 onsideSuccessful = true;
             }
             else {
@@ -261,8 +365,8 @@
             if (onsideSuccessful) {
                 _yards = UTILITIES.getRandomInt(10, 20); //ball at least has to travel 10 yards, but has a chance of traveling 20
 
-                //now determine if kicking team gets the ball or the return team gets it. TODO: is this 20%?
-                if (UTILITIES.getRandomInt(1, 100) <= 20) {
+                if (UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.ONSIDE_RECOVERY_CHANCE_PERCENT) {
+                    isOnsideRecoveredByKickingTeam = true;
                     receivingTeam = kickingTeam; //essentially a turnover
                 }
                 else {
@@ -295,7 +399,12 @@
         else if (kickoffType === KICKOFF_TYPES.EXTRAPOINT || kickoffType === KICKOFF_TYPES.FIELDGOAL) {
             //Field goals and extra points have a very small chance of being blocked.
             let isBlocked = chanceOfBlock <= 2;
-            let isGoodKick = _yards > ballKickOffSpot + MODULES.Constants.END_ZONE_YARDS;
+            let distanceToGoalPosts = kickoffType === KICKOFF_TYPES.FIELDGOAL
+                ? self.yardsToTouchdown() + MODULES.Constants.END_ZONE_YARDS
+                : ballKickOffSpot + MODULES.Constants.END_ZONE_YARDS;
+            if (kickoffType === KICKOFF_TYPES.FIELDGOAL)
+                recordedKickYards = distanceToGoalPosts;
+            let isGoodKick = _yards >= distanceToGoalPosts;
 
             if (!isBlocked && isGoodKick) {
                 _kickoffResultText += ' GOOD';
@@ -309,7 +418,7 @@
             }
 
             if (kickoffType === KICKOFF_TYPES.FIELDGOAL && (isBlocked || !isGoodKick)) {
-                playMaker.handleFailedFieldGoal(_kickoffResultText, isBlocked);
+                playMaker.handleFailedFieldGoal(_kickoffResultText, isBlocked, recordedKickYards);
                 return;
             }
 
@@ -321,8 +430,11 @@
         else {
             //Normal Kickoff, Punt, Safety
             console.log('HANDLE NORMAL KICKOFF/PUNT/SAFETY');
-            if (chanceOfBlock < 6 && kickoffType === KICKOFF_TYPES.PUNT) {
+            if (chanceOfBlock <= MODULES.Constants.PUNT_BLOCK_CHANCE_PERCENT && kickoffType === KICKOFF_TYPES.PUNT) {
+                isPuntBlocked = true;
                 _kickoffResultText += ' Blocked';
+                _yards = UTILITIES.getRandomInt(0, Math.min(10, totalMaxKickWithoutTouchback));
+                _returnYards = UTILITIES.getRandomInt(0, Math.min(40, ballKickOffSpot + _yards));
             }
             else {
                 //handle normal kicks and touchback logic
@@ -366,12 +478,18 @@
             }
         }
 
+        if (kickoffType === KICKOFF_TYPES.PUNT && !isPuntBlocked && !isTouchback && !isPenalty &&
+            UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.PUNT_MUFF_CHANCE_PERCENT) {
+            isMuffedPunt = true;
+            _returnYards = 0;
+        }
+
         //self.currentTeamWithBall(receivingTeam); //this will be the team running or getting a touchback.
 
         console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
 
         //create a play result and record it in the play history
-        let kickoffResult = new MODULES.Constructors.PlayResult(_yards, _kickoffResultText);
+        let kickoffResult = new MODULES.Constructors.PlayResult(recordedKickYards, _kickoffResultText, false, kickoffType);
 
         //record/show play results       
         self.currentTeamWithBall(kickingTeam); //set current team with ball to kickoff team briefly to record the correct team name in the history
@@ -383,32 +501,43 @@
 
         //show return of kick (if any), but only for kicks that allow for returns
         if (isReturnTypeKickoff) {
-            let _returnPlayText = 'Kickoff Return';
+            let _returnPlayText = isOnsideRecoveredByKickingTeam ? 'Onside Kick Recovered by Kicking Team' :
+                isPuntBlocked ? 'Blocked Punt Return' : kickoffType === KICKOFF_TYPES.PUNT ? 'Punt Return' : 'Kickoff Return';
+            let returnDisplayText = '';
+            let isReturnTouchdown = false;
+            let newFieldPosition = 0;
 
             //Handle new spot of ball
             if (isTouchback || isPenalty) {
                 if (isTouchback) {
                     _returnPlayText += ' - TOUCHBACK';
-                    //set ball at 20 yard line when a touchback occurs
+                    //set ball at the appropriate yard line when a touchback occurs
                     _yards = MODULES.Constants.TOUCHBACK_YARD_LINE;
+                    returnDisplayText = 'TOUCHBACK - the ball will be placed on the ' + _yards + ' yard line';
                 }
-
-                ////home is left end-zone, away is right
-                //if (self.currentTeamWithBall() === self.awayTeamID()) {
-                //    self.ballSpotStart(100 - _yards);
-                //}
-                //else {
                 self.ballSpotStart(_yards);
-                //}
+            }
+            else if (isOnsideRecoveredByKickingTeam) {
+                newFieldPosition = Math.min(ballKickOffSpot + _yards, 100);
+                self.ballSpotStart(newFieldPosition);
             }
             else {
                 //distance from the receiving team's own goal line: how far the kick traveled past the kick spot, minus the return yards
-                let newFieldPosition = 100 - (ballKickOffSpot + _yards) + _returnYards;
+                newFieldPosition = 100 - (ballKickOffSpot + _yards) + _returnYards;
                 console.log('NEW FIELD POSITION: %s', newFieldPosition);
 
+                if (!isMuffedPunt && newFieldPosition >= 100) {
+                    newFieldPosition = 100;
+                    isReturnTouchdown = true;
+                    _returnPlayText += ' TOUCHDOWN';
+                }
+
+                newFieldPosition = Math.max(0, Math.min(newFieldPosition, 100));
                 self.ballSpotStart(newFieldPosition);
             }
-            //TODO: Handle return for Touchdown 
+
+            if (isMuffedPunt)
+                _returnPlayText += ' - MUFFED, RECOVERED BY KICKING TEAM';
 
             //the receiving team starts a fresh set of downs at the new spot of the ball
             self.yardsTraveled(0);
@@ -418,9 +547,23 @@
             self.timeOfPossession(0);
 
             //create a play result and record it in the play history
-            let returnResult = new MODULES.Constructors.PlayResult(_returnYards, _returnPlayText);
+            let returnResult = new MODULES.Constructors.PlayResult(_returnYards, _returnPlayText, isMuffedPunt, '', false, returnDisplayText);
             self.currentTeamWithBall(receivingTeam); //set back to receiving team for proper team in play history
+
+            if (isReturnTouchdown) {
+                self.pointAttemptTeamId = receivingTeam;
+                playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
+                self.pointAttemptAfterTouchDown(true);
+                $('#home-team-trail, #away-team-trail').css('width', '0px');
+            }
+
             playMaker.recordPlay(returnResult);
+
+            if (isMuffedPunt) {
+                self.currentTeamWithBall(kickingTeam);
+                self.ballSpotStart(100 - newFieldPosition);
+                self.yardsTraveled(0);
+            }
         }
 
         //set the new position of the ball
@@ -436,6 +579,9 @@
             self.isKickoff(true);
             self.currentTeamWithBall(receivingTeam);
             self.SetupKickoff();
+
+            if (kickoffType === KICKOFF_TYPES.EXTRAPOINT)
+                self.CompleteQuarterAfterTry();
         }
     },
 
@@ -455,10 +601,10 @@
     },
 
     //A missed or blocked field goal gives the defense a new drive at the physical spot of the kick.
-    handleFailedFieldGoal: function (kickResultText, isBlocked) {
+    handleFailedFieldGoal: function (kickResultText, isBlocked, kickYards) {
         let attemptingTeam = self.currentTeamWithBall();
         let defensiveTeam = attemptingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
-        let kickResult = new MODULES.Constructors.PlayResult(0, kickResultText, true, GAME_PLAY_TYPES.FIELDGOAL);
+        let kickResult = new MODULES.Constructors.PlayResult(kickYards, kickResultText, true, GAME_PLAY_TYPES.FIELDGOAL);
 
         playMaker.recordPlay(kickResult);
         playMaker.resetKickoffFlags(KICKOFF_TYPES.FIELDGOAL);
@@ -466,16 +612,27 @@
         self.yardsTraveled(0);
         self.ChangePossession();
 
-        //A block return touchdown is deliberately rarer than the block itself.
-        if (isBlocked && UTILITIES.getRandomInt(1, 100) === 1) {
-            let returnResult = new MODULES.Constructors.PlayResult(0, 'Blocked Field Goal Return TOUCHDOWN', false, GAME_PLAY_TYPES.FIELDGOAL);
-            playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
-            playMaker.recordPlay(returnResult);
+        if (isBlocked && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.BLOCKED_FIELD_GOAL_RETURN_CHANCE_PERCENT) {
+            let recoveryYardsBehindLine = UTILITIES.getRandomInt(0, 10);
+            let recoverySpot = Math.min(self.ballSpotStart() + recoveryYardsBehindLine, 100);
+            self.ballSpotStart(recoverySpot);
 
-            //No extra point attempt follows a defensive field-goal return touchdown.
-            self.currentTeamWithBall(attemptingTeam);
-            self.isKickoff(true);
-            self.SetupKickoff();
+            let isReturnTouchdown = UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.BLOCKED_FIELD_GOAL_TOUCHDOWN_CHANCE_PERCENT;
+            let returnYards = isReturnTouchdown ? self.yardsToTouchdown() : UTILITIES.getRandomInt(1, Math.max(1, Math.min(30, self.yardsToTouchdown())));
+            let returnText = 'Blocked Field Goal Recovered ' + recoveryYardsBehindLine + ' Yards Behind the Line - Return';
+
+            self.yardsTraveled(returnYards);
+
+            if (isReturnTouchdown) {
+                returnText += ' TOUCHDOWN';
+                self.pointAttemptTeamId = defensiveTeam;
+                playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
+                self.pointAttemptAfterTouchDown(true);
+                $('#home-team-trail, #away-team-trail').css('width', '0px');
+            }
+
+            playMaker.recordPlay(new MODULES.Constructors.PlayResult(returnYards, returnText, false, GAME_PLAY_TYPES.FIELDGOAL));
+            self.SetBallPosition();
             return;
         }
 
@@ -506,6 +663,7 @@
         self.isExtraPointKick(false);
         self.isKickoff(true);
         self.SetupKickoff();
+        self.CompleteQuarterAfterTry();
     },
 
     //the offense spikes the ball (intentional incomplete pass) to stop the clock, at the cost of a down
@@ -519,6 +677,23 @@
 
         self.yardsTraveled(self.yardsTraveled() + spikeYards); //spiking the ball costs 2 yards
         self.yardsToFirst(self.yardsToFirst() - spikeYards); //the lost yards are added to the distance needed for a first down
+
+        if (self.yardsToTouchdown() > 100) {
+            playResultText = 'SAFETY - Spike in Own End Zone';
+            let safetyResult = new MODULES.Constructors.PlayResult(spikeYards, playResultText, true, GAME_PLAY_TYPES.PASS);
+
+            playMaker.addScore(SCORE_TYPES.SAFETY);
+            playMaker.recordPlay(safetyResult);
+
+            self.yardsTraveled(0);
+            self.yardsToFirst(10);
+            self.currentDown(1);
+            self.isSafety(true);
+            self.SetupKickoff();
+            self.ChangePossession();
+            self.ShowHideSpecialTeamsMenu();
+            return;
+        }
 
         if (!turnover)
             self.currentDown(self.currentDown() + 1);
@@ -620,6 +795,13 @@
     },
 
     recordTimeOfPossession: function (typeOfPlay, yards) {
+        if (typeOfPlay === GAME_PLAY_TYPES.TWOPOINTCONVERSION || typeOfPlay === KICKOFF_TYPES.EXTRAPOINT) {
+            self.timeOfPossession(0);
+            self.StopCounter();
+            self.StopPlayClock();
+            return;
+        }
+
         let timeSpentWithBall = 0; //represents seconds off the game clock for this play
         let nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_NORMAL; //40s, unless the clock was stopped by this play
         //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
@@ -652,11 +834,18 @@
         self.timeOfPossession(timeSpentWithBall); //record time of possession in seconds
 
         //resume the game clock at the snap (e.g. after a timeout), then skip the clock ahead realistically for this play
-        if (!self.isRunning())
+        if (!self.isRunning() && !self.pointAttemptAfterTouchDown())
             self.StartCounter();
 
         self.AdvanceTime(timeSpentWithBall);
-        self.StartPlayClock(nextPlayClockSeconds);
+
+        if (self.pointAttemptAfterTouchDown()) {
+            self.StopCounter();
+            self.StopPlayClock();
+        }
+        else {
+            self.StartPlayClock(nextPlayClockSeconds);
+        }
     },
 
     recordPlay: function (thisPlaysResult) {
@@ -687,7 +876,8 @@
             self.homeTeamScore() + ' - ' + self.awayTeamScore(),
             self.remainingTimeDisplay()));
 
-        playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer, team);
+        let displayText = thisPlaysResult.displayText || thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer;
+        playMaker.display(displayText, team);
 
         //now record stats for this play
         this.recordGameStats(team, thisPlaysResult);
@@ -717,7 +907,7 @@
         self.UpdateGameStat(playStatsRecord);
     },
 
-    play: function (playSelected) {
+    play: function (playSelected, pointAttemptPlayType) {
         playSelected = playSelected || $('input[name=selectPlay]:checked').val();
         if (playSelected) {
             self.hasRolled(false); //reset flag so player has to roll before making next play
@@ -725,10 +915,10 @@
             //clear results in list of die values
             $("#diceValues").empty();
 
-            let thisPlaysResult = playMaker.getPlayResult(playSelected);
+            let thisPlaysResult = playMaker.getPlayResult(playSelected, pointAttemptPlayType);
 
             //turnover plays are already recorded (with the correct pre-turnover team/down) inside getPlayResult
-            if (!thisPlaysResult.isTurnover) {
+            if (!thisPlaysResult.isTurnover && !thisPlaysResult.wasRecorded) {
                 playMaker.recordPlay(thisPlaysResult);
             }
 
@@ -745,18 +935,26 @@
 
         self.yardsTraveled(0); //reset yards traveled since team already got TD
         self.pointAttemptAfterTouchDown(false); //reset point after attempt flag
+        self.StopCounter();
+        self.StopPlayClock();
 
-        //START_HERE
         if (playSelected === GAME_PLAY_TYPES.EXTRAPOINT) {
             self.currentTeamWithBall(self.pointAttemptTeamId);
+            self.isTwoPointConversion(false);
             self.isExtraPointKick(true);
             self.SetupKickoff();
         }
         else if (playSelected === GAME_PLAY_TYPES.TWOPOINTCONVERSION) {
             spot = MODULES.Constants.TWO_POINT_CONVERSION_SPOT;
+            self.currentTeamWithBall(self.pointAttemptTeamId);
+            self.isTwoPointConversion(true);
+            self.showKickoffControls(false);
+            self.hasRolled(false);
+            self.currentDown(1);
+            self.yardsToFirst(spot);
         }
 
-        self.ballSpotStart(spot);
+        self.ballSpotStart(100 - spot);
         self.SetBallPosition();
         //this is going to use same kickoff params as normal kickoffs
         //already wrote conversion from kickoff power and angle [e.g. convertKickoffPowerToYards('extrapoint', 39, 40);]
@@ -779,6 +977,12 @@
                 score = 2;
                 break;
         }
+
+            let scoringTeamId = self.currentTeamWithBall();
+            if (type === SCORE_TYPES.SAFETY)
+                scoringTeamId = scoringTeamId === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+            let scoringTeam = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === scoringTeamId; })[0];
+
         if (currentTeamWithBall() === homeTeamID()) {
             //add score to home team, unless safety
             if (type === SCORE_TYPES.SAFETY)
@@ -795,6 +999,12 @@
 
         //update the box score
         self.UpdateBoxScore();
+
+        if (scoringTeam) {
+            setTimeout(function () {
+                playMaker.displayScore(score, type, scoringTeam);
+            }, 0);
+        }
 
         self.StopCounter(); //the clock stops after any score, until the next kickoff/snap
     }

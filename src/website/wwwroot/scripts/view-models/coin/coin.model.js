@@ -117,5 +117,28 @@
             0,
             self.homeTeamScore() + ' - ' + self.awayTeamScore(),
             self.remainingTimeDisplay()));
+
+        playMaker.display(resultText, winningTeam);
+    };
+
+    self.RecordOvertimeCoinToss = function (winningTeamId) {
+        let winningTeam = winningTeamId === self.homeTeamID() ? self.homeTeamInfo() : self.awayTeamInfo();
+        let resultText = 'Overtime Coin Toss: ' + winningTeam.teamCityAndName() + ' won and elected to receive. ' +
+            winningTeam.teamCityAndName() + ' will receive the overtime kickoff.';
+
+        self.AddPlayHistory(new MODULES.Constructors.PlayHistory(self.teamPlayHistory().length + 1,
+            winningTeamId,
+            winningTeam.teamName(),
+            'Overtime Coin Toss',
+            0,
+            '0 Yards',
+            resultText,
+            '',
+            self.currentQuarter(),
+            0,
+            self.homeTeamScore() + ' - ' + self.awayTeamScore(),
+            self.remainingTimeDisplay()));
+
+        playMaker.display(resultText, winningTeam);
     };
 })(jQuery);

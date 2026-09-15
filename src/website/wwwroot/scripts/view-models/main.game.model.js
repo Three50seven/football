@@ -18,8 +18,11 @@
         self.ChooseCoinSide();
         return picked;
     });   
-    self.SelectTeam = function () {
-        let teamIdSelected = parseInt($('input[name=selectTeam]:checked').val(), 10);
+    self.SelectTeam = function (teamSelected) {
+        let teamIdSelected = teamSelected && parseInt(teamSelected.teamId, 10);
+
+        if (!Number.isInteger(teamIdSelected))
+            return;
 
         if (teamIdSelected === self.homeTeamID()) {
             alert('The away team must be different than the home team.  Please select a different team.');
@@ -40,7 +43,16 @@
             }
         }
     };
+    self.SelectTeamOnKeyDown = function (teamSelected, event) {
+        if (event.key !== 'Enter' && event.key !== ' ')
+            return true;
+
+        event.preventDefault();
+        self.SelectTeam(teamSelected);
+        return false;
+    };
     self.StartGame = function () {
+        self.periodKickoffReceivingTeam = self.teamReceivingInitialKickoff();
         self.currentTeamWithBall(self.teamReceivingInitialKickoff());
         self.pointAttemptAfterTouchDown(false);
         self.SetupField();
@@ -65,6 +77,7 @@
         self.currentQuarter(1);
         self.elapsedTime(0);
         self.playClockRemaining(MODULES.Constants.PLAY_CLOCK_NORMAL);
+        self.quarterEndPendingAfterTry = false;
         self.currentDown(1);
         self.playCountForPossession(1);
         self.timeOfPossession(0);
@@ -87,6 +100,7 @@
         self.isPunt(false);
         self.isFieldGoal(false);
         self.isExtraPointKick(false);
+        self.isTwoPointConversion(false);
         self.isBeginningOfHalf = true;
         self.lastTimeoutTeam(0);
         self.consecutiveDelayOfGamePenalties(0);
@@ -101,6 +115,7 @@
         self.coinTossLoser(0);
         self.coinTossWinningOption('receive');
         self.teamReceivingInitialKickoff(0);
+        self.periodKickoffReceivingTeam = 0;
         $('#coin').removeClass('heads tails');
         self.ChooseCoinSide();
         $('#coin').off('click').on('click', self.TossCoin);
@@ -118,7 +133,7 @@
     };
     self.ShowHideSpecialTeamsMenu = function () {
         //show/hide special teams menu depending on down
-        if (self.currentDown() === 4) {
+        if (self.currentDown() === 4 && !self.isTwoPointConversion()) {
             $('#specialTeamsMenu').addClass(MODULES.Constants.SHOW_SPECIAL_TEAMS_CLASS);
         }
         else {

@@ -5,6 +5,7 @@
   "scripts": {
     "start": "vite --host localhost --port 8080",
     "dev": "vite --host localhost --port 8080",
+    "test": "node --test test/*.test.cjs",
     "bundle": "gulp Bundle",
     "build": "npm run bundle && vite build",
     "preview": "vite preview --host localhost --port 8080",

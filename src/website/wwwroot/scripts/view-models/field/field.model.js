@@ -22,58 +22,6 @@
     self.SetBallPosition = function () {
         console.log('SETTING BALL POSITION');
         self.ballSpot();
-
-        //TODO: REMOVE BELOW AFTER TESTING (uncomment $('#ball-position-img').css('margin-left', self.ballSpot() + 'px'); ABOVE)
-        //TEST TRAIL:
-        //let counter = 100;
-        //let swapBall = false;
-
-        //(function move() {
-        //    if (swapBall)
-        //        self.currentTeamWithBall(28); //11 away,28 home TESTING: TODO: REMOVE AFTER TESTING
-        //    else
-        //        self.currentTeamWithBall(11); //11 away,28 home TESTING: TODO: REMOVE AFTER TESTING
-        //    self.yardsToTouchdown(counter);
-        //    self.ballSpotStart = ko.observable(0);
-        //    self.yardsTraveled = ko.observable(100-counter);
-        //    $('#ball-position-img').css('margin-left', self.ballSpot() + 'px');                
-        //    //background - image: linear - gradient(to right, rgba(255, 0, 0, 0), rgba(255, 0, 0, 1));
-        //    setTimeout(move, 100); //football mover countdown
-        //    //if (counter === 100) {
-        //    //    reverse = -1;
-        //    //}
-        //    if (counter === 0) {
-        //        swapBall = !swapBall;
-        //        counter = 100;
-        //    }
-        //    counter -= 1; //+= 1 * reverse;
-        //})();
-        //END TEST TRAIL
-
-        //TEST BALL MOVEMENT:
-        //let counter = 100;
-        //let swapBall = false;
-
-        //(function move() {
-        //    if (swapBall)
-        //        self.currentTeamWithBall(28); //11 away,28 home TESTING: TODO: REMOVE AFTER TESTING
-        //    else
-        //        self.currentTeamWithBall(11); //11 away,28 home TESTING: TODO: REMOVE AFTER TESTING
-        //    self.yardsToTouchdown(counter);
-        //    $('#ball-position-img').css('margin-left', self.ballSpot() + 'px');                
-        //    //background - image: linear - gradient(to right, rgba(255, 0, 0, 0), rgba(255, 0, 0, 1));
-        //    setTimeout(move, 500); //football mover countdown
-        //    //if (counter === 100) {
-        //    //    reverse = -1;
-        //    //}
-        //    if (counter === 0) {
-        //        swapBall = !swapBall;
-        //        counter = 100;
-        //    }
-        //    counter -= 1; //+= 1 * reverse;
-        //})();
-        //END TEST BALL MOVEMENT:
-        //TODO: REMOVE ABOVE AFTER TESTING
     };
 
     $(window).on('resize', function () {

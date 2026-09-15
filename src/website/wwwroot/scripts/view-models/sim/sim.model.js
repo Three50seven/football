@@ -18,4 +18,7 @@
     self.SimGame = function () {
         sim.simGame();
     };
+    self.SimQuarter = function () {
+        sim.simQuarter();
+    };
 })(jQuery);

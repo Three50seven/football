@@ -14,6 +14,7 @@
     self.lastTimeoutTeam = ko.observable(0); //tracks the team that most recently called a timeout, prevents back-to-back timeouts by the same team
     self.playClockTimerId = 0;
     self.playClockRemaining = ko.observable(MODULES.Constants.PLAY_CLOCK_NORMAL);
+    self.quarterEndPendingAfterTry = false;
     self.isGamePaused = ko.observable(false);
     self.wasGameClockRunningBeforePause = false;
     self.wasPlayClockRunningBeforePause = false;
@@ -21,7 +22,10 @@
 
     //FUNCTIONS
     self.currentQuarterDisplay = ko.computed(function () {
-        return self.gameOver() ? 'Final' : UTILITIES.getNumberWithEnding(self.currentQuarter());
+        if (self.gameOver())
+            return 'Final';
+
+        return self.currentQuarter() >= 5 ? 'OT' : UTILITIES.getNumberWithEnding(self.currentQuarter());
     });
     self.remainingTime = ko.computed(function () {
         return self.initialTime() - self.elapsedTime();
@@ -98,25 +102,47 @@
         self.elapsedTime(Math.min(self.elapsedTime() + seconds, self.initialTime()));
 
         if (self.remainingTime() <= 0) {
-            self.EndQuarter();
+            if (self.pointAttemptAfterTouchDown()) {
+                self.quarterEndPendingAfterTry = true;
+                self.StopCounter();
+                self.StopPlayClock();
+            }
+            else {
+                self.EndQuarter();
+            }
         }
+    };
+    self.CompleteQuarterAfterTry = function () {
+        if (!self.quarterEndPendingAfterTry)
+            return;
+
+        self.quarterEndPendingAfterTry = false;
+        self.EndQuarter();
     };
     self.EndQuarter = function () {
         self.StopCounter();
         self.elapsedTime(0);
+        let endingQuarter = self.currentQuarter();
 
-        if (self.currentQuarter() === 2) { //end of the first half - timeouts reset for the second half
+        if (endingQuarter === 2) { //end of the first half - timeouts reset for the second half
             self.homeTeamTimeOuts(3);
             self.awayTeamTimeOuts(3);
-            self.isBeginningOfHalf = true;
         }
 
-        self.currentQuarter(self.currentQuarter() + 1);
+        self.currentQuarter(endingQuarter + 1);
 
-        if (self.currentQuarter() > 4) {
+        if (endingQuarter === 2) {
+            let secondHalfReceiver = self.teamReceivingInitialKickoff() === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+            self.PreparePeriodKickoff(secondHalfReceiver);
+            alert('Halftime - ' + (secondHalfReceiver === self.homeTeamID() ? self.homeTeamInfo().teamCityAndName() : self.awayTeamInfo().teamCityAndName()) +
+                ' will receive the second-half kickoff.');
+        }
+        else if (endingQuarter === 4) {
             if (self.homeTeamScore() === self.awayTeamScore()) {
+                let overtimeReceiver = UTILITIES.getRandomInt(1, 2) === 1 ? self.homeTeamID() : self.awayTeamID();
+                self.RecordOvertimeCoinToss(overtimeReceiver);
+                self.PreparePeriodKickoff(overtimeReceiver);
                 alert('End of regulation - the score is tied, heading to overtime!');
-                self.StartCounter();
             }
             else {
                 self.gameOver(true);
@@ -125,10 +151,24 @@
                     ' - ' + self.awayTeamInfo().teamName() + ' ' + self.awayTeamScore());
             }
         }
+        else if (endingQuarter >= 5) {
+            self.gameOver(true);
+            sim.addCompletedGameToHistory();
+            alert('Game Over! Final Score: ' + self.homeTeamInfo().teamName() + ' ' + self.homeTeamScore() +
+                ' - ' + self.awayTeamInfo().teamName() + ' ' + self.awayTeamScore());
+        }
         else {
             alert('End of the ' + UTILITIES.getNumberWithEnding(self.currentQuarter() - 1) + ' quarter');
-            self.StartCounter();
+            if (!self.showKickoffControls())
+                self.StartCounter();
         }
+    };
+    self.PreparePeriodKickoff = function (receivingTeam) {
+        self.periodKickoffReceivingTeam = receivingTeam;
+        self.currentTeamWithBall(receivingTeam);
+        self.isBeginningOfHalf = true;
+        self.isKickoff(true);
+        self.SetupKickoff();
     };
     //shared timeout logic used by both teams; disallows the same team from calling consecutive timeouts
     self.CallTeamTimeout = function (teamId) {

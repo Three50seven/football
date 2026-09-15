@@ -36,6 +36,7 @@ internet zone change to: url=(0014)about:internet-->
         <div id="container">
             <div id="header" style="height: 60px;"> <span class="header-text">Play Football</span>
                 <div class="header-actions">
+                    <button class="btn-default btn-default-small" data-bind="click: SimQuarter, visible: gameStarted() && !gameOver()">Sim Quarter</button>
                     <button class="btn-default btn-default-small" data-bind="click: SimGame, visible: gameStarted() && !gameOver()">Sim Remaining Game</button>
                     <button class="btn-default btn-default-small" data-bind="click: ResetGameForCoinToss, visible: gameOver">Start New Game</button>
                 </div>
@@ -117,6 +118,7 @@ internet zone change to: url=(0014)about:internet-->
                             </div>
                             <div id="home-team-trail" data-bind="class: homeTeamInfo().teamBgColor()"></div>
                             <div id="ball-position-img"></div>
+                            <div id="field-score-feedback" role="status" aria-live="polite"></div>
                             <div id="away-team-trail" data-bind="class: awayTeamInfo().teamBgColor()"></div>
                             <div id="end-zone-right-img"> <span id="end-zone-right-txt" data-bind="text: awayTeamInfo().teamName(), class: awayTeamInfo().teamBgColor()"
                                 class="rotate-right"></span>
@@ -157,15 +159,11 @@ internet zone change to: url=(0014)about:internet-->
                             <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : '[Pick the Home Team]'"></span>
                             <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
                         </div>
-                        <!--EMBELISH: Maybe animate selections: something like: https://www.w3schools.com/jquery/tryit.asp?filename=tryjquery_animation2
-                        -->
                         <div class="team-select-container" data-bind="foreach: MODULES.GameVariables.Teams">
-                            <div class="team-name-select" data-bind="class: teamBgColor()">
-                                <!--TODO/EMBELISH: Make team selected more noticeable - maybe add animation
-                                to selected-team class-->
+                            <div class="team-name-select" role="button" tabindex="0" data-bind="click: SelectTeam, event: { keydown: SelectTeamOnKeyDown }, class: teamBgColor(), css: { 'team-selected-home': homeTeamID() === teamId, 'team-selected-away': awayTeamID() === teamId }, attr: { 'aria-label': 'Select ' + teamCityAndName() }">
                                 <label>
                                     <img class="team-select-img" data-bind="attr:{src: teamImage()}" />
-                                    <input type="radio" name="selectTeam" data-bind="value: teamId, click: SelectTeam"> <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
+                                    <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
                                 </label>
                             </div>
                         </div>
@@ -385,8 +383,14 @@ internet zone change to: url=(0014)about:internet-->
                         <h2 id="pauseTitle">Game Paused</h2>
                         <p>The game clock and play clock are stopped.</p>
                         <div id="pauseScoreboard">
-                            <div><span data-bind="text: homeTeamInfo().teamName()"></span> <strong data-bind="text: homeTeamScore"></strong></div>
-                            <div><span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong></div>
+                            <div>
+                                <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}" />
+                                <span data-bind="text: homeTeamInfo().teamName()"></span> <strong data-bind="text: homeTeamScore"></strong>
+                            </div>
+                            <div>
+                                <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" />
+                                <span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong>
+                            </div>
                             <div><span data-bind="text: currentQuarterDisplay"></span> <span data-bind="text: remainingTimeDisplay"></span> <span data-bind="text: playClockDisplay"></span></div>
                             <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
                             <div data-bind="text: HELPERS.getYardText()"></div>
@@ -483,7 +487,7 @@ internet zone change to: url=(0014)about:internet-->
                         </div>
                         <br />
                         <br />
-                        <div class="quick-play-actions" id="specialTeamsMenu" data-bind="css: { 'show-sub-menu': currentDown() === 4 }">
+                        <div class="quick-play-actions" id="specialTeamsMenu" data-bind="visible: !isTwoPointConversion(), css: { 'show-sub-menu': currentDown() === 4 }">
                             <button type="button" id="spikeBall" class="quick-play-button" data-bind="click: SpikeBall">
                                 <span class="quick-play-kicker">Clock</span>
                                 <span class="quick-play-label">Spike Ball</span>

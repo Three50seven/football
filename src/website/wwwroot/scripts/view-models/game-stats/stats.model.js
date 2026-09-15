@@ -20,7 +20,6 @@
         self.gamePlayStats.push(awayTeamPlayStat);
     };
     self.UpdateGameStat = function (teamStatUpdates) {
-        //TODO: call this at the end of each play to update team stats
         if (self.gamePlayStats().length > 0) {
             let team = $.grep(self.gamePlayStats(), function (team) { return team.teamId === teamStatUpdates.teamId; })[0]; //get the team that needs an update
 
