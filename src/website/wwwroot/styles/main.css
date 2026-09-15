@@ -1651,18 +1651,27 @@ input[type="submit"].btn-default:hover {
     margin-top: 10px;
 }
 .die-result {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 116px;
-    min-height: 32px;
-    padding: 6px 10px;
-    border: 1px solid var(--broadcast-line);
-    border-radius: 5px;
-    background: var(--broadcast-panel-raised);
-    color: var(--broadcast-ink);
-    font-size: 0.8rem;
-    font-weight: 700;
+    display: inline-grid;
+    grid-template-columns: repeat(3, 10px);
+    grid-template-rows: repeat(3, 10px);
+    gap: 5px;
+    width: 54px;
+    height: 54px;
+    padding: 7px;
+    border: 2px solid #d9e5ed;
+    border-radius: 7px;
+    background: #f7f3e8;
+    box-shadow: inset 0 0 0 1px rgba(17, 39, 52, 0.18), 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+.die-pip {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: transparent;
+}
+.die-pip-visible {
+    background: #132331;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 .dice-rolling .die-result { animation: diceBounce 0.65s ease both; }
 .dice-rolling .die-result:nth-child(2) { animation-delay: 0.08s; }
