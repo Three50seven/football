@@ -124,6 +124,7 @@
             self.isKickoff(true);
             self.SetupKickoff();
             self.ShowHideSpecialTeamsMenu();
+            self.CompleteQuarterAfterTry();
 
             return conversionResult;
         }
@@ -578,6 +579,9 @@
             self.isKickoff(true);
             self.currentTeamWithBall(receivingTeam);
             self.SetupKickoff();
+
+            if (kickoffType === KICKOFF_TYPES.EXTRAPOINT)
+                self.CompleteQuarterAfterTry();
         }
     },
 
@@ -659,6 +663,7 @@
         self.isExtraPointKick(false);
         self.isKickoff(true);
         self.SetupKickoff();
+        self.CompleteQuarterAfterTry();
     },
 
     //the offense spikes the ball (intentional incomplete pass) to stop the clock, at the cost of a down

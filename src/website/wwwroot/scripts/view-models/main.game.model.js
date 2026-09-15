@@ -77,6 +77,7 @@
         self.currentQuarter(1);
         self.elapsedTime(0);
         self.playClockRemaining(MODULES.Constants.PLAY_CLOCK_NORMAL);
+        self.quarterEndPendingAfterTry = false;
         self.currentDown(1);
         self.playCountForPossession(1);
         self.timeOfPossession(0);

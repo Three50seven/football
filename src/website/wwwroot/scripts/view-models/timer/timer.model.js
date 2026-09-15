@@ -14,6 +14,7 @@
     self.lastTimeoutTeam = ko.observable(0); //tracks the team that most recently called a timeout, prevents back-to-back timeouts by the same team
     self.playClockTimerId = 0;
     self.playClockRemaining = ko.observable(MODULES.Constants.PLAY_CLOCK_NORMAL);
+    self.quarterEndPendingAfterTry = false;
     self.isGamePaused = ko.observable(false);
     self.wasGameClockRunningBeforePause = false;
     self.wasPlayClockRunningBeforePause = false;
@@ -101,8 +102,22 @@
         self.elapsedTime(Math.min(self.elapsedTime() + seconds, self.initialTime()));
 
         if (self.remainingTime() <= 0) {
-            self.EndQuarter();
+            if (self.pointAttemptAfterTouchDown()) {
+                self.quarterEndPendingAfterTry = true;
+                self.StopCounter();
+                self.StopPlayClock();
+            }
+            else {
+                self.EndQuarter();
+            }
         }
+    };
+    self.CompleteQuarterAfterTry = function () {
+        if (!self.quarterEndPendingAfterTry)
+            return;
+
+        self.quarterEndPendingAfterTry = false;
+        self.EndQuarter();
     };
     self.EndQuarter = function () {
         self.StopCounter();
@@ -144,7 +159,8 @@
         }
         else {
             alert('End of the ' + UTILITIES.getNumberWithEnding(self.currentQuarter() - 1) + ' quarter');
-            self.StartCounter();
+            if (!self.showKickoffControls())
+                self.StartCounter();
         }
     };
     self.PreparePeriodKickoff = function (receivingTeam) {
