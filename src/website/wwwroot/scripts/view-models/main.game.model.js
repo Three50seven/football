@@ -18,8 +18,11 @@
         self.ChooseCoinSide();
         return picked;
     });   
-    self.SelectTeam = function () {
-        let teamIdSelected = parseInt($('input[name=selectTeam]:checked').val(), 10);
+    self.SelectTeam = function (teamSelected) {
+        let teamIdSelected = teamSelected && parseInt(teamSelected.teamId, 10);
+
+        if (!Number.isInteger(teamIdSelected))
+            return;
 
         if (teamIdSelected === self.homeTeamID()) {
             alert('The away team must be different than the home team.  Please select a different team.');
@@ -39,6 +42,14 @@
                     self.awayTeamID(teamIdSelected);
             }
         }
+    };
+    self.SelectTeamOnKeyDown = function (teamSelected, event) {
+        if (event.key !== 'Enter' && event.key !== ' ')
+            return true;
+
+        event.preventDefault();
+        self.SelectTeam(teamSelected);
+        return false;
     };
     self.StartGame = function () {
         self.periodKickoffReceivingTeam = self.teamReceivingInitialKickoff();

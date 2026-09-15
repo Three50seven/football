@@ -159,15 +159,11 @@ internet zone change to: url=(0014)about:internet-->
                             <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : '[Pick the Home Team]'"></span>
                             <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
                         </div>
-                        <!--EMBELISH: Maybe animate selections: something like: https://www.w3schools.com/jquery/tryit.asp?filename=tryjquery_animation2
-                        -->
                         <div class="team-select-container" data-bind="foreach: MODULES.GameVariables.Teams">
-                            <div class="team-name-select" data-bind="class: teamBgColor()">
-                                <!--TODO/EMBELISH: Make team selected more noticeable - maybe add animation
-                                to selected-team class-->
+                            <div class="team-name-select" role="button" tabindex="0" data-bind="click: SelectTeam, event: { keydown: SelectTeamOnKeyDown }, class: teamBgColor(), css: { 'team-selected-home': homeTeamID() === teamId, 'team-selected-away': awayTeamID() === teamId }, attr: { 'aria-label': 'Select ' + teamCityAndName() }">
                                 <label>
                                     <img class="team-select-img" data-bind="attr:{src: teamImage()}" />
-                                    <input type="radio" name="selectTeam" data-bind="value: teamId, click: SelectTeam"> <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
+                                    <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
                                 </label>
                             </div>
                         </div>
