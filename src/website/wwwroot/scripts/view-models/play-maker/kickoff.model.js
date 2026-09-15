@@ -9,6 +9,7 @@
     self.isFieldGoal = ko.observable(false); //determines when kick is a field goal
     self.isExtraPointKick = ko.observable(false); //determines when kick is an extra point attempt
     self.teamReceivingInitialKickoff = ko.observable(0); //stores value of team receiving ball at start of game
+    self.periodKickoffReceivingTeam = 0;
 
     self.teamReceivingInitialKickoffInfo = ko.computed(function () {
         if (self.teamReceivingInitialKickoff() === self.homeTeamID())

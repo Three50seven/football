@@ -41,6 +41,7 @@
         }
     };
     self.StartGame = function () {
+        self.periodKickoffReceivingTeam = self.teamReceivingInitialKickoff();
         self.currentTeamWithBall(self.teamReceivingInitialKickoff());
         self.pointAttemptAfterTouchDown(false);
         self.SetupField();
@@ -101,6 +102,7 @@
         self.coinTossLoser(0);
         self.coinTossWinningOption('receive');
         self.teamReceivingInitialKickoff(0);
+        self.periodKickoffReceivingTeam = 0;
         $('#coin').removeClass('heads tails');
         self.ChooseCoinSide();
         $('#coin').off('click').on('click', self.TossCoin);
