@@ -65,6 +65,9 @@
         //    console.log('AFTER KICKOFF SPOT SET => Home Team: %s, Away Team: %s, Kicking Team %s, Spot: %s', self.homeTeamID(), self.awayTeamID(), kickingTeam, spot);
         //}
         if (extraPointKickActive || kickoffActive || safetyKickActive) {
+            self.yardsTraveled(0);
+            $('#home-team-trail, #away-team-trail').css('width', '0px');
+
             //set spot depending on type of kick, default is normal kickoff
             let spot = MODULES.Constants.KICKOFF_SPOT;
 
@@ -99,10 +102,11 @@
         let fieldScale = $('#field-img').width() / 220 || 1;
         let ratio = 1.8 * fieldScale; //180 divided by 100, scaled to the responsive field width
 
-        let isExtraPoint = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick() && self.pointAttemptTeamId;
-        if (isExtraPoint) {
-            // The point-after is placed at the scoring team's opponent's 15-yard line.
-            isHomeTeam = self.pointAttemptTeamId === self.awayTeamID();
+        let isPointAttempt = self.pointAttemptTeamId &&
+            ((typeof self.isExtraPointKick === 'function' && self.isExtraPointKick()) ||
+                (typeof self.isTwoPointConversion === 'function' && self.isTwoPointConversion()));
+        if (isPointAttempt) {
+            isHomeTeam = self.pointAttemptTeamId === self.homeTeamID();
         }
         else if (self.currentTeamWithBall() === self.homeTeamID()) {
             isHomeTeam = true;

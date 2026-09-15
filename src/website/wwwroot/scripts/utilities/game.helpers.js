@@ -1,5 +1,8 @@
 ﻿var HELPERS = {
     getDownText: function (playAttempt, yardsToFirst) {
+        if (typeof self.isTwoPointConversion === 'function' && self.isTwoPointConversion())
+            return '1st & GOAL';
+
         let yardsToFirstText = '';
 
         //null/empty check

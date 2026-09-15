@@ -7,10 +7,7 @@ const { src, dest, watch, series } = require("gulp");
 let bundler = require("./gulp_modules/bundler"),
     cleaner = require("./gulp_modules/cleaner"),
     helper = require("./gulp_modules/helper"),
-    transformer = require("json-config-transform"),
-    sass = require('gulp-sass')(require('sass')),
-    sassGlob = require("./gulp_modules/sassGlobber"),
-    autoprefixer = require('gulp-autoprefixer');
+    transformer = require("json-config-transform");
 
 function Clean(onComplete) {
     cleaner({
@@ -55,7 +52,6 @@ function CopyProjectFiles(source, destination) {
     return src(source, { allowEmpty: true }).pipe(dest(destination));
 }
 
-// TODO - is jquery ui static css still needed?
 const DeployAssetFiles = series(
     (onComplete) => BundleAssets({}, onComplete),
     () => CopyProjectFiles(
@@ -77,40 +73,6 @@ function TransformJson(onComplete) {
     onComplete();
 }
 
-function SassCompile(sourceFile, destinationFolder) {
-    console.log("Compiling Sass: " + sourceFile + " -> " + destinationFolder);
-
-    return src(sourceFile)
-        .pipe(sassGlob())
-        .pipe(sass({ outputStyle: 'expanded' }).on('error', console.log))
-        .pipe(autoprefixer())
-        .pipe(dest(destinationFolder));
-}
-
-//const Sass = series(
-//    () => SassCompile('./wwwroot/sass/styles.scss', './wwwroot/content/css'),
-//    () => SassCompile('./wwwroot/sass/richtext-editor-styles.scss', './wwwroot/content/css'));
-
-//function MinifyImages() {
-//    return src('./wwwroot/content/images/src/**')
-//        .pipe(imagemin())
-//        .pipe(dest('./wwwroot/content/images/min'))
-//}
-
-//function WatchTask() {
-//    watch('./wwwroot/sass/**', Sass);
-//    watch('./wwwroot/content/images/src/**', MinifyImages);
-//}
-
-
-//exports.ProjectOpen = series(
-//    Clean,
-//    Sass,
-//    DeployAssetFiles,
-//    MinifyImages,
-//    WatchTask
-//);
-//exports.BuildAllAssets = series(Clean, Sass, MinifyImages, DeployAssetFiles);
 exports.ProjectOpen = series(Clean, DeployAssetFiles);
 exports.BuildAllAssets = series(Clean, DeployAssetFiles);
 exports.Bundle = DeployAssetFiles;

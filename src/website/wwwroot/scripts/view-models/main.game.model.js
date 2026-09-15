@@ -88,6 +88,7 @@
         self.isPunt(false);
         self.isFieldGoal(false);
         self.isExtraPointKick(false);
+        self.isTwoPointConversion(false);
         self.isBeginningOfHalf = true;
         self.lastTimeoutTeam(0);
         self.consecutiveDelayOfGamePenalties(0);
@@ -120,7 +121,7 @@
     };
     self.ShowHideSpecialTeamsMenu = function () {
         //show/hide special teams menu depending on down
-        if (self.currentDown() === 4) {
+        if (self.currentDown() === 4 && !self.isTwoPointConversion()) {
             $('#specialTeamsMenu').addClass(MODULES.Constants.SHOW_SPECIAL_TEAMS_CLASS);
         }
         else {

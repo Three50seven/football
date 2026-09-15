@@ -12,7 +12,10 @@
     };
 
     self.MakePlay = function (playSelected) {
-        playMaker.init(playSelected);
+        if (self.isTwoPointConversion())
+            playMaker.play(GAME_PLAY_TYPES.TWOPOINTCONVERSION, playSelected);
+        else
+            playMaker.init(playSelected);
     };
 
     self.MakePassPlay = function () {
@@ -24,6 +27,9 @@
     };
 
     self.SpikeBall = function () {
+        if (self.isTwoPointConversion())
+            return;
+
         playMaker.spike();
         MODULES.GameVariables.TotalPlayCount += 1;
     };

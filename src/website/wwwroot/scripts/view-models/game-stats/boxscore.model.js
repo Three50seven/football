@@ -20,7 +20,6 @@
         self.gameBoxScore.push(awayBoxScore);
     };
     self.UpdateBoxScore = function () {
-        //TODO: call this at the end of each score to add total score for each team
         let quarter = self.currentQuarter();
         let homeTeam = $.grep(self.gameBoxScore(), function (team) { return team.teamId === self.homeTeamID(); })[0]; //get the home team
         let awayTeam = $.grep(self.gameBoxScore(), function (team) { return team.teamId === self.awayTeamID(); })[0]; //get the away team

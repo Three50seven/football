@@ -36,6 +36,7 @@ internet zone change to: url=(0014)about:internet-->
         <div id="container">
             <div id="header" style="height: 60px;"> <span class="header-text">Play Football</span>
                 <div class="header-actions">
+                    <button class="btn-default btn-default-small" data-bind="click: SimQuarter, visible: gameStarted() && !gameOver()">Sim Quarter</button>
                     <button class="btn-default btn-default-small" data-bind="click: SimGame, visible: gameStarted() && !gameOver()">Sim Remaining Game</button>
                     <button class="btn-default btn-default-small" data-bind="click: ResetGameForCoinToss, visible: gameOver">Start New Game</button>
                 </div>
@@ -386,8 +387,14 @@ internet zone change to: url=(0014)about:internet-->
                         <h2 id="pauseTitle">Game Paused</h2>
                         <p>The game clock and play clock are stopped.</p>
                         <div id="pauseScoreboard">
-                            <div><span data-bind="text: homeTeamInfo().teamName()"></span> <strong data-bind="text: homeTeamScore"></strong></div>
-                            <div><span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong></div>
+                            <div>
+                                <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}" />
+                                <span data-bind="text: homeTeamInfo().teamName()"></span> <strong data-bind="text: homeTeamScore"></strong>
+                            </div>
+                            <div>
+                                <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" />
+                                <span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong>
+                            </div>
                             <div><span data-bind="text: currentQuarterDisplay"></span> <span data-bind="text: remainingTimeDisplay"></span> <span data-bind="text: playClockDisplay"></span></div>
                             <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
                             <div data-bind="text: HELPERS.getYardText()"></div>
@@ -484,7 +491,7 @@ internet zone change to: url=(0014)about:internet-->
                         </div>
                         <br />
                         <br />
-                        <div class="quick-play-actions" id="specialTeamsMenu" data-bind="css: { 'show-sub-menu': currentDown() === 4 }">
+                        <div class="quick-play-actions" id="specialTeamsMenu" data-bind="visible: !isTwoPointConversion(), css: { 'show-sub-menu': currentDown() === 4 }">
                             <button type="button" id="spikeBall" class="quick-play-button" data-bind="click: SpikeBall">
                                 <span class="quick-play-kicker">Clock</span>
                                 <span class="quick-play-label">Spike Ball</span>
