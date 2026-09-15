@@ -442,31 +442,32 @@
         //show return of kick (if any), but only for kicks that allow for returns
         if (isReturnTypeKickoff) {
             let _returnPlayText = kickoffType === KICKOFF_TYPES.PUNT ? 'Punt Return' : 'Kickoff Return';
+            let returnDisplayText = '';
+            let isReturnTouchdown = false;
 
             //Handle new spot of ball
             if (isTouchback || isPenalty) {
                 if (isTouchback) {
                     _returnPlayText += ' - TOUCHBACK';
-                    //set ball at 20 yard line when a touchback occurs
+                    //set ball at the appropriate yard line when a touchback occurs
                     _yards = MODULES.Constants.TOUCHBACK_YARD_LINE;
+                    returnDisplayText = 'TOUCHBACK - the ball will be placed on the ' + _yards + ' yard line';
                 }
-
-                ////home is left end-zone, away is right
-                //if (self.currentTeamWithBall() === self.awayTeamID()) {
-                //    self.ballSpotStart(100 - _yards);
-                //}
-                //else {
                 self.ballSpotStart(_yards);
-                //}
             }
             else {
                 //distance from the receiving team's own goal line: how far the kick traveled past the kick spot, minus the return yards
                 let newFieldPosition = 100 - (ballKickOffSpot + _yards) + _returnYards;
                 console.log('NEW FIELD POSITION: %s', newFieldPosition);
 
+                if (newFieldPosition >= 100) {
+                    newFieldPosition = 100;
+                    isReturnTouchdown = true;
+                    _returnPlayText += ' TOUCHDOWN';
+                }
+
                 self.ballSpotStart(newFieldPosition);
             }
-            //TODO: Handle return for Touchdown 
 
             //the receiving team starts a fresh set of downs at the new spot of the ball
             self.yardsTraveled(0);
@@ -476,8 +477,16 @@
             self.timeOfPossession(0);
 
             //create a play result and record it in the play history
-            let returnResult = new MODULES.Constructors.PlayResult(_returnYards, _returnPlayText);
+            let returnResult = new MODULES.Constructors.PlayResult(_returnYards, _returnPlayText, false, '', false, returnDisplayText);
             self.currentTeamWithBall(receivingTeam); //set back to receiving team for proper team in play history
+
+            if (isReturnTouchdown) {
+                self.pointAttemptTeamId = receivingTeam;
+                playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
+                self.pointAttemptAfterTouchDown(true);
+                $('#home-team-trail, #away-team-trail').css('width', '0px');
+            }
+
             playMaker.recordPlay(returnResult);
         }
 
@@ -745,7 +754,8 @@
             self.homeTeamScore() + ' - ' + self.awayTeamScore(),
             self.remainingTimeDisplay()));
 
-        playMaker.display(thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer, team);
+        let displayText = thisPlaysResult.displayText || thisPlaysResult.playResultText + ' for ' + thisPlaysResult.yards.toString() + ' Yard' + pluralizer;
+        playMaker.display(displayText, team);
 
         //now record stats for this play
         this.recordGameStats(team, thisPlaysResult);
