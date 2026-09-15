@@ -1,4 +1,16 @@
 ﻿var HELPERS = {
+    clampFieldProgress: function (fieldProgress) {
+        return Math.max(-MODULES.Constants.END_ZONE_YARDS,
+            Math.min(fieldProgress, 100 + MODULES.Constants.END_ZONE_YARDS));
+    },
+
+    capRunYardsAtGoalLine: function (runYards, distanceToGoalLine) {
+        if (runYards <= 0 || distanceToGoalLine < 0)
+            return runYards;
+
+        return Math.min(runYards, distanceToGoalLine);
+    },
+
     getDownText: function (playAttempt, yardsToFirst) {
         if (typeof self.isTwoPointConversion === 'function' && self.isTwoPointConversion())
             return '1st & GOAL';

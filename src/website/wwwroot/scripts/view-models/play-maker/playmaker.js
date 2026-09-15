@@ -144,11 +144,7 @@
         }
         if (_positiveYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _yards = UTILITIES.getRandomInt(1, yardageMax);
-
-            //a run can't gain more than the distance to the goal line - the play ends the instant the ball crosses it
-            if (distanceToGoalLine > 0 && _yards > distanceToGoalLine) {
-                _yards = distanceToGoalLine;
-            }
+            _yards = HELPERS.capRunYardsAtGoalLine(_yards, distanceToGoalLine);
 
             _playResultText = _playResultText + ' Successful';
         }
@@ -285,6 +281,7 @@
             self.StartCounter(); //the quarter clock starts the moment the ball is kicked
 
         let _yards = convertKickoffPowerToYards(kickoffType, kickoffPower, kickoffAngle);
+        let recordedKickYards = _yards;
         let _returnYards = 0;
         let _kickoffResultText = UTILITIES.splitAndTitleCase(kickoffType);
         let ballKickOffSpot = MODULES.Constants.KICKOFF_SPOT; //set ball Spot Start at 35 yard line        
@@ -404,6 +401,8 @@
             let distanceToGoalPosts = kickoffType === KICKOFF_TYPES.FIELDGOAL
                 ? self.yardsToTouchdown() + MODULES.Constants.END_ZONE_YARDS
                 : ballKickOffSpot + MODULES.Constants.END_ZONE_YARDS;
+            if (kickoffType === KICKOFF_TYPES.FIELDGOAL)
+                recordedKickYards = distanceToGoalPosts;
             let isGoodKick = _yards >= distanceToGoalPosts;
 
             if (!isBlocked && isGoodKick) {
@@ -418,7 +417,7 @@
             }
 
             if (kickoffType === KICKOFF_TYPES.FIELDGOAL && (isBlocked || !isGoodKick)) {
-                playMaker.handleFailedFieldGoal(_kickoffResultText, isBlocked, _yards);
+                playMaker.handleFailedFieldGoal(_kickoffResultText, isBlocked, recordedKickYards);
                 return;
             }
 
@@ -489,7 +488,7 @@
         console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
 
         //create a play result and record it in the play history
-        let kickoffResult = new MODULES.Constructors.PlayResult(_yards, _kickoffResultText, false, kickoffType);
+        let kickoffResult = new MODULES.Constructors.PlayResult(recordedKickYards, _kickoffResultText, false, kickoffType);
 
         //record/show play results       
         self.currentTeamWithBall(kickingTeam); //set current team with ball to kickoff team briefly to record the correct team name in the history
