@@ -43,6 +43,8 @@ MODULES.GameVariables = (function () {
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(31, 'titans', 'Tennessee', 'Titans'));
         teamArray.push(new MODULES.Constructors.TeamArrayRecord(32, 'commanders', 'Washington', 'Commanders'));
 
+        teamArray = teamArray.sort((a, b) => a.teamCity.localeCompare(b.teamCity) || a.teamMascot.localeCompare(b.teamMascot));
+
         return teamArray;
     }
 

@@ -1,40 +1,25 @@
 <!DOCTYPE html>
-<!--PREVENT SCRIPT WARNING WHEN RUNNING ON LOCAL HOST, otherwise, for
-internet zone change to: url=(0014)about:internet-->
+<!--PREVENT SCRIPT WARNING WHEN RUNNING ON LOCAL HOST, otherwise, for internet zone change to: url=(0014)about:internet-->
 <!-- saved from url=(0016)http://localhost -->
 <html lang="en">
     <!-- NAME: Paul Krimm -->
-    <!-- DATE: 2018.09.18 -->
-    
+    <!-- DATE: 2018.09.18 -->    
     <head>
         <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="stylesheet" type="text/css" href="/wwwroot/content/css/styles.min.css"
-        media="screen" />
+        <link rel="stylesheet" type="text/css" href="/wwwroot/content/css/styles.min.css" media="screen" />
         <title>Football: A Game of American Football in JavaScript</title>
-        <!--initialize
-        objects for JavaScript-->
+        <!--initialize objects for JavaScript-->
         <script type="text/javascript">
             var MODULES = {}; MODULES.UI = {}; var COMPONENTS = {}; var USER = {};
         </script>
-    </head>
-    
+    </head>    
     <body>
-        <div id="jsconfig" style="display:none;visibility:hidden">
-            <!--<input type="hidden" value="@settings.AlertErrors.ToString().ToLower()"
-            id="showJSErrors" />
-            <input type="hidden" value="@settings.Debug.ToString().ToLower()" id="isDebugMode"
-            />
-            <input type="hidden" value="@settings.LogErrors.ToString().ToLower()"
-            id="logJSErrors" />
-            <input type="hidden" value="@settings.UserSessionTimeout" id="sessionExpireTime"
-            />-->
-            <input type="hidden" value="Production" id="app-environment" />
-        </div>
         <div id="container">
-            <div id="header" style="height: 60px;"> <span class="header-text">Play Football</span>
+            <div id="header" style="height: 60px;"> 
+                <span class="header-text">Play Football</span>
                 <div class="header-actions">
                     <button class="btn-default btn-default-small" data-bind="click: SimQuarter, visible: gameStarted() && !gameOver()">Sim Quarter</button>
                     <button class="btn-default btn-default-small" data-bind="click: SimGame, visible: gameStarted() && !gameOver()">Sim Remaining Game</button>
@@ -49,7 +34,13 @@ internet zone change to: url=(0014)about:internet-->
                 <div class="team-images">
                     <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
                 </div>
-                <br />
+                <div id="finalScoreBanner" class="white" data-bind="visible: gameOver">
+                    GAME OVER - Final Score: 
+                    <span data-bind="text: homeTeamInfo().teamName()"></span> 
+                    <span data-bind="text: homeTeamScore()"></span> - 
+                    <span data-bind="text: awayTeamInfo().teamName()"></span>
+                    <span data-bind="text: awayTeamScore()"></span>
+                </div>
             </div>
             <!--END of div header-->
             <div id="body">
@@ -79,8 +70,8 @@ internet zone change to: url=(0014)about:internet-->
                                     <line x1="146" y1="4" x2="146" y2="99"></line>
                                     <line x1="164" y1="4" x2="164" y2="99"></line>
                                     <line x1="182" y1="4" x2="182" y2="99"></line>
-                                    <line x1="20" y1="19" x2="200" y2="19"></line>
-                                    <line x1="20" y1="84" x2="200" y2="84"></line>
+                                    <line x1="20" y1="4" x2="200" y2="4"></line>
+                                    <line x1="20" y1="99" x2="200" y2="99"></line>
                                 </g>
                                 <defs>
                                     <pattern id="middle-hash-top" width="3.6" height="4" patternUnits="userSpaceOnUse">
@@ -110,31 +101,24 @@ internet zone change to: url=(0014)about:internet-->
                                         preserveAspectRatio="xMidYMid meet"
                                         data-bind="attr: { href: homeTeamInfo().teamImage() }"></image>
                             </svg>
-                            <div id="end-zone-left-img"> <span id="end-zone-left-txt" data-bind="text: homeTeamInfo().teamName(), class: homeTeamInfo().teamBgColor()"
-                                class="rotate-left"></span>
+                            <div id="end-zone-left-img"> 
+                                <span id="end-zone-left-txt" data-bind="text: homeTeamInfo().teamName(), class: homeTeamInfo().teamBgColor()" class="rotate-left"></span>
                             </div>
                             <div id="home-team-trail" data-bind="class: homeTeamInfo().teamBgColor()"></div>
                             <div id="ball-position-img"></div>
                             <div id="field-score-feedback" role="status" aria-live="polite"></div>
                             <div id="away-team-trail" data-bind="class: awayTeamInfo().teamBgColor()"></div>
-                            <div id="end-zone-right-img"> <span id="end-zone-right-txt" data-bind="text: awayTeamInfo().teamName(), class: awayTeamInfo().teamBgColor()"
-                                class="rotate-right"></span>
+                            <div id="end-zone-right-img">
+                                <span id="end-zone-right-txt" data-bind="text: awayTeamInfo().teamName(), class: awayTeamInfo().teamBgColor()" class="rotate-right"></span>
                             </div>
                         </div>
                     </div>
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <div id="mainField"></div>
                 </div>
                 <br>
-                <div id="pickTeam" data-bind="visible: !gameStarted()" align="center">
+                <div id="pickTeam" data-bind="visible: !gameStarted()" style="text-align: center;">
                     <div data-bind="visible: !coinTossValue() > 0">
-                        <div class="teams-picked">Teams Picked:
+                        <div class="teams-picked">
+                            Teams Picked:
                             <br />
                             <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0"/> 
                             <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : '[Pick the Away Team]'"></span>
@@ -142,12 +126,15 @@ internet zone change to: url=(0014)about:internet-->
                             <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : '[Pick the Home Team]'"></span>
                             <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
                         </div>
-                        <div class="team-select-container" data-bind="foreach: MODULES.GameVariables.Teams">
-                            <div class="team-name-select" role="button" tabindex="0" data-bind="click: SelectTeam, event: { keydown: SelectTeamOnKeyDown }, class: teamBgColor(), css: { 'team-selected-home': homeTeamID() === teamId, 'team-selected-away': awayTeamID() === teamId }, attr: { 'aria-label': 'Select ' + teamCityAndName() }">
-                                <label>
-                                    <img class="team-select-img" data-bind="attr:{src: teamImage()}" />
-                                    <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
-                                </label>
+                        <!-- wrapper stays put while the container scrolls, so the edge fades can be pinned to it -->
+                        <div class="team-select-scroller">
+                            <div class="team-select-container" data-bind="foreach: MODULES.GameVariables.Teams">
+                                <div class="team-name-select" role="button" tabindex="0" data-bind="click: SelectTeam, event: { keydown: SelectTeamOnKeyDown }, class: teamBgColor(), css: { 'team-selected-home': homeTeamID() === teamId, 'team-selected-away': awayTeamID() === teamId }, attr: { 'aria-label': 'Select ' + teamCityAndName() }">
+                                    <label>
+                                        <img class="team-select-img" data-bind="attr:{src: teamImage()}" />
+                                        <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -157,15 +144,15 @@ internet zone change to: url=(0014)about:internet-->
                             <button class="btn-default" style="margin-top:5px" data-bind="click: SimGame">Sim Game</button>
                             <br />
                             <div data-bind="visible: !gameSimulated()">
-                                <br /> <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span>,
+                                <br /> 
+                                <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span>,
                                 choose heads or tails:
                                 <br>
                                 <label>
-                                    <input type="radio" name="selectCoinSide" value="1" checked="checked"
-                                           data-bind="click: ChooseCoinSide">Heads
+                                    <input type="radio" name="selectCoinSide" value="1" checked="checked" data-bind="click: ChooseCoinSide" />Heads
                                 </label>
                                 <label>
-                                    <input type="radio" name="selectCoinSide" value="2" data-bind="click: ChooseCoinSide">Tails
+                                    <input type="radio" name="selectCoinSide" value="2" data-bind="click: ChooseCoinSide" />Tails
                                 </label>
                                 <br />
                                 <br />
@@ -183,7 +170,8 @@ internet zone change to: url=(0014)about:internet-->
                                 </div>
                             </div>
                             <div data-bind="visible: simHistory().length > 0">
-                                <br><span class="white">Sim Box Score:</span>
+                                <br>
+                                <span class="white">Sim Box Score:</span>
                                 <table class="football-stats">
                                     <thead>
                                         <tr>
@@ -234,17 +222,19 @@ internet zone change to: url=(0014)about:internet-->
                                 <br />
                                 
                                 <br />
-                                <div id="simMatchupTally" data-bind="visible: simHistory().length > 0" align="center">
+                                <div id="simMatchupTally" data-bind="visible: simHistory().length > 0" style="text-align: center;">
                                     <span class="white">Matchup Record:</span>
                                     <br />
                                     <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}" />
                                     <span data-bind="text: homeTeamInfo().teamCityAndName()"></span>
-                                    <span data-bind="text: simMatchupRecord().wins"></span> - <span data-bind="text: simMatchupRecord().losses"></span> - <span data-bind="text: simMatchupRecord().ties"></span>
+                                    <span data-bind="text: simMatchupRecord().wins"></span> - 
+                                    <span data-bind="text: simMatchupRecord().losses"></span> - 
+                                    <span data-bind="text: simMatchupRecord().ties"></span>
                                     <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" />
                                     <span data-bind="text: awayTeamInfo().teamCityAndName()"></span>
                                 </div>
                                 <br />
-                                <div id="simHistory" data-bind="visible: simHistory().length > 0" align="center">
+                                <div id="simHistory" data-bind="visible: simHistory().length > 0" style="text-align: center;">
                                     <span class="white">Sim History:</span>
                                     <div id="simHistoryScroller" class="scroller">
                                         <!-- ko foreach: simHistory -->
@@ -307,21 +297,24 @@ internet zone change to: url=(0014)about:internet-->
                         </div>
                         <div data-bind="visible: coinTossValue() > 0 && coinTossWinner() > 0"> <span class="coin-toss-result" data-bind="text: coinTossResultText"></span>
                             <br/>
-                            The <span data-bind="text: coinTossWinnerInfo() ? coinTossWinnerInfo().teamCityAndName() : '[Error - coin toss winner not determined.]'"></span> won
-                            the coin toss.
+                            The <span data-bind="text: coinTossWinnerInfo() ? coinTossWinnerInfo().teamCityAndName() : '[Error - coin toss winner not determined.]'"></span> 
+                            won the coin toss.
                             <br />
-                            <br />Choose to receive or kickoff.
+                            <br />
+                            Choose to receive or kickoff.
                             <br />
                             <br />
                             <label>
-                                <input type="radio" name="selectCoinTossWinner" value="receive" data-bind="click: SelectCoinTossWinningOption"
-                                checked="checked"> <span class="coin-toss-winner-txt" data-bind="css: { 'selected-team': coinTossWinningOption() === 'receive'}">Receive</span>
+                                <input type="radio" name="selectCoinTossWinner" value="receive" data-bind="click: SelectCoinTossWinningOption" checked="checked" /> 
+                                <span class="coin-toss-winner-txt" data-bind="css: { 'selected-team': coinTossWinningOption() === 'receive'}">Receive</span>
                             </label>
                             <label>
-                                <input type="radio" name="selectCoinTossWinner" value="kickoff" data-bind="click: SelectCoinTossWinningOption"> <span class="coin-toss-winner-txt" data-bind="css: { 'selected-team': coinTossWinningOption() === 'kickoff'}">Kickoff</span>
+                                <input type="radio" name="selectCoinTossWinner" value="kickoff" data-bind="click: SelectCoinTossWinningOption" /> 
+                                <span class="coin-toss-winner-txt" data-bind="css: { 'selected-team': coinTossWinningOption() === 'kickoff'}">Kickoff</span>
                             </label>
                             <br />
-                            <br />The <span data-bind="text: teamReceivingInitialKickoffInfo() ? teamReceivingInitialKickoffInfo().teamCityAndName() : '[Error - kickoff team not determined.]'"></span>,
+                            <br />
+                            The <span data-bind="text: teamReceivingInitialKickoffInfo() ? teamReceivingInitialKickoffInfo().teamCityAndName() : '[Error - kickoff team not determined.]'"></span>,
                             are receiving the initial kickoff.
                             <br />
                             <br />
@@ -333,16 +326,17 @@ internet zone change to: url=(0014)about:internet-->
                     <div id="homeTeamName" data-bind="class: homeTeamInfo().teamBgColor()" class="white"> 
                         <span class="hasBall" data-bind="visible: currentTeamWithBall() == homeTeamID()"></span>
                         <span data-bind="text: homeTeamID() ? homeTeamInfo().teamName() : '[Pick the Home Team]'"></span>
-                            <!-- ko foreach: new Array(homeTeamTimeOuts()) --> <span class="timeout-display"></span>
+                            <!-- ko foreach: Array.apply(null, Array(homeTeamTimeOuts())) -->
+                            <span class="timeout-display"></span>
                             <!-- /ko -->
-                            <!-- </div>--> 
                         <span id="homeTeamScore" data-bind="text: homeTeamScore(), class: homeTeamInfo().teamBgColor()" class="white score-display"></span>
                     </div>
-                    <div id="awayTeamName" data-bind="class: awayTeamInfo().teamBgColor()" class="white"> <span class="hasBall" data-bind="visible: currentTeamWithBall() == awayTeamID()"></span>
+                    <div id="awayTeamName" data-bind="class: awayTeamInfo().teamBgColor()" class="white"> 
+                        <span class="hasBall" data-bind="visible: currentTeamWithBall() == awayTeamID()"></span>
                         <span data-bind="text: awayTeamID() ? awayTeamInfo().teamName() : '[Pick the Home Team]'"></span>
-                            <!-- ko foreach: new Array(awayTeamTimeOuts()) --> <span class="timeout-display"></span>
+                            <!-- ko foreach: Array.apply(null, Array(awayTeamTimeOuts())) -->
+                            <span class="timeout-display"></span>
                             <!-- /ko -->
-                            <!--</div>-->
                         <span id="awayTeamScore" data-bind="text: awayTeamScore(), class: awayTeamInfo().teamBgColor()" class="white score-display"></span>
                     </div>
                     <div id="currentQuarter" class="white" data-bind="text: currentQuarterDisplay()"></div>
@@ -353,12 +347,6 @@ internet zone change to: url=(0014)about:internet-->
                     <div id="currentBallSpot" class="white">
                         <span id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></span>
                         <span data-bind="text: HELPERS.getYardText()"></span>
-                    </div>                    
-                    <div id="finalScoreBanner" class="white" data-bind="visible: gameOver">
-                        GAME OVER - Final Score: 
-                        <span data-bind="text: homeTeamInfo().teamName()"></span> 
-                        <span data-bind="text: homeTeamScore()"></span> - <span data-bind="text: awayTeamInfo().teamName()"></span>
-                        <span data-bind="text: awayTeamScore()"></span>
                     </div>
                 </div>
                 <div id="pauseOverlay" data-bind="visible: isGamePaused">
@@ -374,15 +362,59 @@ internet zone change to: url=(0014)about:internet-->
                                 <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" />
                                 <span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong>
                             </div>
-                            <div><span data-bind="text: currentQuarterDisplay"></span> <span data-bind="text: remainingTimeDisplay"></span> <span class="gold" data-bind="text: playClockDisplay"></span></div>
+                            <div>
+                                <span data-bind="text: currentQuarterDisplay"></span>
+                                <span data-bind="text: remainingTimeDisplay"></span>
+                                <span class="gold" data-bind="text: playClockDisplay"></span>
+                            </div>
                             <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
                             <div data-bind="text: HELPERS.getYardText()"></div>
                         </div>
                         <div id="pauseHistory" class="scroller">
                             <table class="football-stats">
-                                <thead><tr><th>Team</th><th>Play</th><th>Score</th><th>Clock</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th>Team</th>
+                                        <th>Play</th>
+                                        <th>Score</th>
+                                        <th>Clock</th>
+                                    </tr>
+                                </thead>
                                 <tbody data-bind="foreach: teamPlayHistory">
-                                    <tr><td data-bind="text: fullTeamName"></td><td data-bind="text: playResult"></td><td data-bind="text: score"></td><td data-bind="text: gameClock"></td></tr>
+                                    <tr>
+                                        <td data-bind="text: fullTeamName"></td>
+                                        <td data-bind="text: playResult"></td>
+                                        <td data-bind="text: score"></td>
+                                        <td data-bind="text: gameClock"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pauseStats" class="scroller">
+                            <table class="football-stats">
+                                <thead>
+                                    <tr>
+                                        <th>Team</th>
+                                        <th># of Plays Total</th>
+                                        <th>Total Yards Rushing</th>
+                                        <th>Total Yards Passing</th>
+                                        <th>Penalty Yards</th>
+                                        <th>Total Time of Possession</th>
+                                        <th>Turnovers</th>
+                                        <th>1<sup>st</sup> Downs</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: gamePlayStats">
+                                    <tr>
+                                        <td data-bind="text: fullTeamName"></td>
+                                        <td data-bind="text: totalPlayCount"></td>
+                                        <td data-bind="text: totalYardsRushing"></td>
+                                        <td data-bind="text: totalYardsPassing"></td>
+                                        <td data-bind="text: totalPenaltyYards"></td>
+                                        <td data-bind="text: totalTimePossessionDisplay"></td>
+                                        <td data-bind="text: totalTurnovers"></td>
+                                        <td data-bind="text: totalFirstDowns"></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -399,32 +431,36 @@ internet zone change to: url=(0014)about:internet-->
                         <span id="playResult">0</span>
                     </span>
                 </p>
-                <div id="kickoffPlays" data-bind="visible:showKickoffControls() && gameStarted() && !gameOver()"
-                align="center">
+                <div id="kickoffPlays" data-bind="visible:showKickoffControls() && gameStarted() && !gameOver()" style="text-align: center;">
                     <br>Click sliders or buttons to select power and angle of kick:
                     <br>
                     <br />
                     <div data-bind="visible: isKickoff">
                         <label>
-                            <input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked">Kickoff</label>
+                            <input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked" /> 
+                            Kickoff
+                        </label>
                         <label>
-                            <input type="radio" name="selectKickoffPlay" value="onside">On-Side Kick</label>
+                            <input type="radio" name="selectKickoffPlay" value="onside" /> 
+                            On-Side Kick
+                        </label>
                         <br />
                         <br />
                     </div>
                     <div class="slidecontainer">Power:
                         <button type="button" id="powerStopper" class="btn-default" data-bind="click: GetKickoffPower">Select Power</button>
-                        <input type="range" min="1" max="100" value="50"
-                        class="slider" id="kickoffPower" data-bind="click: GetKickoffPower" /> <span class="smaller">(select a higher power for stronger kick, a lower value will allow for a return)</span>
-                        <br
-                        />Angle :
+                        <input type="range" min="1" max="100" value="50" class="slider" id="kickoffPower" data-bind="click: GetKickoffPower" /> 
+                        <span class="smaller">(select a higher power for stronger kick, a lower value will allow for a return)</span>
+                        <br />
+                        Angle :
                         <button type="button" id="angleStopper" class="btn-default" data-bind="click: GetKickoffAngle">Select Angle</button>
-                        <input type="range" min="1" max="100" value="50"
-                        class="slider" id="kickoffAngle" data-bind="click: GetKickoffAngle" /> <span class="smaller">(select center for a normal kick-off, select left or right for on-side kick)</span>
-                        <br
-                        />
-                        <p>Kick Power: <span id="kickoffPowerSelected"></span>
-                            <br />Kick Angle: <span id="kickoffAngleSelected"></span>
+                        <input type="range" min="1" max="100" value="50" class="slider" id="kickoffAngle" data-bind="click: GetKickoffAngle" /> 
+                        <span class="smaller">(select center for a normal kick-off, select left or right for on-side kick)</span>
+                        <br/>
+                        <p>
+                            Kick Power: <span id="kickoffPowerSelected"></span>
+                            <br />
+                            Kick Angle: <span id="kickoffAngleSelected"></span>
                         </p>
                     </div>
                     <button type="button" class="btn-default" data-bind="click: Kickoff">
@@ -437,16 +473,19 @@ internet zone change to: url=(0014)about:internet-->
                     <br />
                     <br />
                 </div>
-                <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()"
-                align="center">
+                <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()" style="text-align: center;">
                     <div data-bind="visible:pointAttemptAfterTouchDown()">
                         <button type="button" id="pointAfterAttempt" class="btn-default" data-bind="click: MakePlayAfterTD">Make Attempt</button>
                         <br />
                         <br />
                         <label>
-                            <input type="radio" name="afterTDPlay" value="extraPoint" checked="checked">Extra Point Attempt</label>
+                            <input type="radio" name="afterTDPlay" value="extraPoint" checked="checked" />
+                            Extra Point Attempt
+                        </label>
                         <label>
-                            <input type="radio" name="afterTDPlay" value="twoPointConversion">2 Point Conversion</label>
+                            <input type="radio" name="afterTDPlay" value="twoPointConversion" />
+                            2 Point Conversion
+                        </label>
                     </div>
                     <div data-bind="visible:!hasRolled() && !pointAttemptAfterTouchDown()">
                         <div class="play-ready-panel">
@@ -521,67 +560,76 @@ internet zone change to: url=(0014)about:internet-->
                     </p>
                     <br />
                     <!--TODO: Update Storage - needs further development to work properly-->
-                    <div id="storage-controls" align="center" style="display:none;">
+                    <div id="storage-controls" style="text-align: center; display:none;">
                         <button type="button" id="resetGame" class="btn-default" data-bind="click: ResetGame">RESET GAME</button>
-                        <button type="button" id="saveGame" class="btn-default"
-                        data-bind="click: SaveGame">SAVE GAME</button>
-                        <button type="button" id="getGame" class="btn-default"
-                        data-bind="click: GetGameSaves">GET GAME SAVES</button>
+                        <button type="button" id="saveGame" class="btn-default" data-bind="click: SaveGame">SAVE GAME</button>
+                        <button type="button" id="getGame" class="btn-default" data-bind="click: GetGameSaves">GET GAME SAVES</button>
                     </div>
                     <br>
-                    <br>
-                    <br>
-                    <div align="center"> <span class="white">Play History:</span>
-                        <div id="playHistoryScroller"
-                        class="scroller">
-                            <table id="playHistory" class="football-stats alt-color-tr">
-                                <thead>
-                                    <tr>
-                                        <th>Quarter</th>
-                                        <th>Team</th>
-                                        <th>Down</th>
-                                        <th># of Plays in Drive</th>
-                                        <th>Total Yards for Play</th>
-                                        <th>Play Result</th>
-                                        <th>Spot of Ball</th>
-                                        <th>Time of Possession</th>
-                                        <th>Score</th>
-                                        <th>Game Clock</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: teamPlayHistory">
-                                    <tr>
-                                        <td><span data-bind="text: quarter"></span>
-                                        </td>
-                                        <td><span data-bind="text: fullTeamName"></span>
-                                        </td>
-                                        <td><span data-bind="text: down"></span>
-                                        </td>
-                                        <td><span data-bind="text: playCount"></span>
-                                        </td>
-                                        <td><span data-bind="text: playYards"></span>
-                                        </td>
-                                        <td><span data-bind="text: playResult"></span>
-                                        </td>
-                                        <td><span data-bind="text: ballSpot"></span>
-                                        </td>
-                                        <td><span data-bind="text: timeOfPossessionDisplay"></span>
-                                        </td>
-                                        <td><span data-bind="text: score"></span>
-                                        </td>
-                                        <td><span data-bind="text: gameClock"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <br>                 
+                </div>
+
+                <div id="game-info-container" data-bind="visible: gameStarted()" style="text-align: center;"> 
+                    <h3 class="white">Play History:</h3>
+                    <div id="playHistoryScroller" class="scroller">
+                        <table id="playHistory" class="football-stats alt-color-tr">
+                            <thead>
+                                <tr>
+                                    <th>Quarter</th>
+                                    <th>Team</th>
+                                    <th>Down</th>
+                                    <th># of Plays in Drive</th>
+                                    <th>Total Yards for Play</th>
+                                    <th>Play Result</th>
+                                    <th>Spot of Ball</th>
+                                    <th>Time of Possession</th>
+                                    <th>Score</th>
+                                    <th>Game Clock</th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: teamPlayHistory">
+                                <tr>
+                                    <td>
+                                        <span data-bind="text: quarter"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: fullTeamName"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: down"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: playCount"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: playYards"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: playResult"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: ballSpot"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: timeOfPossessionDisplay"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: score"></span>
+                                    </td>
+                                    <td>
+                                        <span data-bind="text: gameClock"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <!--BEGINNING of hidden div slider gameInfoBox-->
-                     <h3 id="gameInfoBoxSwitch" data-bind="click: ShowOtherGameInfo"> Click for Other Game Info</h3>
-                    <div id="gameInfoBox">
+
+                    <h3 id="gameInfoBoxSwitch" data-bind="click: ShowOtherGameInfo"> Click for Other Game Info</h3>
+                    <div id="gameInfoBox" class="scroller">
                         <div>
                             <br>
-                            <div align="center"> <span class="white">Game Stats:</span>
+                            <div style="text-align: center;"> 
+                                <span class="white">Game Stats:</span>
                                 <table id="gameStats" class="football-stats">
                                     <thead>
                                         <tr>
@@ -597,22 +645,14 @@ internet zone change to: url=(0014)about:internet-->
                                     </thead>
                                     <tbody data-bind="foreach: gamePlayStats">
                                         <tr>
-                                            <td><span data-bind="text: fullTeamName"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalPlayCount"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalYardsRushing"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalYardsPassing"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalPenaltyYards"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalTimePossessionDisplay"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalTurnovers"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalFirstDowns"></span>
-                                            </td>
+                                            <td><span data-bind="text: fullTeamName"></span></td>
+                                            <td><span data-bind="text: totalPlayCount"></span></td>
+                                            <td><span data-bind="text: totalYardsRushing"></span></td>
+                                            <td><span data-bind="text: totalYardsPassing"></span></td>
+                                            <td><span data-bind="text: totalPenaltyYards"></span></td>
+                                            <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
+                                            <td><span data-bind="text: totalTurnovers"></span></td>
+                                            <td><span data-bind="text: totalFirstDowns"></span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -657,19 +697,17 @@ internet zone change to: url=(0014)about:internet-->
                         <br />
                         <br />
                     </div>
-                    <!--END of hidden div slider gameInfoBox-->
-                </div>
+                </div>                
             </div>
-            <!--END of div body-->﻿
-            <div id="footer">Copyright Note: All images and logos belong to the NFL - this is just
-                a training/testing web application with no intention to sell this product.</div>
-        </div>
-        <!--END of div container-->
+            <div id="footer">
+                Copyright Note: All images and logos belong to the NFL - this is just
+                a training/testing web application with no intention to sell this product.
+            </div>
+        </div>        
         <script src="/wwwroot/content/js/lib/jquery.min.js"></script>
         <script src="/wwwroot/content/js/lib/knockout-bundle.min.js"></script>
         <script src="/wwwroot/content/js/utilities/utilities-bundle.min.js"></script>
         <script src="/wwwroot/content/js/modules/main-bundle.min.js"></script>
         <script src="/wwwroot/content/js/viewmodels/main-game-bundle.min.js"></script>
     </body>
-
 </html>

@@ -416,19 +416,6 @@ nav > ul {
         color: #0E97D2
     }
 
-/*#mainField {
-	position: relative;
-	width: 100%;
-	padding-bottom: 80%;
-	margin: 20px;
-}
-
-#mainField canvas{
-	position: absolute;
-	width: 100%;
-	height: 80%;
-	border: solid 1px pink; 
-}*/
 
 /*sources: https://codepen.io/rtro92/pen/bqlCx and https://www.w3schools.com/howto/howto_css_image_text_blocks.asp*/
 /* Container holding the image and the text */
@@ -667,17 +654,6 @@ nav > ul {
 	padding-left: 15px;
 }
 
-#currentGameInfo {
-	width: 50%;
-	overflow: hidden;
-	border: 1px solid #fff
-}
-
-#currentGameInfo div {
-	float: left;
-	padding: 10px;
-}
-
 .football-stats {
 	color: gold;
 	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -840,9 +816,81 @@ input[type="radio"][name="selectCoinTossWinner"] {
     visibility: hidden;
 }
 
+/* Non-scrolling wrapper for the team list; the edge fades hang off this so they
+   stay at the visible edges instead of scrolling away with the team tiles. */
+.team-select-scroller {
+    position: relative;
+}
+
 .team-select-container {
-    height: 250px;
-    overflow: auto;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    gap: 10px;
+    padding: 10px 0;
+    margin: 10px 0;
+}
+
+/* Faded glow showing there is more to scroll to, on whichever side has more */
+.team-select-scroller::before,
+.team-select-scroller::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.team-select-scroller::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.team-select-scroller::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.team-select-scroller.can-scroll-left::before,
+.team-select-scroller.can-scroll-right::after {
+    opacity: 1;
+}
+
+/* Before the script reports scroll position (or with JS off) show both fades,
+   so the list never renders without its glow. */
+.team-select-scroller:not(.scroller-ready)::before,
+.team-select-scroller:not(.scroller-ready)::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .team-select-scroller::before,
+    .team-select-scroller::after {
+        transition: none;
+    }
+}
+
+/* Custom scrollbar styling */
+.team-select-container::-webkit-scrollbar {
+    height: 6px;
+    background: transparent;
+    margin-top: 5px;
+}
+
+.team-select-container::-webkit-scrollbar-thumb {
+    background: #4a90e2;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+.team-select-container::-webkit-scrollbar-thumb:hover {
+    background: #357abd;
 }
 
 .coin-toss-winner-txt {
@@ -1147,8 +1195,11 @@ body {
 }
 
 #currentGameInfo {
-    display: grid;
-    grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(120px, 0.8fr);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 10px;
+    display: flex;
     align-items: stretch;
     width: 100%;
     overflow: hidden;
@@ -1166,6 +1217,41 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#currentGameInfo > div:last-child {
+    border-right: none;
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+    #currentGameInfo {
+        padding: 0px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+    
+    #currentGameInfo > div {
+        min-height: 45px;
+        padding: 8px 8px;
+        gap: 4px;
+        font-size: 0.75em;
+        border-right: none;
+        border-bottom: 1px solid var(--broadcast-line);
+    }
+}
+
+@media (max-width: 480px) {
+    #currentGameInfo > div {
+        min-height: 35px;
+        padding: 6px 6px;
+        gap: 3px;
+        font-size: 0.7em;
+    }
 }
 
 #currentGameInfo #homeTeamName,
@@ -1212,7 +1298,6 @@ body {
 
 #currentDown,
 #currentBallSpot {
-    font-size: 0.95rem;
     font-weight: 700;
 }
 
@@ -1259,6 +1344,17 @@ input[type="submit"].btn-default:hover {
 #kickoffPlays,
 #mainPlaySelection {
     max-width: 760px;
+    margin: 26px auto 0;
+    padding: 24px clamp(16px, 4vw, 36px);
+    background: var(--broadcast-panel);
+    border: 1px solid var(--broadcast-line);
+    border-radius: 10px;
+    box-shadow: var(--broadcast-shadow);
+    text-align: center;
+}
+
+#game-info-container {
+    max-width: 90%;
     margin: 26px auto 0;
     padding: 24px clamp(16px, 4vw, 36px);
     background: var(--broadcast-panel);
@@ -1403,37 +1499,6 @@ input[type="submit"].btn-default:hover {
 
     #mainFieldDisplay {
         padding: 12px;
-    }
-
-    #currentGameInfo {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    #currentGameInfo > div {
-        min-height: 54px;
-        padding: 10px;
-    }
-
-    #currentGameInfo #currentQuarter,
-    #currentGameInfo #timeRemainingInQuarter,
-    #currentGameInfo #currentDown,
-    #currentGameInfo #currentBallSpot {
-        border-top: 1px solid var(--broadcast-line);
-    }
-
-    #currentGameInfo #awayTeamName,
-    #currentGameInfo #currentDown {
-        border-right: 0;
-    }
-
-    #currentGameInfo #currentBallSpot {
-        grid-column: span 2;
-        border-right: 0;
-    }
-
-    #homeTeamScore,
-    #awayTeamScore {
-        font-size: 1.35rem;
     }
 
     #field-img {
@@ -1685,7 +1750,7 @@ input[type="submit"].btn-default:hover {
     #header { flex-wrap: wrap; }
     .header-actions { order: 3; width: 100%; margin: 8px 0 0; }
     .header-actions .btn-default { flex: 1; }
-    #diceValues { flex-direction: column; align-items: center; }
+    #diceValues { flex-direction: column; align-items: center; }     
 }
 
 #pauseOverlay {
@@ -1747,18 +1812,18 @@ input[type="submit"].btn-default:hover {
     font-size: 1.2rem;
 }
 
-#pauseHistory {
+#pauseHistory, #pauseStats {
     height: 180px;
     margin-bottom: 20px;
 }
 
-#pauseHistory .football-stats {
+#pauseHistory, #pauseStats, .football-stats {
     min-width: 0;
     margin: 0;
     font-size: 0.72rem;
 }
 
-#pauseHistory .football-stats td,
-#pauseHistory .football-stats th {
+#pauseHistory, #pauseStats, .football-stats td,
+#pauseHistory, #pauseStats, .football-stats th {
     padding: 7px;
 }

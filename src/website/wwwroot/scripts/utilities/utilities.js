@@ -78,5 +78,110 @@
         else {
             return self.homeTeamInfo().teamImage();
         }
+    },
+    //Wires up a horizontally scrolling strip (e.g. the team picker):
+    //  - turns vertical mouse wheel into horizontal scrolling, 1:1 with the wheel so it never feels laggy
+    //  - leaves touch panning to the browser, which is smoother than anything we can do from script
+    //  - flags the wrapper with can-scroll-left/can-scroll-right so CSS can fade the correct edge
+    //options: { fadeTarget, previousButton, nextButton, step }
+    initHorizontalScroller: function (scroller, options) {
+        let settings = options || {};
+        let element = UTILITIES.resolveElement(scroller);
+
+        if (!element)
+            return null;
+
+        let fadeTarget = UTILITIES.resolveElement(settings.fadeTarget) || element.parentElement;
+        let previousButton = UTILITIES.resolveElement(settings.previousButton);
+        let nextButton = UTILITIES.resolveElement(settings.nextButton);
+        let updateQueued = false;
+
+        function maxScrollLeft() {
+            return element.scrollWidth - element.clientWidth;
+        }
+
+        function updateFades() {
+            if (!fadeTarget)
+                return;
+
+            //1px of slack: fractional scroll offsets and zoom keep scrollLeft from landing exactly on the ends
+            let maxScroll = maxScrollLeft();
+            let canScrollLeft = maxScroll > 1 && element.scrollLeft > 1;
+            let canScrollRight = maxScroll > 1 && element.scrollLeft < maxScroll - 1;
+
+            fadeTarget.classList.add('scroller-ready');
+            fadeTarget.classList.toggle('can-scroll-left', canScrollLeft);
+            fadeTarget.classList.toggle('can-scroll-right', canScrollRight);
+        }
+
+        //scroll fires far more often than we can paint, so collapse bursts into one update per frame
+        function queueUpdate() {
+            if (updateQueued)
+                return;
+
+            updateQueued = true;
+            window.requestAnimationFrame(function () {
+                updateQueued = false;
+                updateFades();
+            });
+        }
+
+        function scrollByStep(direction) {
+            let step = settings.step || Math.max(150, Math.round(element.clientWidth * 0.8));
+
+            element.scrollBy({ left: direction * step, behavior: 'smooth' });
+        }
+
+        element.addEventListener('wheel', function (e) {
+            //let the browser own pinch-zoom and trackpad gestures that are already horizontal
+            if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY))
+                return;
+
+            let maxScroll = maxScrollLeft();
+
+            if (maxScroll <= 1)
+                return;
+
+            //deltaMode 1 = lines, 2 = pages; normalize both to pixels
+            let delta = e.deltaY;
+
+            if (e.deltaMode === 1)
+                delta *= 16;
+            else if (e.deltaMode === 2)
+                delta *= element.clientWidth;
+
+            //at either end, give the wheel back to the page so it keeps scrolling vertically
+            if ((delta < 0 && element.scrollLeft <= 0) || (delta > 0 && element.scrollLeft >= maxScroll - 1))
+                return;
+
+            e.preventDefault();
+            element.scrollLeft += delta;
+        }, { passive: false });
+
+        element.addEventListener('scroll', queueUpdate, { passive: true });
+        window.addEventListener('resize', queueUpdate);
+
+        if (previousButton)
+            previousButton.addEventListener('click', function () { scrollByStep(-1); });
+
+        if (nextButton)
+            nextButton.addEventListener('click', function () { scrollByStep(1); });
+
+        //catches the strip being shown/hidden or reflowed (it starts out display:none behind a ko visible binding)
+        if (window.ResizeObserver) {
+            let observer = new ResizeObserver(queueUpdate);
+
+            observer.observe(element);
+        }
+
+        queueUpdate();
+
+        return { update: queueUpdate, scrollByStep: scrollByStep };
+    },
+    resolveElement: function (target) {
+        if (!target)
+            return null;
+
+        return typeof target === 'string' ? document.querySelector(target) : target;
     }
 };
