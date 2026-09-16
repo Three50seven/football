@@ -46,10 +46,20 @@ internet zone change to: url=(0014)about:internet-->
                 <div class="team-images" data-bind="visible: awayTeamID() > 0 && homeTeamID() > 0">
                     at
                 </div>
+                <br />
+                <br />
                 <div class="team-images">
                     <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
                 </div>
                 <br />
+                <br />
+                <div id="finalScoreBanner" class="white" data-bind="visible: gameOver">
+                    GAME OVER - Final Score: 
+                    <span data-bind="text: homeTeamInfo().teamName()"></span> 
+                    <span data-bind="text: homeTeamScore()"></span> - 
+                    <span data-bind="text: awayTeamInfo().teamName()"></span>
+                    <span data-bind="text: awayTeamScore()"></span>
+                </div>
             </div>
             <!--END of div header-->
             <div id="body">
@@ -79,8 +89,8 @@ internet zone change to: url=(0014)about:internet-->
                                     <line x1="146" y1="4" x2="146" y2="99"></line>
                                     <line x1="164" y1="4" x2="164" y2="99"></line>
                                     <line x1="182" y1="4" x2="182" y2="99"></line>
-                                    <line x1="20" y1="19" x2="200" y2="19"></line>
-                                    <line x1="20" y1="84" x2="200" y2="84"></line>
+                                    <line x1="20" y1="4" x2="200" y2="4"></line>
+                                    <line x1="20" y1="99" x2="200" y2="99"></line>
                                 </g>
                                 <defs>
                                     <pattern id="middle-hash-top" width="3.6" height="4" patternUnits="userSpaceOnUse">
@@ -353,12 +363,6 @@ internet zone change to: url=(0014)about:internet-->
                     <div id="currentBallSpot" class="white">
                         <span id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></span>
                         <span data-bind="text: HELPERS.getYardText()"></span>
-                    </div>                    
-                    <div id="finalScoreBanner" class="white" data-bind="visible: gameOver">
-                        GAME OVER - Final Score: 
-                        <span data-bind="text: homeTeamInfo().teamName()"></span> 
-                        <span data-bind="text: homeTeamScore()"></span> - <span data-bind="text: awayTeamInfo().teamName()"></span>
-                        <span data-bind="text: awayTeamScore()"></span>
                     </div>
                 </div>
                 <div id="pauseOverlay" data-bind="visible: isGamePaused">
