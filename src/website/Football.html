@@ -126,12 +126,15 @@
                             <span data-bind="text: homeTeamID() ? homeTeamInfo().teamCityAndName() : '[Pick the Home Team]'"></span>
                             <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
                         </div>
-                        <div class="team-select-container" data-bind="foreach: MODULES.GameVariables.Teams">
-                            <div class="team-name-select" role="button" tabindex="0" data-bind="click: SelectTeam, event: { keydown: SelectTeamOnKeyDown }, class: teamBgColor(), css: { 'team-selected-home': homeTeamID() === teamId, 'team-selected-away': awayTeamID() === teamId }, attr: { 'aria-label': 'Select ' + teamCityAndName() }">
-                                <label>
-                                    <img class="team-select-img" data-bind="attr:{src: teamImage()}" />
-                                    <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
-                                </label>
+                        <!-- wrapper stays put while the container scrolls, so the edge fades can be pinned to it -->
+                        <div class="team-select-scroller">
+                            <div class="team-select-container" data-bind="foreach: MODULES.GameVariables.Teams">
+                                <div class="team-name-select" role="button" tabindex="0" data-bind="click: SelectTeam, event: { keydown: SelectTeamOnKeyDown }, class: teamBgColor(), css: { 'team-selected-home': homeTeamID() === teamId, 'team-selected-away': awayTeamID() === teamId }, attr: { 'aria-label': 'Select ' + teamCityAndName() }">
+                                    <label>
+                                        <img class="team-select-img" data-bind="attr:{src: teamImage()}" />
+                                        <span data-bind="text: teamCityAndName(), css: { 'selected-team': awayTeamID() === teamId || homeTeamID() === teamId}"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -387,6 +390,34 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div id="pauseStats" class="scroller">
+                            <table class="football-stats">
+                                <thead>
+                                    <tr>
+                                        <th>Team</th>
+                                        <th># of Plays Total</th>
+                                        <th>Total Yards Rushing</th>
+                                        <th>Total Yards Passing</th>
+                                        <th>Penalty Yards</th>
+                                        <th>Total Time of Possession</th>
+                                        <th>Turnovers</th>
+                                        <th>1<sup>st</sup> Downs</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: gamePlayStats">
+                                    <tr>
+                                        <td data-bind="text: fullTeamName"></td>
+                                        <td data-bind="text: totalPlayCount"></td>
+                                        <td data-bind="text: totalYardsRushing"></td>
+                                        <td data-bind="text: totalYardsPassing"></td>
+                                        <td data-bind="text: totalPenaltyYards"></td>
+                                        <td data-bind="text: totalTimePossessionDisplay"></td>
+                                        <td data-bind="text: totalTurnovers"></td>
+                                        <td data-bind="text: totalFirstDowns"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <button type="button" class="btn-default" data-bind="click: ResumeGame">Resume Game</button>
                     </div>
                 </div>
@@ -614,22 +645,14 @@
                                     </thead>
                                     <tbody data-bind="foreach: gamePlayStats">
                                         <tr>
-                                            <td><span data-bind="text: fullTeamName"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalPlayCount"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalYardsRushing"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalYardsPassing"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalPenaltyYards"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalTimePossessionDisplay"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalTurnovers"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalFirstDowns"></span>
-                                            </td>
+                                            <td><span data-bind="text: fullTeamName"></span></td>
+                                            <td><span data-bind="text: totalPlayCount"></span></td>
+                                            <td><span data-bind="text: totalYardsRushing"></span></td>
+                                            <td><span data-bind="text: totalYardsPassing"></span></td>
+                                            <td><span data-bind="text: totalPenaltyYards"></span></td>
+                                            <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
+                                            <td><span data-bind="text: totalTurnovers"></span></td>
+                                            <td><span data-bind="text: totalFirstDowns"></span></td>
                                         </tr>
                                     </tbody>
                                 </table>

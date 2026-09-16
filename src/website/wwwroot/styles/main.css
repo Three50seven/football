@@ -816,9 +816,81 @@ input[type="radio"][name="selectCoinTossWinner"] {
     visibility: hidden;
 }
 
+/* Non-scrolling wrapper for the team list; the edge fades hang off this so they
+   stay at the visible edges instead of scrolling away with the team tiles. */
+.team-select-scroller {
+    position: relative;
+}
+
 .team-select-container {
-    height: 250px;
-    overflow: auto;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    gap: 10px;
+    padding: 10px 0;
+    margin: 10px 0;
+}
+
+/* Faded glow showing there is more to scroll to, on whichever side has more */
+.team-select-scroller::before,
+.team-select-scroller::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.team-select-scroller::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.team-select-scroller::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.team-select-scroller.can-scroll-left::before,
+.team-select-scroller.can-scroll-right::after {
+    opacity: 1;
+}
+
+/* Before the script reports scroll position (or with JS off) show both fades,
+   so the list never renders without its glow. */
+.team-select-scroller:not(.scroller-ready)::before,
+.team-select-scroller:not(.scroller-ready)::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .team-select-scroller::before,
+    .team-select-scroller::after {
+        transition: none;
+    }
+}
+
+/* Custom scrollbar styling */
+.team-select-container::-webkit-scrollbar {
+    height: 6px;
+    background: transparent;
+    margin-top: 5px;
+}
+
+.team-select-container::-webkit-scrollbar-thumb {
+    background: #4a90e2;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+.team-select-container::-webkit-scrollbar-thumb:hover {
+    background: #357abd;
 }
 
 .coin-toss-winner-txt {
@@ -1740,18 +1812,18 @@ input[type="submit"].btn-default:hover {
     font-size: 1.2rem;
 }
 
-#pauseHistory {
+#pauseHistory, #pauseStats {
     height: 180px;
     margin-bottom: 20px;
 }
 
-#pauseHistory .football-stats {
+#pauseHistory, #pauseStats, .football-stats {
     min-width: 0;
     margin: 0;
     font-size: 0.72rem;
 }
 
-#pauseHistory .football-stats td,
-#pauseHistory .football-stats th {
+#pauseHistory, #pauseStats, .football-stats td,
+#pauseHistory, #pauseStats, .football-stats th {
     padding: 7px;
 }
