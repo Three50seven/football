@@ -9,15 +9,11 @@ let bundler = require("./gulp_modules/bundler"),
     helper = require("./gulp_modules/helper"),
     transformer = require("json-config-transform");
 
-function Clean(onComplete) {
-    cleaner({
-        basePath: "./wwwroot/",
-        directories: [
-            "content/js",
-            "content/css"
-        ]
-    });
-    onComplete();
+function Clean() {
+  return cleaner({
+    basePath: "./wwwroot/",
+    directories: ["content/js", "content/css"]
+  });
 }
 
 function BundleAssets(options, onComplete) {
