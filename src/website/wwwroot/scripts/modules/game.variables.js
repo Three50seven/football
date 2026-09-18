@@ -4,7 +4,7 @@ MODULES.GameVariables = (function () {
     var _diceSumTotal = 0;
     var _teams = new TeamArray();
     var _timeIntervalCountDown = 1000; //Modify this value to set how fast the clock counts down for a quarter, 1000 = 1 second, 500 = half second, etc.
-    var _kickoffSliderDifficulty = 10; //change to higher number to slow down kick sliders, change to lower number to speed up    
+    var _kickoffSliderDifficulty = 5; //change to higher number to slow down kick sliders, change to lower number to speed up    
 
     //object constructor for a new teams array, stored in, MODULES.GameVariables.Teams
     function TeamArray() {

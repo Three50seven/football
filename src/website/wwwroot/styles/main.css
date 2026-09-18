@@ -764,10 +764,6 @@ input[type="submit"].btn-default:disabled {
 }
 
 /*Sliders*/
-.slidecontainer {
-    max-width: 350px;
-}
-
 .last-play-container {
     font-size: 22px;
     font-weight:600
@@ -1370,17 +1366,6 @@ input[type="submit"].btn-default:hover {
     text-align: center;
 }
 
-.slidecontainer {
-    width: min(100%, 470px);
-    max-width: none;
-    margin: 18px auto;
-    color: var(--broadcast-muted);
-}
-
-.slidecontainer > .btn-default {
-    margin: 6px 8px;
-}
-
 .slider {
     height: 6px;
     margin: 12px 0 6px;
@@ -1832,4 +1817,261 @@ input[type="submit"].btn-default:hover {
 #pauseHistory, #pauseStats, .football-stats td,
 #pauseHistory, #pauseStats, .football-stats th {
     padding: 7px;
+}
+
+/* Kickoff controls: kick-type toggle plus the two timing meters the player locks in. */
+#kickoffPlays {
+    text-align: center;
+}
+
+.kick-panel-hint {
+    max-width: 46ch;
+    margin: 0 auto 18px;
+    color: var(--broadcast-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.kick-panel-hint strong {
+    color: var(--broadcast-accent);
+}
+
+.kick-type-toggle {
+    display: flex;
+    gap: 6px;
+    width: min(100%, 420px);
+    margin: 0 auto 20px;
+    padding: 5px;
+    border: 1px solid var(--broadcast-line);
+    border-radius: 999px;
+    background: var(--broadcast-panel-raised);
+}
+
+.kick-type-option {
+    position: relative;
+    flex: 1 1 0;
+    margin: 0;
+    color: var(--broadcast-muted);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.kick-type-option input[type="radio"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.kick-type-option > span {
+    display: block;
+    padding: 12px 8px;
+    border-radius: 999px;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.kick-type-option input[type="radio"]:checked + span {
+    background: var(--broadcast-blue);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+    color: #fff;
+}
+
+.kick-type-option input[type="radio"]:focus-visible + span {
+    outline: 3px solid var(--broadcast-accent);
+    outline-offset: 2px;
+}
+
+.kick-meters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    gap: 14px;
+    margin: 0 auto 20px;
+}
+
+.kick-meter {
+    padding: 14px;
+    border: 1px solid var(--broadcast-line);
+    border-radius: 9px;
+    background: var(--broadcast-panel-raised);
+    text-align: left;
+}
+
+.kick-meter-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.kick-meter-label {
+    color: var(--broadcast-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.kick-meter-value {
+    min-width: 3ch;
+    padding: 2px 9px;
+    border: 1px solid var(--broadcast-line);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.28);
+    color: var(--broadcast-accent);
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+/* Taller hit area than the base .slider so the moving thumb is tappable on phones. */
+.kick-meter .slider {
+    display: block;
+    width: 100%;
+    height: 34px;
+    margin: 8px 0 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.kick-meter .slider::-webkit-slider-runnable-track {
+    height: 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1b3347 0%, #405366 100%);
+}
+
+.kick-meter .slider::-moz-range-track {
+    height: 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1b3347 0%, #405366 100%);
+}
+
+.kick-meter .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 30px;
+    height: 30px;
+    margin-top: -8px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: var(--broadcast-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.kick-meter .slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: var(--broadcast-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.kick-meter-scale {
+    display: flex;
+    justify-content: space-between;
+    color: var(--broadcast-muted);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.btn-default.kick-lock-button {
+    display: block;
+    width: 100%;
+    margin: 12px 0 8px;
+    padding: 13px 16px;
+    font-size: 1rem;
+}
+
+/* Locked state: JS adds .kick-meter-locked once a value is committed. */
+.kick-meter-locked {
+    border-color: rgba(95, 224, 155, 0.55);
+    background: linear-gradient(180deg, rgba(23, 102, 63, 0.32) 0%, var(--broadcast-panel-raised) 100%);
+}
+
+.kick-meter-locked .kick-meter-label::after {
+    content: " \2022 Locked";
+    color: #5FE09B;
+}
+
+.kick-meter-locked .kick-meter-value {
+    border-color: #5FE09B;
+    color: #5FE09B;
+}
+
+.kick-meter-locked .slider {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.kick-meter-locked .kick-lock-button {
+    background: #17663f;
+    border-color: #5FE09B;
+    box-shadow: none;
+    pointer-events: none;
+}
+
+.btn-default.kick-go-button {
+    display: block;
+    width: min(100%, 420px);
+    margin: 4px auto 0;
+    padding: 16px 20px;
+    border: 1px solid #FFD28A;
+    border-radius: 7px;
+    background: linear-gradient(180deg, #FFB84A 0%, #F17918 48%, #A93B0D 100%);
+    box-shadow: 0 7px 0 #6D2309, 0 14px 22px rgba(0, 0, 0, 0.35);
+    color: #1E1106;
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.btn-default.kick-go-button:hover,
+.btn-default.kick-go-button:focus {
+    background: linear-gradient(180deg, #FFD06D 0%, #FE9428 48%, #B94A12 100%);
+    box-shadow: 0 7px 0 #6D2309, 0 16px 26px rgba(0, 0, 0, 0.35);
+    transform: none;
+}
+
+.btn-default.kick-go-button:active {
+    box-shadow: 0 3px 0 #6D2309, 0 8px 14px rgba(0, 0, 0, 0.35);
+    transform: translateY(4px);
+}
+
+@media (max-width: 560px) {
+    .kick-meters {
+        grid-template-columns: 1fr;
+    }
+
+    .kick-panel-hint {
+        font-size: 0.82rem;
+    }
+
+    .kick-type-option {
+        font-size: 0.85rem;
+    }
+
+    .kick-meter-value {
+        font-size: 1.3rem;
+    }
+
+    .btn-default.kick-go-button {
+        width: 100%;
+        font-size: 1.1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kick-type-option > span {
+        transition: none;
+    }
 }
