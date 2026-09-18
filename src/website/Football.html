@@ -33,88 +33,10 @@
                 </div>
                 <div class="team-images">
                     <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
-                </div>
-                <div id="finalScoreBanner" class="white" data-bind="visible: gameOver">
-                    GAME OVER - Final Score: 
-                    <span data-bind="text: homeTeamInfo().teamName()"></span> 
-                    <span data-bind="text: homeTeamScore()"></span> - 
-                    <span data-bind="text: awayTeamInfo().teamName()"></span>
-                    <span data-bind="text: awayTeamScore()"></span>
-                </div>
+                </div>                
             </div>
             <!--END of div header-->
             <div id="body">
-                <div id="mainFieldDisplay" data-bind="visible: gameStarted()">
-                    <div id="field-container" style="display: none;">
-                        <div id="field">
-                            <div id="end-zone-left"></div>
-                            <div id="ball-position"></div>
-                            <div id="end-zone-right"></div>
-                        </div>
-                    </div>
-                    <div id="field-container-img">
-                        <div id="field-img">
-                            <svg id="football-field-svg" viewBox="0 0 220 103" role="img" aria-label="Football field">
-                                <rect class="field-surface" x="0" y="0" width="220" height="103"></rect>
-                                <rect class="field-endzone field-endzone-home" x="4" y="4" width="16" height="95"></rect>
-                                <rect class="field-endzone field-endzone-away" x="200" y="4" width="16" height="95"></rect>
-                                <g class="field-lines">
-                                    <line x1="20" y1="4" x2="20" y2="99"></line>
-                                    <line x1="200" y1="4" x2="200" y2="99"></line>
-                                    <line x1="38" y1="4" x2="38" y2="99"></line>
-                                    <line x1="56" y1="4" x2="56" y2="99"></line>
-                                    <line x1="74" y1="4" x2="74" y2="99"></line>
-                                    <line x1="92" y1="4" x2="92" y2="99"></line>
-                                    <line x1="110" y1="4" x2="110" y2="99"></line>
-                                    <line x1="128" y1="4" x2="128" y2="99"></line>
-                                    <line x1="146" y1="4" x2="146" y2="99"></line>
-                                    <line x1="164" y1="4" x2="164" y2="99"></line>
-                                    <line x1="182" y1="4" x2="182" y2="99"></line>
-                                    <line x1="20" y1="4" x2="200" y2="4"></line>
-                                    <line x1="20" y1="99" x2="200" y2="99"></line>
-                                </g>
-                                <defs>
-                                    <pattern id="middle-hash-top" width="3.6" height="4" patternUnits="userSpaceOnUse">
-                                        <path class="field-hash" d="M 1.8 0 V 4"></path>
-                                    </pattern>
-                                    <pattern id="middle-hash-bottom" width="3.6" height="4" patternUnits="userSpaceOnUse">
-                                        <path class="field-hash" d="M 1.8 0 V 4"></path>
-                                    </pattern>
-                                </defs>
-                                <rect class="middle-hashes" x="20" y="41" width="180" height="4" fill="url(#middle-hash-top)"></rect>
-                                <rect class="middle-hashes" x="20" y="58" width="180" height="4" fill="url(#middle-hash-bottom)"></rect>
-                                <g class="endzone-hashes">
-                                    <path d="M 10 48 V 55"></path>
-                                    <path d="M 210 48 V 55"></path>
-                                </g>
-                                <g class="goal-line-hashes">
-                                    <path d="M 22 48 V 55"></path>
-                                    <path d="M 198 48 V 55"></path>
-                                </g>
-                                <g class="field-numbers">
-                                    <text x="38" y="25">10</text><text x="56" y="25">20</text><text x="74" y="25">30</text><text x="92" y="25">40</text><text x="110" y="25">50</text>
-                                    <text x="128" y="25">40</text><text x="146" y="25">30</text><text x="164" y="25">20</text><text x="182" y="25">10</text>
-                                    <text x="38" y="79">10</text><text x="56" y="79">20</text><text x="74" y="79">30</text><text x="92" y="79">40</text><text x="110" y="79">50</text>
-                                    <text x="128" y="79">40</text><text x="146" y="79">30</text><text x="164" y="79">20</text><text x="182" y="79">10</text>
-                                </g>
-                                    <image id="field-center-team-logo" x="96" y="38" width="28" height="38"
-                                        preserveAspectRatio="xMidYMid meet"
-                                        data-bind="attr: { href: homeTeamInfo().teamImage() }"></image>
-                            </svg>
-                            <div id="end-zone-left-img"> 
-                                <span id="end-zone-left-txt" data-bind="text: homeTeamInfo().teamName(), class: homeTeamInfo().teamBgColor()" class="rotate-left"></span>
-                            </div>
-                            <div id="home-team-trail" data-bind="class: homeTeamInfo().teamBgColor()"></div>
-                            <div id="ball-position-img"></div>
-                            <div id="field-score-feedback" role="status" aria-live="polite"></div>
-                            <div id="away-team-trail" data-bind="class: awayTeamInfo().teamBgColor()"></div>
-                            <div id="end-zone-right-img">
-                                <span id="end-zone-right-txt" data-bind="text: awayTeamInfo().teamName(), class: awayTeamInfo().teamBgColor()" class="rotate-right"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <br>
                 <div id="pickTeam" data-bind="visible: !gameStarted()" style="text-align: center;">
                     <div data-bind="visible: !coinTossValue() > 0">
                         <div class="teams-picked">
@@ -145,9 +67,9 @@
                             <br />
                             <div data-bind="visible: !gameSimulated()">
                                 <br /> 
-                                <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span>,
-                                choose heads or tails:
-                                <br>
+                                <span data-bind="text: awayTeamID() ? awayTeamInfo().teamCityAndName() : 'Visiting team'"></span>, choose heads or tails:
+                                <br />
+                                <br />
                                 <label>
                                     <input type="radio" name="selectCoinSide" value="1" checked="checked" data-bind="click: ChooseCoinSide" />Heads
                                 </label>
@@ -170,7 +92,6 @@
                                 </div>
                             </div>
                             <div data-bind="visible: simHistory().length > 0">
-                                <br>
                                 <span class="white">Sim Box Score:</span>
                                 <table class="football-stats">
                                     <thead>
@@ -322,315 +243,159 @@
                         </div>
                     </div>
                 </div>
-                <div id="currentGameInfo" data-bind="visible: gameStarted">
-                    <div id="homeTeamName" data-bind="class: homeTeamInfo().teamBgColor()" class="white"> 
-                        <span class="hasBall" data-bind="visible: currentTeamWithBall() == homeTeamID()"></span>
-                        <span data-bind="text: homeTeamID() ? homeTeamInfo().teamName() : '[Pick the Home Team]'"></span>
-                            <!-- ko foreach: Array.apply(null, Array(homeTeamTimeOuts())) -->
-                            <span class="timeout-display"></span>
-                            <!-- /ko -->
-                        <span id="homeTeamScore" data-bind="text: homeTeamScore(), class: homeTeamInfo().teamBgColor()" class="white score-display"></span>
-                    </div>
-                    <div id="awayTeamName" data-bind="class: awayTeamInfo().teamBgColor()" class="white"> 
-                        <span class="hasBall" data-bind="visible: currentTeamWithBall() == awayTeamID()"></span>
-                        <span data-bind="text: awayTeamID() ? awayTeamInfo().teamName() : '[Pick the Home Team]'"></span>
-                            <!-- ko foreach: Array.apply(null, Array(awayTeamTimeOuts())) -->
-                            <span class="timeout-display"></span>
-                            <!-- /ko -->
-                        <span id="awayTeamScore" data-bind="text: awayTeamScore(), class: awayTeamInfo().teamBgColor()" class="white score-display"></span>
-                    </div>
-                    <div id="currentQuarter" class="white" data-bind="text: currentQuarterDisplay()"></div>
-                    <div id="timeRemainingInQuarter" class="gold">
-                        <span data-bind="text: remainingTimeDisplay"></span>
-                        <span id="playClock" data-bind="visible: !showKickoffControls() && !pointAttemptAfterTouchDown(), text: playClockDisplay()"></span>
-                    </div>
-                    <div id="currentBallSpot" class="white">
-                        <span id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></span>
-                        <span data-bind="text: HELPERS.getYardText()"></span>
-                    </div>
-                </div>
-                <div id="pauseOverlay" data-bind="visible: isGamePaused">
-                    <div class="pause-dialog" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
-                        <h2 id="pauseTitle">Game Paused</h2>
-                        <p>The game clock and play clock are stopped.</p>
-                        <div id="pauseScoreboard">
-                            <div>
-                                <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}" />
-                                <span data-bind="text: homeTeamInfo().teamName()"></span> <strong data-bind="text: homeTeamScore"></strong>
+
+                <div id="game-main-container" data-bind="visible: gameStarted()">
+                    <div id="game-sticky-info">
+                        <div id="mainFieldDisplay">
+                            <div id="field-container" style="display: none;">
+                                <div id="field">
+                                    <div id="end-zone-left"></div>
+                                    <div id="ball-position"></div>
+                                    <div id="end-zone-right"></div>
+                                </div>
                             </div>
-                            <div>
-                                <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" />
-                                <span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong>
+                            <div id="field-container-img">
+                                <div id="field-img">
+                                    <svg id="football-field-svg" viewBox="0 0 220 103" role="img" aria-label="Football field">
+                                        <rect class="field-surface" x="0" y="0" width="220" height="103"></rect>
+                                        <rect class="field-endzone field-endzone-home" x="4" y="4" width="16" height="95"></rect>
+                                        <rect class="field-endzone field-endzone-away" x="200" y="4" width="16" height="95"></rect>
+                                        <g class="field-lines">
+                                            <line x1="20" y1="4" x2="20" y2="99"></line>
+                                            <line x1="200" y1="4" x2="200" y2="99"></line>
+                                            <line x1="38" y1="4" x2="38" y2="99"></line>
+                                            <line x1="56" y1="4" x2="56" y2="99"></line>
+                                            <line x1="74" y1="4" x2="74" y2="99"></line>
+                                            <line x1="92" y1="4" x2="92" y2="99"></line>
+                                            <line x1="110" y1="4" x2="110" y2="99"></line>
+                                            <line x1="128" y1="4" x2="128" y2="99"></line>
+                                            <line x1="146" y1="4" x2="146" y2="99"></line>
+                                            <line x1="164" y1="4" x2="164" y2="99"></line>
+                                            <line x1="182" y1="4" x2="182" y2="99"></line>
+                                            <line x1="20" y1="4" x2="200" y2="4"></line>
+                                            <line x1="20" y1="99" x2="200" y2="99"></line>
+                                        </g>
+                                        <defs>
+                                            <pattern id="middle-hash-top" width="3.6" height="4" patternUnits="userSpaceOnUse">
+                                                <path class="field-hash" d="M 1.8 0 V 4"></path>
+                                            </pattern>
+                                            <pattern id="middle-hash-bottom" width="3.6" height="4" patternUnits="userSpaceOnUse">
+                                                <path class="field-hash" d="M 1.8 0 V 4"></path>
+                                            </pattern>
+                                        </defs>
+                                        <rect class="middle-hashes" x="20" y="41" width="180" height="4" fill="url(#middle-hash-top)"></rect>
+                                        <rect class="middle-hashes" x="20" y="58" width="180" height="4" fill="url(#middle-hash-bottom)"></rect>
+                                        <g class="endzone-hashes">
+                                            <path d="M 10 48 V 55"></path>
+                                            <path d="M 210 48 V 55"></path>
+                                        </g>
+                                        <g class="goal-line-hashes">
+                                            <path d="M 22 48 V 55"></path>
+                                            <path d="M 198 48 V 55"></path>
+                                        </g>
+                                        <g class="field-numbers">
+                                            <text x="38" y="25">10</text><text x="56" y="25">20</text><text x="74" y="25">30</text><text x="92" y="25">40</text><text x="110" y="25">50</text>
+                                            <text x="128" y="25">40</text><text x="146" y="25">30</text><text x="164" y="25">20</text><text x="182" y="25">10</text>
+                                            <text x="38" y="79">10</text><text x="56" y="79">20</text><text x="74" y="79">30</text><text x="92" y="79">40</text><text x="110" y="79">50</text>
+                                            <text x="128" y="79">40</text><text x="146" y="79">30</text><text x="164" y="79">20</text><text x="182" y="79">10</text>
+                                        </g>
+                                            <image id="field-center-team-logo" x="96" y="38" width="28" height="38"
+                                                preserveAspectRatio="xMidYMid meet"
+                                                data-bind="attr: { href: homeTeamInfo().teamImage() }"></image>
+                                    </svg>
+                                    <div id="end-zone-left-img"> 
+                                        <span id="end-zone-left-txt" data-bind="text: homeTeamInfo().teamName(), class: homeTeamInfo().teamBgColor()" class="rotate-left"></span>
+                                    </div>
+                                    <div id="home-team-trail" data-bind="class: homeTeamInfo().teamBgColor()"></div>
+                                    <div id="ball-position-img"></div>
+                                    <div id="field-score-feedback" role="status" aria-live="polite"></div>
+                                    <div id="away-team-trail" data-bind="class: awayTeamInfo().teamBgColor()"></div>
+                                    <div id="end-zone-right-img">
+                                        <span id="end-zone-right-txt" data-bind="text: awayTeamInfo().teamName(), class: awayTeamInfo().teamBgColor()" class="rotate-right"></span>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <span data-bind="text: currentQuarterDisplay"></span>
+                        </div>
+                        <div id="currentGameInfo">
+                            <div id="homeTeamName" data-bind="class: homeTeamInfo().teamBgColor()" class="white"> 
+                                <span class="hasBall" data-bind="visible: currentTeamWithBall() == homeTeamID()"></span>
+                                <span data-bind="text: homeTeamID() ? homeTeamInfo().teamName() : '[Pick the Home Team]'"></span>
+                                    <!-- ko foreach: Array.apply(null, Array(homeTeamTimeOuts())) -->
+                                    <span class="timeout-display"></span>
+                                    <!-- /ko -->
+                                <span id="homeTeamScore" data-bind="text: homeTeamScore(), class: homeTeamInfo().teamBgColor()" class="white score-display"></span>
+                            </div>
+                            <div id="awayTeamName" data-bind="class: awayTeamInfo().teamBgColor()" class="white"> 
+                                <span class="hasBall" data-bind="visible: currentTeamWithBall() == awayTeamID()"></span>
+                                <span data-bind="text: awayTeamID() ? awayTeamInfo().teamName() : '[Pick the Home Team]'"></span>
+                                    <!-- ko foreach: Array.apply(null, Array(awayTeamTimeOuts())) -->
+                                    <span class="timeout-display"></span>
+                                    <!-- /ko -->
+                                <span id="awayTeamScore" data-bind="text: awayTeamScore(), class: awayTeamInfo().teamBgColor()" class="white score-display"></span>
+                            </div>
+                            <div id="currentQuarter" class="white" data-bind="text: currentQuarterDisplay()"></div>
+                            <div id="timeRemainingInQuarter" class="gold">
                                 <span data-bind="text: remainingTimeDisplay"></span>
-                                <span class="gold" data-bind="text: playClockDisplay"></span>
+                                <span id="playClock" data-bind="visible: !showKickoffControls() && !pointAttemptAfterTouchDown(), text: playClockDisplay()"></span>
                             </div>
-                            <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
-                            <div data-bind="text: HELPERS.getYardText()"></div>
-                        </div>
-                        <div id="pauseHistory" class="scroller">
-                            <table class="football-stats">
-                                <thead>
-                                    <tr>
-                                        <th>Team</th>
-                                        <th>Play</th>
-                                        <th>Score</th>
-                                        <th>Clock</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: teamPlayHistory">
-                                    <tr>
-                                        <td data-bind="text: fullTeamName"></td>
-                                        <td data-bind="text: playResult"></td>
-                                        <td data-bind="text: score"></td>
-                                        <td data-bind="text: gameClock"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="pauseStats" class="scroller">
-                            <table class="football-stats">
-                                <thead>
-                                    <tr>
-                                        <th>Team</th>
-                                        <th># of Plays Total</th>
-                                        <th>Total Yards Rushing</th>
-                                        <th>Total Yards Passing</th>
-                                        <th>Penalty Yards</th>
-                                        <th>Total Time of Possession</th>
-                                        <th>Turnovers</th>
-                                        <th>1<sup>st</sup> Downs</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: gamePlayStats">
-                                    <tr>
-                                        <td data-bind="text: fullTeamName"></td>
-                                        <td data-bind="text: totalPlayCount"></td>
-                                        <td data-bind="text: totalYardsRushing"></td>
-                                        <td data-bind="text: totalYardsPassing"></td>
-                                        <td data-bind="text: totalPenaltyYards"></td>
-                                        <td data-bind="text: totalTimePossessionDisplay"></td>
-                                        <td data-bind="text: totalTurnovers"></td>
-                                        <td data-bind="text: totalFirstDowns"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <button type="button" class="btn-default" data-bind="click: ResumeGame">Resume Game</button>
-                    </div>
-                </div>
-                <br>
-                <p class="last-play-container" data-bind="visible: gameStarted()">
-                    <span class="last-play-kicker">Last play</span>
-                    <span class="last-play-summary">
-                        <img id="lastPlayTeamIcon" class="last-play-team-icon" alt="" />
-                        <span id="lastPlayTeamName" class="last-play-team-name"></span>
-                        <span id="lastPlaySeparator" class="last-play-separator">-</span>
-                        <span id="playResult">0</span>
-                    </span>
-                </p>
-                <div id="kickoffPlays" data-bind="visible:showKickoffControls() && gameStarted() && !gameOver()" style="text-align: center;">
-                    <br>Click sliders or buttons to select power and angle of kick:
-                    <br>
-                    <br />
-                    <div data-bind="visible: isKickoff">
-                        <label>
-                            <input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked" /> 
-                            Kickoff
-                        </label>
-                        <label>
-                            <input type="radio" name="selectKickoffPlay" value="onside" /> 
-                            On-Side Kick
-                        </label>
-                        <br />
-                        <br />
-                    </div>
-                    <div class="slidecontainer">Power:
-                        <button type="button" id="powerStopper" class="btn-default" data-bind="click: GetKickoffPower">Select Power</button>
-                        <input type="range" min="1" max="100" value="50" class="slider" id="kickoffPower" data-bind="click: GetKickoffPower" /> 
-                        <span class="smaller">(select a higher power for stronger kick, a lower value will allow for a return)</span>
-                        <br />
-                        Angle :
-                        <button type="button" id="angleStopper" class="btn-default" data-bind="click: GetKickoffAngle">Select Angle</button>
-                        <input type="range" min="1" max="100" value="50" class="slider" id="kickoffAngle" data-bind="click: GetKickoffAngle" /> 
-                        <span class="smaller">(select center for a normal kick-off, select left or right for on-side kick)</span>
-                        <br/>
-                        <p>
-                            Kick Power: <span id="kickoffPowerSelected"></span>
-                            <br />
-                            Kick Angle: <span id="kickoffAngleSelected"></span>
-                        </p>
-                    </div>
-                    <button type="button" class="btn-default" data-bind="click: Kickoff">
-                        <span data-bind="visible: isKickoff">Kickoff</span>
-                        <span data-bind="visible: isSafety">Kickoff</span>
-                        <span data-bind="visible: isPunt">Punt</span>
-                        <span data-bind="visible: isFieldGoal">Field Goal</span>
-                        <span data-bind="visible: isExtraPointKick">Kick Extra Point</span>
-                    </button>
-                    <br />
-                    <br />
-                </div>
-                <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()" style="text-align: center;">
-                    <div data-bind="visible:pointAttemptAfterTouchDown()">
-                        <button type="button" id="pointAfterAttempt" class="btn-default" data-bind="click: MakePlayAfterTD">Make Attempt</button>
-                        <br />
-                        <br />
-                        <label>
-                            <input type="radio" name="afterTDPlay" value="extraPoint" checked="checked" />
-                            Extra Point Attempt
-                        </label>
-                        <label>
-                            <input type="radio" name="afterTDPlay" value="twoPointConversion" />
-                            2 Point Conversion
-                        </label>
-                    </div>
-                    <div data-bind="visible:!hasRolled() && !pointAttemptAfterTouchDown()">
-                        <div class="play-ready-panel">
-                            <div class="possession-card">
-                                <span class="possession-kicker">Possession</span>
-                                <img class="possession-team-icon" data-bind="attr:{src: currentTeamWithBall() === homeTeamID() ? homeTeamInfo().teamImage() : awayTeamInfo().teamImage()}, visible: currentTeamWithBall() > 0" />
-                                <span class="possession-team-name" data-bind="text: currentTeamWithBall() === homeTeamID() ? homeTeamInfo().teamCityAndName() : awayTeamInfo().teamCityAndName()"></span>
-                                <span class="possession-ball-marker">Ball</span>
+                            <div id="currentBallSpot" class="white">
+                                <span id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></span>
+                                <span data-bind="text: HELPERS.getYardText()"></span>
                             </div>
-                            <button type="button" id="diceRoller" class="dice-roll-button" data-bind="click: RollDice">
-                                <svg class="dice-roll-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-                                    <rect x="8" y="8" width="48" height="48" rx="10"></rect>
-                                    <circle cx="22" cy="22" r="4"></circle>
-                                    <circle cx="42" cy="22" r="4"></circle>
-                                    <circle cx="32" cy="32" r="4"></circle>
-                                    <circle cx="22" cy="42" r="4"></circle>
-                                    <circle cx="42" cy="42" r="4"></circle>
-                                </svg>
-                                <span>Roll Dice</span>
-                            </button>
-                        </div>
-                        <br />
-                        <br />
-                        <div class="quick-play-actions" id="specialTeamsMenu" data-bind="visible: !isTwoPointConversion(), css: { 'show-sub-menu': currentDown() === 4 }">
-                            <button type="button" id="spikeBall" class="quick-play-button" data-bind="click: SpikeBall">
-                                <span class="quick-play-kicker">Clock</span>
-                                <span class="quick-play-label">Spike Ball</span>
-                            </button>
-                            <button type="button" class="quick-play-button" data-bind="click: PuntBall">
-                                <span class="quick-play-kicker">Special Teams</span>
-                                <span class="quick-play-label">Punt</span>
-                            </button>
-                            <button type="button" class="quick-play-button" data-bind="click: KickFieldGoal">
-                                <span class="quick-play-kicker">Special Teams</span>
-                                <span class="quick-play-label">Field Goal</span>
-                            </button>
-                        </div>
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <div class="game-utility-controls">
-                            <button type="button" id="pauseGame" class="utility-control-button utility-control-button-pause" data-bind="click: PauseGame, visible: gameStarted() && !gameOver() && !isGamePaused()">Pause Game</button>
-                            <button type="button" id="homeTimeout" class="utility-control-button" data-bind="click: CallHomeTimeout"><span data-bind="text: homeTeamInfo().teamName()"></span> Timeout (<span data-bind="text: homeTeamTimeOuts()"></span>)</button>
-                            <button type="button" id="awayTimeout" class="utility-control-button" data-bind="click: CallAwayTimeout"><span data-bind="text: awayTeamInfo().teamName()"></span> Timeout (<span data-bind="text: awayTeamTimeOuts()"></span>)</button>
-                        </div>
-                        
-                    </div>
-                    <br />
-                    <div class="play-controls" data-bind="visible:hasRolled()">
-                        <div class="play-call-actions" data-bind="visible: !pointAttemptAfterTouchDown()">
-                            <button type="button" id="makePassPlay" class="play-call-button" data-bind="click: MakePassPlay">
-                                <span class="quick-play-kicker">Call Play</span>
-                                <span class="quick-play-label">Pass</span>
-                            </button>
-                            <button type="button" id="makeRunPlay" class="play-call-button" data-bind="click: MakeRunPlay">
-                                <span class="quick-play-kicker">Call Play</span>
-                                <span class="quick-play-label">Run</span>
-                            </button>
-                        </div>
-                        <div>
-                            <p style="display:none;">Play Recommendations:
-                                <br>Pass - 45% chance of making a complete pass for positive yards
-                                <br>Run - 95% chance of a run for positive yards
-                                <br>Punt - not recommended
-                                <br>Field Goal - not recommended</p>
+                            <p class="last-play-container">
+                                <span class="last-play-kicker">Last play</span>
+                                <span class="last-play-summary">
+                                    <img id="lastPlayTeamIcon" class="last-play-team-icon" alt="" />
+                                    <span id="lastPlayTeamName" class="last-play-team-name"></span>
+                                    <span id="lastPlaySeparator" class="last-play-separator">-</span>
+                                    <span id="playResult">0</span>
+                                </span>
+                            </p>
                         </div>
                     </div>
-                    <div class="dice-results">Dice Total: <span id="diceTotal">0</span>
-                        <div id="diceValues"></div>
-                    </div>
-                    </p>
-                    <br />
-                    <!--TODO: Update Storage - needs further development to work properly-->
-                    <div id="storage-controls" style="text-align: center; display:none;">
-                        <button type="button" id="resetGame" class="btn-default" data-bind="click: ResetGame">RESET GAME</button>
-                        <button type="button" id="saveGame" class="btn-default" data-bind="click: SaveGame">SAVE GAME</button>
-                        <button type="button" id="getGame" class="btn-default" data-bind="click: GetGameSaves">GET GAME SAVES</button>
-                    </div>
-                    <br>
-                    <br>                 
-                </div>
-
-                <div id="game-info-container" data-bind="visible: gameStarted()" style="text-align: center;"> 
-                    <h3 class="white">Play History:</h3>
-                    <div id="playHistoryScroller" class="scroller">
-                        <table id="playHistory" class="football-stats alt-color-tr">
-                            <thead>
-                                <tr>
-                                    <th>Quarter</th>
-                                    <th>Team</th>
-                                    <th>Down</th>
-                                    <th># of Plays in Drive</th>
-                                    <th>Total Yards for Play</th>
-                                    <th>Play Result</th>
-                                    <th>Spot of Ball</th>
-                                    <th>Time of Possession</th>
-                                    <th>Score</th>
-                                    <th>Game Clock</th>
-                                </tr>
-                            </thead>
-                            <tbody data-bind="foreach: teamPlayHistory">
-                                <tr>
-                                    <td>
-                                        <span data-bind="text: quarter"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: fullTeamName"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: down"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: playCount"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: playYards"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: playResult"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: ballSpot"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: timeOfPossessionDisplay"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: score"></span>
-                                    </td>
-                                    <td>
-                                        <span data-bind="text: gameClock"></span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3 id="gameInfoBoxSwitch" data-bind="click: ShowOtherGameInfo"> Click for Other Game Info</h3>
-                    <div id="gameInfoBox" class="scroller">
-                        <div>
-                            <br>
-                            <div style="text-align: center;"> 
-                                <span class="white">Game Stats:</span>
-                                <table id="gameStats" class="football-stats">
+                    <div id="pauseOverlay" data-bind="visible: isGamePaused">
+                        <div class="pause-dialog" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+                            <h2 id="pauseTitle">Game Paused</h2>
+                            <p>The game clock and play clock are stopped.</p>
+                            <div id="pauseScoreboard">
+                                <div>
+                                    <img class="team-tiny-img" data-bind="attr:{src: homeTeamInfo().teamImage()}" />
+                                    <span data-bind="text: homeTeamInfo().teamName()"></span> <strong data-bind="text: homeTeamScore"></strong>
+                                </div>
+                                <div>
+                                    <img class="team-tiny-img" data-bind="attr:{src: awayTeamInfo().teamImage()}" />
+                                    <span data-bind="text: awayTeamInfo().teamName()"></span> <strong data-bind="text: awayTeamScore"></strong>
+                                </div>
+                                <div>
+                                    <span data-bind="text: currentQuarterDisplay"></span>
+                                    <span data-bind="text: remainingTimeDisplay"></span>
+                                    <span class="gold" data-bind="text: playClockDisplay"></span>
+                                </div>
+                                <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
+                                <div data-bind="text: HELPERS.getYardText()"></div>
+                            </div>
+                            <div id="pauseHistory" class="scroller">
+                                <table class="football-stats">
+                                    <thead>
+                                        <tr>
+                                            <th>Team</th>
+                                            <th>Play</th>
+                                            <th>Score</th>
+                                            <th>Clock</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: teamPlayHistory">
+                                        <tr>
+                                            <td data-bind="text: fullTeamName"></td>
+                                            <td data-bind="text: playResult"></td>
+                                            <td data-bind="text: score"></td>
+                                            <td data-bind="text: gameClock"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="pauseStats" class="scroller">
+                                <table class="football-stats">
                                     <thead>
                                         <tr>
                                             <th>Team</th>
@@ -645,59 +410,269 @@
                                     </thead>
                                     <tbody data-bind="foreach: gamePlayStats">
                                         <tr>
-                                            <td><span data-bind="text: fullTeamName"></span></td>
-                                            <td><span data-bind="text: totalPlayCount"></span></td>
-                                            <td><span data-bind="text: totalYardsRushing"></span></td>
-                                            <td><span data-bind="text: totalYardsPassing"></span></td>
-                                            <td><span data-bind="text: totalPenaltyYards"></span></td>
-                                            <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
-                                            <td><span data-bind="text: totalTurnovers"></span></td>
-                                            <td><span data-bind="text: totalFirstDowns"></span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <br> <span class="white">Box Score:</span>
-                                <table id="boxScore" class="football-stats">
-                                    <thead>
-                                        <tr>
-                                            <th>Team</th>
-                                            <th>1<sup>st</sup>
-                                            </th>
-                                            <th>2<sup>nd</sup>
-                                            </th>
-                                            <th>3<sup>rd</sup>
-                                            </th>
-                                            <th>4<sup>th</sup>
-                                            </th>
-                                            <th>OT</th>
-                                            <th>TOTAL SCORE</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-bind="foreach: gameBoxScore">
-                                        <tr>
-                                            <td><span data-bind="text: fullTeamName"></span>
-                                            </td>
-                                            <td><span data-bind="text: firstQuarterScore"></span>
-                                            </td>
-                                            <td><span data-bind="text: secondQuarterScore"></span>
-                                            </td>
-                                            <td><span data-bind="text: thirdQuarterScore"></span>
-                                            </td>
-                                            <td><span data-bind="text: fourthQuarterScore"></span>
-                                            </td>
-                                            <td><span data-bind="text: overtimeScore"></span>
-                                            </td>
-                                            <td><span data-bind="text: totalScore"></span>
-                                            </td>
+                                            <td data-bind="text: fullTeamName"></td>
+                                            <td data-bind="text: totalPlayCount"></td>
+                                            <td data-bind="text: totalYardsRushing"></td>
+                                            <td data-bind="text: totalYardsPassing"></td>
+                                            <td data-bind="text: totalPenaltyYards"></td>
+                                            <td data-bind="text: totalTimePossessionDisplay"></td>
+                                            <td data-bind="text: totalTurnovers"></td>
+                                            <td data-bind="text: totalFirstDowns"></td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+                            <button type="button" class="btn-default" data-bind="click: ResumeGame">Resume Game</button>
                         </div>
+                    </div>                
+                    <div id="kickoffPlays" data-bind="visible:showKickoffControls() && !gameOver()" style="text-align: center;">
+                        <p>Click buttons to select power and angle of kick:</p>
+                        <div data-bind="visible: isKickoff">
+                            <label>
+                                <input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked" /> 
+                                Kickoff
+                            </label>
+                            <label>
+                                <input type="radio" name="selectKickoffPlay" value="onside" /> 
+                                On-Side Kick
+                            </label>
+                            <br />
+                            <br />
+                        </div>
+                        <div class="slidecontainer">
+                            <span>Power:</span>
+                            <button type="button" id="powerStopper" class="btn-default" data-bind="click: GetKickoffPower">
+                                <span id="kickoffPowerSelected"></span>
+                            </button>
+                            <input type="range" min="1" max="100" value="50" class="slider" id="kickoffPower" data-bind="click: GetKickoffPower" /> 
+                            <span class="smaller">(select a higher power for stronger kick, a lower value will allow for a return)</span>
+                            <br />
+                            <span>Angle:</span>
+                            <button type="button" id="angleStopper" class="btn-default" data-bind="click: GetKickoffAngle">
+                                <span id="kickoffAngleSelected"></span>
+                            </button>
+                            <input type="range" min="1" max="100" value="50" class="slider" id="kickoffAngle" data-bind="click: GetKickoffAngle" /> 
+                            <span class="smaller">(select center for a normal kick-off, select left or right for on-side kick)</span>
+                        </div>
+                        <button type="button" class="btn-default" data-bind="click: Kickoff">
+                            <span data-bind="visible: isKickoff">Kickoff</span>
+                            <span data-bind="visible: isSafety">Kickoff</span>
+                            <span data-bind="visible: isPunt">Punt</span>
+                            <span data-bind="visible: isFieldGoal">Field Goal</span>
+                            <span data-bind="visible: isExtraPointKick">Kick Extra Point</span>
+                        </button>
                         <br />
                         <br />
                     </div>
-                </div>                
+                    <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()" style="text-align: center;">
+                        <div data-bind="visible:pointAttemptAfterTouchDown()">
+                            <button type="button" id="pointAfterAttempt" class="btn-default" data-bind="click: MakePlayAfterTD">Make Attempt</button>
+                            <br />
+                            <br />
+                            <label>
+                                <input type="radio" name="afterTDPlay" value="extraPoint" checked="checked" />
+                                Extra Point Attempt
+                            </label>
+                            <label>
+                                <input type="radio" name="afterTDPlay" value="twoPointConversion" />
+                                2 Point Conversion
+                            </label>
+                        </div>
+                        <div data-bind="visible:!hasRolled() && !pointAttemptAfterTouchDown()">
+                            <div class="play-ready-panel">                                
+                                <button type="button" id="diceRoller" class="dice-roll-button" data-bind="click: RollDice">
+                                    <svg class="dice-roll-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                                        <rect x="8" y="8" width="48" height="48" rx="10"></rect>
+                                        <circle cx="22" cy="22" r="4"></circle>
+                                        <circle cx="42" cy="22" r="4"></circle>
+                                        <circle cx="32" cy="32" r="4"></circle>
+                                        <circle cx="22" cy="42" r="4"></circle>
+                                        <circle cx="42" cy="42" r="4"></circle>
+                                    </svg>
+                                    <span>Roll Dice</span>
+                                </button>
+                                <button type="button" id="pauseGame" class="utility-control-button utility-control-button-pause" data-bind="click: PauseGame, visible: !gameOver() && !isGamePaused()">Pause Game</button>
+                                <div class="possession-card">
+                                    <span class="possession-kicker">Possession</span>
+                                    <img class="possession-team-icon" data-bind="attr:{src: currentTeamWithBall() === homeTeamID() ? homeTeamInfo().teamImage() : awayTeamInfo().teamImage()}, visible: currentTeamWithBall() > 0" />
+                                    <span class="possession-team-name" data-bind="text: currentTeamWithBall() === homeTeamID() ? homeTeamInfo().teamCityAndName() : awayTeamInfo().teamCityAndName()"></span>
+                                    <span class="possession-ball-marker">Ball</span>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                            <div class="quick-play-actions" id="specialTeamsMenu" data-bind="visible: !isTwoPointConversion(), css: { 'show-sub-menu': currentDown() === 4 }">
+                                <button type="button" id="spikeBall" class="quick-play-button" data-bind="click: SpikeBall">
+                                    <span class="quick-play-kicker">Clock</span>
+                                    <span class="quick-play-label">Spike Ball</span>
+                                </button>
+                                <button type="button" class="quick-play-button" data-bind="click: PuntBall">
+                                    <span class="quick-play-kicker">Special Teams</span>
+                                    <span class="quick-play-label">Punt</span>
+                                </button>
+                                <button type="button" class="quick-play-button" data-bind="click: KickFieldGoal">
+                                    <span class="quick-play-kicker">Special Teams</span>
+                                    <span class="quick-play-label">Field Goal</span>
+                                </button>
+                            </div>
+                            <div class="game-utility-controls">                                
+                                <button type="button" id="homeTimeout" class="utility-control-button" data-bind="click: CallHomeTimeout"><span data-bind="text: homeTeamInfo().teamName()"></span> Timeout (<span data-bind="text: homeTeamTimeOuts()"></span>)</button>
+                                <button type="button" id="awayTimeout" class="utility-control-button" data-bind="click: CallAwayTimeout"><span data-bind="text: awayTeamInfo().teamName()"></span> Timeout (<span data-bind="text: awayTeamTimeOuts()"></span>)</button>
+                            </div>                            
+                        </div>
+                        <br />
+                        <div class="play-controls" data-bind="visible:hasRolled()">
+                            <div class="play-call-actions" data-bind="visible: !pointAttemptAfterTouchDown()">
+                                <button type="button" id="makePassPlay" class="play-call-button" data-bind="click: MakePassPlay">
+                                    <span class="quick-play-kicker">Call Play</span>
+                                    <span class="quick-play-label">Pass</span>
+                                </button>
+                                <button type="button" id="makeRunPlay" class="play-call-button" data-bind="click: MakeRunPlay">
+                                    <span class="quick-play-kicker">Call Play</span>
+                                    <span class="quick-play-label">Run</span>
+                                </button>
+                            </div>
+                            <div class="dice-results">Dice Total: <span id="diceTotal">0</span>
+                                <div id="diceValues"></div>
+                            </div>
+                        </div>
+                        <!--TODO: Update Storage - needs further development to work properly-->
+                        <div id="storage-controls" style="text-align: center; display:none;">
+                            <button type="button" id="resetGame" class="btn-default" data-bind="click: ResetGame">RESET GAME</button>
+                            <button type="button" id="saveGame" class="btn-default" data-bind="click: SaveGame">SAVE GAME</button>
+                            <button type="button" id="getGame" class="btn-default" data-bind="click: GetGameSaves">GET GAME SAVES</button>
+                        </div>                 
+                    </div>
+
+                    <div id="game-info-container" style="text-align: center;"> 
+                        <h3 class="white">Play History:</h3>
+                        <div id="playHistoryScroller" class="scroller">
+                            <table id="playHistory" class="football-stats alt-color-tr">
+                                <thead>
+                                    <tr>
+                                        <th>Quarter</th>
+                                        <th>Team</th>
+                                        <th>Down</th>
+                                        <th># of Plays in Drive</th>
+                                        <th>Total Yards for Play</th>
+                                        <th>Play Result</th>
+                                        <th>Spot of Ball</th>
+                                        <th>Time of Possession</th>
+                                        <th>Score</th>
+                                        <th>Game Clock</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: teamPlayHistory">
+                                    <tr>
+                                        <td>
+                                            <span data-bind="text: quarter"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: fullTeamName"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: down"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: playCount"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: playYards"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: playResult"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: ballSpot"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: timeOfPossessionDisplay"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: score"></span>
+                                        </td>
+                                        <td>
+                                            <span data-bind="text: gameClock"></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 id="gameInfoBoxSwitch" data-bind="click: ShowOtherGameInfo"> Click for Other Game Info</h3>
+                        <div id="gameInfoBox" class="scroller">
+                            <div>
+                                <div style="text-align: center;"> 
+                                    <span class="white">Game Stats:</span>
+                                    <table id="gameStats" class="football-stats">
+                                        <thead>
+                                            <tr>
+                                                <th>Team</th>
+                                                <th># of Plays Total</th>
+                                                <th>Total Yards Rushing</th>
+                                                <th>Total Yards Passing</th>
+                                                <th>Penalty Yards</th>
+                                                <th>Total Time of Possession</th>
+                                                <th>Turnovers</th>
+                                                <th>1<sup>st</sup> Downs</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-bind="foreach: gamePlayStats">
+                                            <tr>
+                                                <td><span data-bind="text: fullTeamName"></span></td>
+                                                <td><span data-bind="text: totalPlayCount"></span></td>
+                                                <td><span data-bind="text: totalYardsRushing"></span></td>
+                                                <td><span data-bind="text: totalYardsPassing"></span></td>
+                                                <td><span data-bind="text: totalPenaltyYards"></span></td>
+                                                <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
+                                                <td><span data-bind="text: totalTurnovers"></span></td>
+                                                <td><span data-bind="text: totalFirstDowns"></span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <span class="white">Box Score:</span>
+                                    <table id="boxScore" class="football-stats">
+                                        <thead>
+                                            <tr>
+                                                <th>Team</th>
+                                                <th>1<sup>st</sup>
+                                                </th>
+                                                <th>2<sup>nd</sup>
+                                                </th>
+                                                <th>3<sup>rd</sup>
+                                                </th>
+                                                <th>4<sup>th</sup>
+                                                </th>
+                                                <th>OT</th>
+                                                <th>TOTAL SCORE</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-bind="foreach: gameBoxScore">
+                                            <tr>
+                                                <td><span data-bind="text: fullTeamName"></span>
+                                                </td>
+                                                <td><span data-bind="text: firstQuarterScore"></span>
+                                                </td>
+                                                <td><span data-bind="text: secondQuarterScore"></span>
+                                                </td>
+                                                <td><span data-bind="text: thirdQuarterScore"></span>
+                                                </td>
+                                                <td><span data-bind="text: fourthQuarterScore"></span>
+                                                </td>
+                                                <td><span data-bind="text: overtimeScore"></span>
+                                                </td>
+                                                <td><span data-bind="text: totalScore"></span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                </div>        
             </div>
             <div id="footer">
                 Copyright Note: All images and logos belong to the NFL - this is just

@@ -229,6 +229,7 @@ nav > ul {
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
+    padding: 5px;
 }
 
 .last-play-kicker {
@@ -762,10 +763,6 @@ input[type="submit"].btn-default:disabled {
 	color: gold;
 }
 
-.play-controls div {
-	border: solid 1px white; 
-}
-
 /*Sliders*/
 .slidecontainer {
     max-width: 350px;
@@ -894,8 +891,14 @@ input[type="radio"][name="selectCoinTossWinner"] {
 }
 
 .coin-toss-winner-txt {
+    outline: 1px dashed #A2A2A2;
+    border-radius: 20%;
+}
+
+.coin-toss-winner-txt.selected-team {
     outline: 1px solid #A2A2A2;
     border-radius: 20%;
+    font-size: larger;
 }
 
 .team-name-select {
@@ -1194,10 +1197,14 @@ body {
     display: none;
 }
 
-#currentGameInfo {
+#game-sticky-info {
     position: sticky;
     top: 0;
     z-index: 1000;
+    overflow: hidden;
+}
+
+#currentGameInfo {    
     padding: 10px;
     display: flex;
     align-items: stretch;
@@ -1354,7 +1361,6 @@ input[type="submit"].btn-default:hover {
 }
 
 #game-info-container {
-    max-width: 90%;
     margin: 26px auto 0;
     padding: 24px clamp(16px, 4vw, 36px);
     background: var(--broadcast-panel);
@@ -1750,13 +1756,13 @@ input[type="submit"].btn-default:hover {
     #header { flex-wrap: wrap; }
     .header-actions { order: 3; width: 100%; margin: 8px 0 0; }
     .header-actions .btn-default { flex: 1; }
-    #diceValues { flex-direction: column; align-items: center; }     
+    #diceValues { flex-direction: row; align-items: center; }     
 }
 
 #pauseOverlay {
     position: fixed;
     inset: 0;
-    z-index: 20;
+    z-index: 1001;
     display: flex;
     align-items: center;
     justify-content: center;

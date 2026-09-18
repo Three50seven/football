@@ -75,8 +75,8 @@
         $("#kickoffAngle").prop('disabled', false);
         self.kickoffPower = -1;
         self.kickoffAngle = -1;
-        $("#kickoffAngleSelected").text('select angle');
-        $("#kickoffPowerSelected").text('select power');
+        $("#kickoffAngleSelected").text('Select angle');
+        $("#kickoffPowerSelected").text('Select power');
 
         //set initial kickoff ball spot for display:
         self.SetupKickoffBallSpot();

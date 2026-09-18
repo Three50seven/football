@@ -26,9 +26,10 @@
         if (lastPlay.length)
             void lastPlay[0].offsetWidth;
         lastPlay.addClass("last-play-update");
+        playMaker.displayPlayToast(null, null, playText, team);
     },
 
-    displayScore: function (score, type, team) {
+    displayPlayToast: function (score, type, playText, team) {
         let labels = {};
         labels[SCORE_TYPES.TOUCHDOWN] = 'TOUCHDOWN';
         labels[SCORE_TYPES.FIELDGOAL] = 'FIELD GOAL IS GOOD';
@@ -42,7 +43,13 @@
         if (!feedback.length || !field.length || !ball.length)
             return;
 
-        feedback.text('+' + score + ' ' + labels[type] + ' - ' + team.teamCityAndName());
+        if (score !== null && type !== null && team) {
+            feedback.text('+' + score + ' ' + labels[type] + ' - ' + team.teamCityAndName());
+        }
+        else {
+            feedback.text(playText + ' - ' + (team ? team.teamCityAndName() : ''));
+        }
+
         feedback.removeClass("field-score-feedback-active").css('left', '0px');
 
         let ballLeft = parseFloat(ball.css('margin-left')) || 0;
@@ -1002,7 +1009,7 @@
 
         if (scoringTeam) {
             setTimeout(function () {
-                playMaker.displayScore(score, type, scoringTeam);
+                playMaker.displayPlayToast(score, type, null, scoringTeam);
             }, 0);
         }
 
