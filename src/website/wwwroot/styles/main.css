@@ -894,8 +894,14 @@ input[type="radio"][name="selectCoinTossWinner"] {
 }
 
 .coin-toss-winner-txt {
+    outline: 1px dashed #A2A2A2;
+    border-radius: 20%;
+}
+
+.coin-toss-winner-txt.selected-team {
     outline: 1px solid #A2A2A2;
     border-radius: 20%;
+    font-size: larger;
 }
 
 .team-name-select {
