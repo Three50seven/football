@@ -30,14 +30,41 @@
         self.kickoffAngleSliderIntervalId = 0;
     };
 
+    //Oscillates a kick meter until the player locks it in. Each meter gets its own
+    //position/direction so the power and angle sliders move independently.
+    self.StartKickoffSlider = function (sliderSelector, readoutSelector, startValue, startDirection) {
+        var min = 1;
+        var max = 100;
+        var position = startValue;
+        var direction = startDirection;
+
+        return window.setInterval(function () {
+            position += direction;
+
+            if (position >= max) {
+                position = max;
+                direction = -1;
+            }
+            else if (position <= min) {
+                position = min;
+                direction = 1;
+            }
+
+            $(sliderSelector).val(position);
+            $(readoutSelector).text(position);
+        }, MODULES.GameVariables.KickoffSliderDifficulty);
+    };
+
     self.GetKickoffPower = function () {
         var power = parseInt($("#kickoffPower").val(), 10);
         $("#kickoffPower").prop('disabled', true);
 
         //stop slider movement after getting value
         clearInterval(self.kickoffPowerSliderIntervalId);
+        self.kickoffPowerSliderIntervalId = 0;
 
         $("#kickoffPowerSelected").text(power);
+        $("#kickPowerMeter").addClass('kick-meter-locked');
         self.kickoffPower = power;
     };
     self.GetKickoffAngle = function () {
@@ -46,15 +73,17 @@
 
         //stop slider movement after getting value
         clearInterval(self.kickoffAngleSliderIntervalId);
+        self.kickoffAngleSliderIntervalId = 0;
 
         $("#kickoffAngleSelected").text(angle);
+        $("#kickAngleMeter").addClass('kick-meter-locked');
         self.kickoffAngle = angle;
     };
     self.Kickoff = function () {
         console.log('kickoffPowerSelected: %s kickoffAngleSelected: %s', self.kickoffPower, self.kickoffAngle);
         if (self.kickoffPower >= 0 && self.kickoffAngle >= 0) {
             //handle kickoff
-            playMaker.kickoff(kickoffPower, kickoffAngle);
+            playMaker.kickoff(self.kickoffPower, self.kickoffAngle);
         }
         else {
             alert('Select kick power and angle');
@@ -65,39 +94,21 @@
         self.showKickoffControls(true); //used to show kickoff controls
         self.StopCounter(); //the quarter clock does not run while the kick is being set up
 
-        let min = 0;
-        let max = 100;
-        let reverse = 1;
-        let i = min;
-
         //enable sliders and reset values:
         $("#kickoffPower").prop('disabled', false);
         $("#kickoffAngle").prop('disabled', false);
         self.kickoffPower = -1;
         self.kickoffAngle = -1;
-        $("#kickoffAngleSelected").text('Select angle');
-        $("#kickoffPowerSelected").text('Select power');
+        $("#kickoffAngleSelected").text('--');
+        $("#kickoffPowerSelected").text('--');
+        $("#kickPowerMeter, #kickAngleMeter").removeClass('kick-meter-locked');
 
         //set initial kickoff ball spot for display:
         self.SetupKickoffBallSpot();
 
-        //setup power slider movement
-        self.kickoffPowerSliderIntervalId = window.setInterval(function () {
-            $("#kickoffPower").val(i += 1 * reverse);
-            if (i === max)
-                reverse = -1;
-            if (i === min)
-                reverse = 1;
-        }, MODULES.GameVariables.KickoffSliderDifficulty);
-
-        //setup angle slider movement
-        self.kickoffAngleSliderIntervalId = window.setInterval(function () {
-            $("#kickoffAngle").val(i += 1 * reverse);
-            if (i === max)
-                reverse = -1;
-            if (i === min)
-                reverse = 1;
-        }, MODULES.GameVariables.KickoffSliderDifficulty);
+        //start each meter at a different point so the two are never in lockstep
+        self.kickoffPowerSliderIntervalId = self.StartKickoffSlider("#kickoffPower", "#kickoffPowerSelected", 1, 1);
+        self.kickoffAngleSliderIntervalId = self.StartKickoffSlider("#kickoffAngle", "#kickoffAngleSelected", 65, -1);
     };
     self.PuntBall = function () {
         if (self.isTwoPointConversion())

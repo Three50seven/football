@@ -425,44 +425,58 @@
                             <button type="button" class="btn-default" data-bind="click: ResumeGame">Resume Game</button>
                         </div>
                     </div>                
-                    <div id="kickoffPlays" data-bind="visible:showKickoffControls() && !gameOver()" style="text-align: center;">
-                        <p>Click buttons to select power and angle of kick:</p>
-                        <div data-bind="visible: isKickoff">
-                            <label>
-                                <input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked" /> 
-                                Kickoff
+                    <div id="kickoffPlays" data-bind="visible:showKickoffControls() && !gameOver()">
+                        <p class="kick-panel-hint">Tap <strong>Lock</strong> (or the meter itself) to stop each slider and set the power and angle of the kick.</p>
+
+                        <div class="kick-type-toggle" role="radiogroup" aria-label="Kick type" data-bind="visible: isKickoff">
+                            <label class="kick-type-option">
+                                <input type="radio" name="selectKickoffPlay" value="kickoff" checked="checked" />
+                                <span>Kickoff</span>
                             </label>
-                            <label>
-                                <input type="radio" name="selectKickoffPlay" value="onside" /> 
-                                On-Side Kick
+                            <label class="kick-type-option">
+                                <input type="radio" name="selectKickoffPlay" value="onside" />
+                                <span>On-Side Kick</span>
                             </label>
-                            <br />
-                            <br />
                         </div>
-                        <div class="slidecontainer">
-                            <span>Power:</span>
-                            <button type="button" id="powerStopper" class="btn-default" data-bind="click: GetKickoffPower">
-                                <span id="kickoffPowerSelected"></span>
-                            </button>
-                            <input type="range" min="1" max="100" value="50" class="slider" id="kickoffPower" data-bind="click: GetKickoffPower" /> 
-                            <span class="smaller">(select a higher power for stronger kick, a lower value will allow for a return)</span>
-                            <br />
-                            <span>Angle:</span>
-                            <button type="button" id="angleStopper" class="btn-default" data-bind="click: GetKickoffAngle">
-                                <span id="kickoffAngleSelected"></span>
-                            </button>
-                            <input type="range" min="1" max="100" value="50" class="slider" id="kickoffAngle" data-bind="click: GetKickoffAngle" /> 
-                            <span class="smaller">(select center for a normal kick-off, select left or right for on-side kick)</span>
+
+                        <div class="kick-meters">
+                            <div class="kick-meter" id="kickPowerMeter">
+                                <div class="kick-meter-head">
+                                    <span class="kick-meter-label">Power</span>
+                                    <span class="kick-meter-value" id="kickoffPowerSelected" aria-live="polite"></span>
+                                </div>
+                                <input type="range" min="1" max="100" value="50" class="slider" id="kickoffPower" aria-label="Kick power" data-bind="click: GetKickoffPower" />
+                                <div class="kick-meter-scale" aria-hidden="true">
+                                    <span>Soft</span>
+                                    <span>Deep</span>
+                                </div>
+                                <button type="button" id="powerStopper" class="btn-default kick-lock-button" data-bind="click: GetKickoffPower">Lock Power</button>
+                                <span class="smaller">Higher power kicks deeper &mdash; a lower value gives the returner a chance.</span>
+                            </div>
+
+                            <div class="kick-meter" id="kickAngleMeter">
+                                <div class="kick-meter-head">
+                                    <span class="kick-meter-label">Angle</span>
+                                    <span class="kick-meter-value" id="kickoffAngleSelected" aria-live="polite"></span>
+                                </div>
+                                <input type="range" min="1" max="100" value="50" class="slider" id="kickoffAngle" aria-label="Kick angle" data-bind="click: GetKickoffAngle" />
+                                <div class="kick-meter-scale" aria-hidden="true">
+                                    <span>Left</span>
+                                    <span>Center</span>
+                                    <span>Right</span>
+                                </div>
+                                <button type="button" id="angleStopper" class="btn-default kick-lock-button" data-bind="click: GetKickoffAngle">Lock Angle</button>
+                                <span class="smaller">Center is a normal kick &mdash; aim left or right for an on-side kick.</span>
+                            </div>
                         </div>
-                        <button type="button" class="btn-default" data-bind="click: Kickoff">
+
+                        <button type="button" class="btn-default kick-go-button" data-bind="click: Kickoff">
                             <span data-bind="visible: isKickoff">Kickoff</span>
                             <span data-bind="visible: isSafety">Kickoff</span>
                             <span data-bind="visible: isPunt">Punt</span>
                             <span data-bind="visible: isFieldGoal">Field Goal</span>
                             <span data-bind="visible: isExtraPointKick">Kick Extra Point</span>
                         </button>
-                        <br />
-                        <br />
                     </div>
                     <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()" style="text-align: center;">
                         <div data-bind="visible:pointAttemptAfterTouchDown()">
