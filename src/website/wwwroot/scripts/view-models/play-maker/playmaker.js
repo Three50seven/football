@@ -76,6 +76,7 @@
         let isKickoffAlreadySetup = false; //true once a safety/2pt conversion has already placed the ball for the next kickoff
         let distanceToGoalLine = self.yardsToTouchdown(); //distance needed for a touchdown before this play's yardage is applied
         let isOverthrownIncomplete = false; //a pass thrown beyond the back of the end zone is incomplete, not a touchdown
+        let isIncompletePass = false; //true when this pass fell incomplete - kept separate from a completion that gained zero yards
 
         self.playCountForPossession(self.playCountForPossession() + 1);
         self.consecutiveDelayOfGamePenalties(0); //the ball was snapped, so the delay of game streak is broken
@@ -144,6 +145,7 @@
             if (distanceToGoalLine > 0 && _yards >= distanceToGoalLine + MODULES.Constants.END_ZONE_YARDS) {
                 _yards = 0;
                 isOverthrownIncomplete = true;
+                isIncompletePass = true;
                 _playResultText = _playResultText + ' Incomplete - Overthrown';
             }
             else {
@@ -167,6 +169,7 @@
         }
         //NO GAIN PLAYS
         if (!_positiveYards && !_negativeYards && !isOverthrownIncomplete && playSelected === GAME_PLAY_TYPES.PASS) {
+            isIncompletePass = true;
             _playResultText = _playResultText + ' Incomplete';
         }
         if (!_positiveYards && !_negativeYards && playSelected === GAME_PLAY_TYPES.RUN) {
@@ -242,7 +245,9 @@
         }
 
         console.log('YARDS: ' + _yards);
-        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown);
+        //flag an incompletion explicitly so the game clock logic never has to infer it from the yardage; a live-ball
+        //turnover (interception/fumble) means the pass was caught or stripped, so it is not an incompletion
+        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown, '', isIncompletePass && !isLiveBallTurnover);
 
         self.SetBallPosition();
 
@@ -831,7 +836,7 @@
             'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.');
     },
 
-    recordTimeOfPossession: function (typeOfPlay, yards) {
+    recordTimeOfPossession: function (typeOfPlay, yards, isTurnover, isIncompletePass) {
         if (typeOfPlay === GAME_PLAY_TYPES.TWOPOINTCONVERSION || typeOfPlay === KICKOFF_TYPES.EXTRAPOINT) {
             self.timeOfPossession(0);
             self.StopCounter();
@@ -841,6 +846,7 @@
 
         let simulatedPlaySeconds = 0; //seconds the play itself consumes; used to skip the game clock ahead
         let nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_NORMAL; //40s, unless the clock was stopped by this play
+        //isIncompletePass is supplied by the caller (getPlayResult) so a completion that gains zero yards is not mistaken for an incompletion
         //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
 
         if (typeOfPlay === GAME_PLAY_TYPES.RUN) {
@@ -848,8 +854,8 @@
             simulatedPlaySeconds = 30 + Math.max(Math.round(yards / 2), 0);
         }
         else if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
-            //an incomplete pass (or a spike) stops the clock almost immediately and shortens the next play clock
-            if (yards === 0) {
+            //an incomplete pass stops the clock almost immediately and shortens the next play clock
+            if (isIncompletePass) {
                 simulatedPlaySeconds = 4;
                 nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
             }
@@ -869,6 +875,13 @@
             if (typeOfPlay === '')
                 simulatedPlaySeconds += Math.max(Math.round(yards / 2), 0);
         }
+
+        //the game clock stops on a turnover, and on an incomplete pass in the 4th quarter (or overtime), so the
+        //offense cannot keep the clock moving - it stays stopped until the next snap. In the 1st-3rd quarters an
+        //incomplete pass leaves the clock running, but the time the chain crew takes to move is charged to the play.
+        let stopsGameClock = isTurnover || (isIncompletePass && self.currentQuarter() >= 4);
+        if (isIncompletePass && self.currentQuarter() < 4)
+            simulatedPlaySeconds += MODULES.Constants.CHAIN_CREW_DELAY_SECONDS;
 
         //seconds that already ran off the game clock while this play was being called and run - they belong
         //to this play's time of possession too, and must not be skipped again by AdvanceTime below
@@ -895,6 +908,10 @@
         }
         else {
             self.StartPlayClock(nextPlayClockSeconds);
+
+            //leave the game clock stopped until the next snap after a turnover or a late-game incomplete pass
+            if (stopsGameClock)
+                self.StopCounter();
         }
     },
 
@@ -911,7 +928,7 @@
         console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
         //RECORD TIME OF POSSESSION (before logging, so the play history shows this play's time)
-        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards);
+        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards, thisPlaysResult.isTurnover, thisPlaysResult.isIncompletePass);
 
         //MODULES.Constructors.PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession
         self.AddPlayHistory(new MODULES.Constructors.PlayHistory(self.teamPlayHistory().length + 1, self.currentTeamWithBall(),

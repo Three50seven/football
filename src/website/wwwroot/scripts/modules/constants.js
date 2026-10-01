@@ -12,6 +12,7 @@ MODULES.Constants = (function () {
         MAX_TIME_OF_QUARTER: 900, //900 seconds = 15 minutes
         PLAY_CLOCK_NORMAL: 40, //seconds the offense has to snap after the end of the previous play
         PLAY_CLOCK_SHORT: 25, //seconds the offense has to snap after an administrative stoppage (penalty, timeout, etc.)
+        CHAIN_CREW_DELAY_SECONDS: 5, //extra game-clock time an incomplete pass costs in the 1st-3rd quarters while the chain crew moves
         DELAY_OF_GAME_PENALTY_YARDS: 5,
         UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS: 15,
         MAX_CONSECUTIVE_DELAY_OF_GAME_PENALTIES: 3, //a 3rd straight delay of game by the same team without a snap results in a forfeit

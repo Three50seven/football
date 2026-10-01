@@ -16,6 +16,8 @@ const GAME_PLAY_TYPES = {
     TWOPOINTCONVERSION: 'twopointconversion'
 };
 
+const CHAIN_CREW_DELAY_SECONDS = 5; //mirrors MODULES.Constants.CHAIN_CREW_DELAY_SECONDS in constants.js
+
 function observable(value) {
     const fn = function (next) {
         if (!arguments.length) return fn.value;
@@ -34,6 +36,7 @@ function createPlaymaker(options = {}) {
         elapsedTime: observable(options.elapsedTime ?? 0),
         elapsedTimeAtLastPlay: options.elapsedTimeAtLastPlay ?? 0,
         isRunning: () => options.isRunning ?? true,
+        currentQuarter: () => options.quarter ?? 1,
         pointAttemptAfterTouchDown: () => false,
         timeOfPossession: observable(0),
         StartCounter: () => { calls.startCounter += 1; },
@@ -52,7 +55,7 @@ function createPlaymaker(options = {}) {
         playMaker: null,
         GAME_PLAY_TYPES,
         KICKOFF_TYPES: { EXTRAPOINT: 'extrapoint' },
-        MODULES: { Constants: { PLAY_CLOCK_NORMAL: 40, PLAY_CLOCK_SHORT: 25 } },
+        MODULES: { Constants: { PLAY_CLOCK_NORMAL: 40, PLAY_CLOCK_SHORT: 25, CHAIN_CREW_DELAY_SECONDS: CHAIN_CREW_DELAY_SECONDS } },
         UTILITIES: {},
         $: () => ({ val: () => '', text: () => {} })
     };
@@ -87,14 +90,51 @@ test('a pass uses the simulated estimate and does not re-skip the real ticks', (
     assert.equal(calls.advanceTime[0], 30);
 });
 
-test('an incomplete pass burns almost no time but still counts the ticks that ran', () => {
-    const { playMaker, self, calls } = createPlaymaker({ elapsedTime: 3, elapsedTimeAtLastPlay: 0 });
+test('an incomplete pass outside the 4th quarter keeps the clock running but charges the chain-crew delay', () => {
+    const { playMaker, self, calls } = createPlaymaker({ quarter: 1, elapsedTime: 3, elapsedTimeAtLastPlay: 0 });
 
-    playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.PASS, 0);
+    playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.PASS, 0, false, true);
 
-    assert.equal(self.timeOfPossession(), 7); // 4 + 3 ticks
-    assert.equal(calls.advanceTime[0], 4);
+    // 4 (quick incomplete pass) + 5 (chain crew) + 3 ticks
+    assert.equal(self.timeOfPossession(), 4 + CHAIN_CREW_DELAY_SECONDS + 3);
+    assert.equal(calls.advanceTime[0], 4 + CHAIN_CREW_DELAY_SECONDS);
     assert.deepEqual(calls.playClock, [25]); // incomplete pass shortens the next play clock
+    assert.equal(calls.stopCounter, 0); // the game clock keeps running
+});
+
+test('an incomplete pass in the 4th quarter stops the game clock until the next snap', () => {
+    const { playMaker, self, calls } = createPlaymaker({ quarter: 4, elapsedTime: 3, elapsedTimeAtLastPlay: 0 });
+
+    playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.PASS, 0, false, true);
+
+    assert.equal(self.timeOfPossession(), 7); // 4 + 3 ticks, no chain-crew delay
+    assert.equal(calls.advanceTime[0], 4);
+    assert.deepEqual(calls.playClock, [25]);
+    assert.equal(calls.stopCounter, 1); // the clock does not restart until the next snap
+    assert.equal(calls.startCounter, 0);
+});
+
+test('a completed pass for zero yards is not treated as an incomplete pass', () => {
+    const { playMaker, self, calls } = createPlaymaker({ quarter: 4, elapsedTime: 3, elapsedTimeAtLastPlay: 0 });
+
+    playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.PASS, 0, false, false);
+
+    // a 0-yard completion still runs the normal pass timing and never stops the clock
+    assert.equal(self.timeOfPossession(), 28); // 25 + 3 ticks
+    assert.equal(calls.advanceTime[0], 25);
+    assert.deepEqual(calls.playClock, [40]); // normal play clock, not the shortened one
+    assert.equal(calls.stopCounter, 0);
+});
+
+test('a turnover stops the game clock until the next snap', () => {
+    const { playMaker, self, calls } = createPlaymaker({ quarter: 1, elapsedTime: 20, elapsedTimeAtLastPlay: 10 });
+
+    playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.RUN, 8, true);
+
+    // 30 (huddle/play clock) + 4 (run) + 10 ticks
+    assert.equal(self.timeOfPossession(), 44);
+    assert.equal(calls.advanceTime[0], 34);
+    assert.equal(calls.stopCounter, 1);
 });
 
 test('a kickoff return adds the time spent running the return yards', () => {
