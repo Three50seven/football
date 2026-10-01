@@ -3,6 +3,9 @@
 
     self.pointAttemptAfterTouchDown = ko.observable(false); //determines when extra point or 2 point conversion is needed
     self.showKickoffControls = ko.observable(true); //determines when to show kickoff controls
+    self.showKickoffPowerSelection = ko.observable(true);
+    self.showKickoffAngleSelection = ko.observable(true);
+    self.kickoffButtonText = ko.observable("Kickoff"); //text for the kickoff button
     self.isKickoff = ko.observable(false); //determines when kick is a normal or onside kickoff
     self.isSafety = ko.observable(false); //determines when kickoff is a safety kick
     self.isPunt = ko.observable(false); //determines when kick is a punt
@@ -20,8 +23,8 @@
     });
     self.kickoffPowerSliderIntervalId = 0;
     self.kickoffAngleSliderIntervalId = 0;
-    self.kickoffPower = -1;
-    self.kickoffAngle = -1;
+    self.kickoffPower = ko.observable(-1);
+    self.kickoffAngle = ko.observable(-1);
 
     self.StopKickoffSliders = function () {
         clearInterval(self.kickoffPowerSliderIntervalId);
@@ -65,7 +68,9 @@
 
         $("#kickoffPowerSelected").text(power);
         $("#kickPowerMeter").addClass('kick-meter-locked');
-        self.kickoffPower = power;
+        self.kickoffPower(power);
+        self.showKickoffPowerSelection(false);
+        self.showKickoffAngleSelection(true);
     };
     self.GetKickoffAngle = function () {
         var angle = parseInt($("#kickoffAngle").val(), 10);
@@ -77,13 +82,14 @@
 
         $("#kickoffAngleSelected").text(angle);
         $("#kickAngleMeter").addClass('kick-meter-locked');
-        self.kickoffAngle = angle;
+        self.kickoffAngle(angle);
+        self.showKickoffAngleSelection(false);
     };
     self.Kickoff = function () {
-        console.log('kickoffPowerSelected: %s kickoffAngleSelected: %s', self.kickoffPower, self.kickoffAngle);
-        if (self.kickoffPower >= 0 && self.kickoffAngle >= 0) {
+        console.log('kickoffPowerSelected: %s kickoffAngleSelected: %s', self.kickoffPower(), self.kickoffAngle());
+        if (self.kickoffPower() >= 0 && self.kickoffAngle() >= 0) {
             //handle kickoff
-            playMaker.kickoff(self.kickoffPower, self.kickoffAngle);
+            playMaker.kickoff(self.kickoffPower(), self.kickoffAngle());
         }
         else {
             alert('Select kick power and angle');
@@ -92,13 +98,15 @@
     self.SetupKickoff = function () {
         self.StopKickoffSliders();
         self.showKickoffControls(true); //used to show kickoff controls
+        self.showKickoffPowerSelection(true);
+        self.showKickoffAngleSelection(false);
         self.StopCounter(); //the quarter clock does not run while the kick is being set up
 
         //enable sliders and reset values:
         $("#kickoffPower").prop('disabled', false);
         $("#kickoffAngle").prop('disabled', false);
-        self.kickoffPower = -1;
-        self.kickoffAngle = -1;
+        self.kickoffPower(-1);
+        self.kickoffAngle(-1);
         $("#kickoffAngleSelected").text('--');
         $("#kickoffPowerSelected").text('--');
         $("#kickPowerMeter, #kickAngleMeter").removeClass('kick-meter-locked');
@@ -109,6 +117,17 @@
         //start each meter at a different point so the two are never in lockstep
         self.kickoffPowerSliderIntervalId = self.StartKickoffSlider("#kickoffPower", "#kickoffPowerSelected", 1, 1);
         self.kickoffAngleSliderIntervalId = self.StartKickoffSlider("#kickoffAngle", "#kickoffAngleSelected", 65, -1);
+
+        // kickoff button text:
+        if (self.isPunt()) {
+            self.kickoffButtonText("Punt");
+        } else if (self.isFieldGoal()) {
+            self.kickoffButtonText("Field Goal");
+        } else if (self.isExtraPointKick()) {
+            self.kickoffButtonText("Kick Extra Point");
+        } else {
+            self.kickoffButtonText("Kickoff");
+        }
     };
     self.PuntBall = function () {
         if (self.isTwoPointConversion())

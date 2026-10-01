@@ -2020,6 +2020,42 @@ input[type="submit"].btn-default:hover {
     pointer-events: none;
 }
 
+/* Compact recap of the locked-in kick settings. Shown once a value is committed
+   so the player still sees their selection after the full meter is dismissed. */
+.kick-summary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: min(100%, 420px);
+    margin: 0 auto 16px;
+}
+
+.kick-summary-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid rgba(95, 224, 155, 0.55);
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(23, 102, 63, 0.32) 0%, var(--broadcast-panel-raised) 100%);
+}
+
+.kick-summary-label {
+    color: var(--broadcast-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.kick-summary-value {
+    color: #5FE09B;
+    font-size: 1.05rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
 .btn-default.kick-go-button {
     display: block;
     width: min(100%, 420px);
@@ -2062,6 +2098,11 @@ input[type="submit"].btn-default:hover {
 
     .kick-meter-value {
         font-size: 1.3rem;
+    }
+
+    .kick-summary {
+        gap: 6px;
+        margin-bottom: 14px;
     }
 
     .btn-default.kick-go-button {
