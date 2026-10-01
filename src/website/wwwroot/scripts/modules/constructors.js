@@ -26,14 +26,14 @@ MODULES.Constructors = (function () {
             this.totalScore = totalScore;
             this.teamImagePath = UTILITIES.getTeamImagePath(this.teamId);
         },
-        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '', isIncompletePass = false) {
+        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '', stopsGameClock = false) {
             this.yards = yards;
             this.playResultText = playText;
             this.isTurnover = isTurnover;
             this.playType = playType;
             this.isFirstDown = isFirstDown;
             this.displayText = displayText;
-            this.isIncompletePass = isIncompletePass; //true when the pass fell incomplete - kept separate from a completion that gained zero yards
+            this.stopsGameClock = stopsGameClock; //true when the ball went dead in a way that stops the game clock (an incompletion, a run out of bounds, etc.)
         },
         PlayHistory: function (playId, teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession, score, gameClock) {
             this.playId = playId;

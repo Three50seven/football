@@ -64,6 +64,42 @@
         feedback.css('left', feedbackLeft + 'px');
     },
 
+    //the 2nd and 4th quarters are the ends of each half and overtime are when an offense is most likely to try to stop the clock
+    isHigherChanceOffenseStopsClock: function () {
+        return self.currentQuarter() === 2 || self.currentQuarter() >= 4;
+    },
+
+    //a run can carry out of bounds (stopping the clock) on any short gain - negative, zero, or under the first-down
+    //marker - much more likely at the end of a half (2nd/4th quarter and overtime) when the offense is trying to
+    //stop the clock. a leading offense does the opposite and stays in bounds to run out the clock.
+    //never on a touchdown (the score stops the clock on its own) or a live-ball turnover (the defense has the ball)
+    rollOutOfBounds: function (playSelected, yardsGained, yardsNeededForFirst, isTouchdown, isLiveBallTurnover) {
+        if (playSelected !== GAME_PLAY_TYPES.RUN || isTouchdown || isLiveBallTurnover)
+            return false;
+
+        let isShortGain = yardsGained < Math.max(yardsNeededForFirst, MODULES.Constants.RUN_OUT_OF_BOUNDS_MAX_YARDS);
+        if (!isShortGain)
+            return false;
+
+        let outOfBoundsChance = MODULES.Constants.RUN_OUT_OF_BOUNDS_CHANCE_PERCENT;
+        if (playMaker.isHigherChanceOffenseStopsClock()) {
+            outOfBoundsChance = playMaker.isOffenseLeading()
+                ? MODULES.Constants.RUN_OUT_OF_BOUNDS_LEADING_END_OF_HALF_CHANCE_PERCENT
+                : MODULES.Constants.RUN_OUT_OF_BOUNDS_END_OF_HALF_CHANCE_PERCENT;
+        }
+
+        return UTILITIES.getRandomInt(1, 100) <= outOfBoundsChance;
+    },
+
+    //the offense is leading when its score is ahead - a leading ball carrier stays in bounds late to run out the clock
+    isOffenseLeading: function () {
+        if (self.currentTeamWithBall() === self.homeTeamID())
+            return self.homeTeamScore() > self.awayTeamScore();
+        if (self.currentTeamWithBall() === self.awayTeamID())
+            return self.awayTeamScore() > self.homeTeamScore();
+        return false;
+    },
+
     getPlayResult: function (playSelected, pointAttemptPlayType) {
         let _yards = 0;
         let _playResultText = UTILITIES.splitAndTitleCase(playSelected);
@@ -77,6 +113,7 @@
         let distanceToGoalLine = self.yardsToTouchdown(); //distance needed for a touchdown before this play's yardage is applied
         let isOverthrownIncomplete = false; //a pass thrown beyond the back of the end zone is incomplete, not a touchdown
         let isIncompletePass = false; //true when this pass fell incomplete - kept separate from a completion that gained zero yards
+        let isOutOfBounds = false; //true when the ball carrier was forced out of bounds - also a clock-stopping play
 
         self.playCountForPossession(self.playCountForPossession() + 1);
         self.consecutiveDelayOfGamePenalties(0); //the ball was snapped, so the delay of game streak is broken
@@ -154,7 +191,7 @@
         }
         if (_positiveYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _yards = UTILITIES.getRandomInt(1, yardageMax);
-            _yards = HELPERS.capRunYardsAtGoalLine(_yards, distanceToGoalLine);
+            _yards = HELPERS.capRunYardsAtGoalLine(_yards, distanceToGoalLine);            
 
             _playResultText = _playResultText + ' Successful';
         }
@@ -169,8 +206,14 @@
         }
         //NO GAIN PLAYS
         if (!_positiveYards && !_negativeYards && !isOverthrownIncomplete && playSelected === GAME_PLAY_TYPES.PASS) {
-            isIncompletePass = true;
-            _playResultText = _playResultText + ' Incomplete';
+            //a no-gain pass is usually incomplete, but the quarterback can also connect on a quick throw for no gain
+            if (UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.NO_GAIN_PASS_COMPLETION_CHANCE_PERCENT) {
+                _playResultText = _playResultText + ' Complete - No Gain';
+            }
+            else {
+                isIncompletePass = true;
+                _playResultText = _playResultText + ' Incomplete';
+            }
         }
         if (!_positiveYards && !_negativeYards && playSelected === GAME_PLAY_TYPES.RUN) {
             _playResultText = _playResultText + ' for no gain';
@@ -217,6 +260,15 @@
             turnover = true;
         }
 
+        //a short run can be forced out of bounds anywhere short of the goal line, so roll for it once the scoring
+        //checks above have resolved (a touchdown already stops the clock, and yardsToFirst() below still holds the
+        //pre-play distance to the sticks until DETERMINE DOWN runs)
+        let yardsNeededForFirstDown = self.yardsToFirst();
+        if (playMaker.rollOutOfBounds(playSelected, _yards, yardsNeededForFirstDown, isTouchdown, isLiveBallTurnover)) {
+            isOutOfBounds = true;
+            _playResultText = _playResultText + ' - Out of Bounds';
+        }
+
         //DETERMINE DOWN
         let isTurnoverOnDowns = false;
         let isFirstDown = false;
@@ -245,9 +297,9 @@
         }
 
         console.log('YARDS: ' + _yards);
-        //flag an incompletion explicitly so the game clock logic never has to infer it from the yardage; a live-ball
-        //turnover (interception/fumble) means the pass was caught or stripped, so it is not an incompletion
-        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown, '', isIncompletePass && !isLiveBallTurnover);
+        //flag a clock-stopping play (an incompletion or a run out of bounds) explicitly so the game clock logic never has
+        //to infer it from the yardage; a live-ball turnover (interception/fumble) means the ball was caught or stripped
+        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown, '', (isIncompletePass || isOutOfBounds) && !isLiveBallTurnover);
 
         self.SetBallPosition();
 
@@ -836,7 +888,7 @@
             'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.');
     },
 
-    recordTimeOfPossession: function (typeOfPlay, yards, isTurnover, isIncompletePass) {
+    recordTimeOfPossession: function (typeOfPlay, yards, isTurnover, stopsGameClock) {
         if (typeOfPlay === GAME_PLAY_TYPES.TWOPOINTCONVERSION || typeOfPlay === KICKOFF_TYPES.EXTRAPOINT) {
             self.timeOfPossession(0);
             self.StopCounter();
@@ -846,7 +898,7 @@
 
         let simulatedPlaySeconds = 0; //seconds the play itself consumes; used to skip the game clock ahead
         let nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_NORMAL; //40s, unless the clock was stopped by this play
-        //isIncompletePass is supplied by the caller (getPlayResult) so a completion that gains zero yards is not mistaken for an incompletion
+        //stopsGameClock is supplied by the caller (getPlayResult) so a completion that gains zero yards is not mistaken for an incompletion
         //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
 
         if (typeOfPlay === GAME_PLAY_TYPES.RUN) {
@@ -855,7 +907,8 @@
         }
         else if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
             //an incomplete pass stops the clock almost immediately and shortens the next play clock
-            if (isIncompletePass) {
+            //(only an incompletion stops the clock on a pass, so stopsGameClock is reliable here)
+            if (stopsGameClock) {
                 simulatedPlaySeconds = 4;
                 nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
             }
@@ -876,11 +929,12 @@
                 simulatedPlaySeconds += Math.max(Math.round(yards / 2), 0);
         }
 
-        //the game clock stops on a turnover, and on an incomplete pass in the 4th quarter (or overtime), so the
-        //offense cannot keep the clock moving - it stays stopped until the next snap. In the 1st-3rd quarters an
-        //incomplete pass leaves the clock running, but the time the chain crew takes to move is charged to the play.
-        let stopsGameClock = isTurnover || (isIncompletePass && self.currentQuarter() >= 4);
-        if (isIncompletePass && self.currentQuarter() < 4)
+        //the game clock stops on a turnover, and on a clock-stopping play (an incomplete pass or a run out of bounds)
+        //in the 4th quarter (or overtime), so the offense cannot keep the clock moving - it stays stopped until the
+        //next snap. In the 1st-3rd quarters those plays leave the clock running, but the time the chain crew takes to
+        //move is charged to the play.
+        let leaveClockStopped = isTurnover || (stopsGameClock && self.currentQuarter() >= 4);
+        if (stopsGameClock && self.currentQuarter() < 4)
             simulatedPlaySeconds += MODULES.Constants.CHAIN_CREW_DELAY_SECONDS;
 
         //seconds that already ran off the game clock while this play was being called and run - they belong
@@ -909,8 +963,8 @@
         else {
             self.StartPlayClock(nextPlayClockSeconds);
 
-            //leave the game clock stopped until the next snap after a turnover or a late-game incomplete pass
-            if (stopsGameClock)
+            //leave the game clock stopped until the next snap after a turnover or a late-game clock-stopping play
+            if (leaveClockStopped)
                 self.StopCounter();
         }
     },
@@ -928,7 +982,7 @@
         console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
         //RECORD TIME OF POSSESSION (before logging, so the play history shows this play's time)
-        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards, thisPlaysResult.isTurnover, thisPlaysResult.isIncompletePass);
+        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards, thisPlaysResult.isTurnover, thisPlaysResult.stopsGameClock);
 
         //MODULES.Constructors.PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession
         self.AddPlayHistory(new MODULES.Constructors.PlayHistory(self.teamPlayHistory().length + 1, self.currentTeamWithBall(),
