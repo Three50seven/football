@@ -26,6 +26,46 @@
     self.kickoffPower = ko.observable(-1);
     self.kickoffAngle = ko.observable(-1);
 
+    //"Temperature" of a locked power value: green is ideal/deep, red is too soft.
+    self.GetKickoffPowerTemperature = function (power) {
+        if (power <= 25)
+            return 'temp-red';
+        if (power <= 35)
+            return 'temp-orange';
+        if (power <= 45)
+            return 'temp-orange-yellow';
+        if (power <= 56)
+            return 'temp-yellow';
+        if (power <= 85)
+            return 'temp-yellow-green';
+        return 'temp-green';
+    };
+
+    //"Temperature" of a locked angle value: green is centered, warming out to red
+    //as the kick aims further toward either sideline.
+    self.GetKickoffAngleTemperature = function (angle) {
+        var distanceFromCenter = Math.abs(angle - 50);
+
+        if (distanceFromCenter <= 5)
+            return 'temp-green';
+        if (distanceFromCenter <= 14)
+            return 'temp-yellow-green';
+        if (distanceFromCenter <= 23)
+            return 'temp-yellow';
+        if (distanceFromCenter <= 32)
+            return 'temp-orange-yellow';
+        if (distanceFromCenter <= 41)
+            return 'temp-orange';
+        return 'temp-red';
+    };
+
+    self.kickoffPowerTemperatureClass = ko.computed(function () {
+        return self.kickoffPower() >= 0 ? self.GetKickoffPowerTemperature(self.kickoffPower()) : '';
+    });
+    self.kickoffAngleTemperatureClass = ko.computed(function () {
+        return self.kickoffAngle() >= 0 ? self.GetKickoffAngleTemperature(self.kickoffAngle()) : '';
+    });
+
     self.StopKickoffSliders = function () {
         clearInterval(self.kickoffPowerSliderIntervalId);
         clearInterval(self.kickoffAngleSliderIntervalId);

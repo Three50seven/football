@@ -472,11 +472,11 @@
 
                         <!-- Compact recap so the locked-in selection stays visible after each meter is dismissed. -->
                         <div class="kick-summary" role="status" aria-live="polite" data-bind="visible: kickoffPower() >= 0 || kickoffAngle() >= 0">
-                            <span class="kick-summary-item" data-bind="visible: kickoffPower() >= 0">
+                            <span class="kick-summary-item" data-bind="visible: kickoffPower() >= 0, class: kickoffPowerTemperatureClass()">
                                 <span class="kick-summary-label">Power</span>
                                 <span class="kick-summary-value" data-bind="text: kickoffPower()"></span>
                             </span>
-                            <span class="kick-summary-item" data-bind="visible: kickoffAngle() >= 0">
+                            <span class="kick-summary-item" data-bind="visible: kickoffAngle() >= 0, class: kickoffAngleTemperatureClass()">
                                 <span class="kick-summary-label">Angle</span>
                                 <span class="kick-summary-value" data-bind="text: kickoffAngle()"></span>
                             </span>

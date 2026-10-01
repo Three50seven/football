@@ -2032,14 +2032,24 @@ input[type="submit"].btn-default:hover {
 }
 
 .kick-summary-item {
+    --kick-temp: #5FE09B;
+    --kick-temp-soft: rgba(95, 224, 155, 0.32);
     display: inline-flex;
     align-items: baseline;
     gap: 8px;
     padding: 6px 14px;
-    border: 1px solid rgba(95, 224, 155, 0.55);
+    border: 1px solid var(--kick-temp);
     border-radius: 999px;
-    background: linear-gradient(180deg, rgba(23, 102, 63, 0.32) 0%, var(--broadcast-panel-raised) 100%);
+    background: linear-gradient(180deg, var(--kick-temp-soft) 0%, var(--broadcast-panel-raised) 100%);
 }
+
+/* Value "temperature": green is the ideal result and warms toward red as risk rises. */
+.kick-summary-item.temp-green { --kick-temp: #5FE09B; --kick-temp-soft: rgba(95, 224, 155, 0.32); }
+.kick-summary-item.temp-yellow-green { --kick-temp: #A8D94E; --kick-temp-soft: rgba(168, 217, 78, 0.26); }
+.kick-summary-item.temp-yellow { --kick-temp: #F6D23C; --kick-temp-soft: rgba(246, 210, 60, 0.26); }
+.kick-summary-item.temp-orange-yellow { --kick-temp: #FFB020; --kick-temp-soft: rgba(255, 176, 32, 0.28); }
+.kick-summary-item.temp-orange { --kick-temp: #F17918; --kick-temp-soft: rgba(241, 121, 24, 0.30); }
+.kick-summary-item.temp-red { --kick-temp: #FF5C5C; --kick-temp-soft: rgba(255, 92, 92, 0.30); }
 
 .kick-summary-label {
     color: var(--broadcast-muted);
@@ -2050,7 +2060,7 @@ input[type="submit"].btn-default:hover {
 }
 
 .kick-summary-value {
-    color: #5FE09B;
+    color: var(--kick-temp);
     font-size: 1.05rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
