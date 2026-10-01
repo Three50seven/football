@@ -14,7 +14,43 @@
 
         return yards;
     });
+    //currentTeamWithBall must be declared before the computeds below that read it, so the line to gain always
+    //resolves against a live observable rather than whatever happens to be on the global at that moment.
     self.currentTeamWithBall = ko.observable(0);
+
+    //Field progress (yards from the home goal line) of the line the offense must reach for a new set of downs.
+    //null means there is no line to draw - e.g. the offense is already first & goal and the goal line is the marker.
+    self.lineToGainProgress = ko.computed(function () {
+        return HELPERS.getLineToGainProgress(self.ballSpotStart(), self.yardsTraveled(), self.yardsToFirst());
+    });
+
+    //Special teams plays (kickoffs, punts, field goals) and point attempts have no down and distance to mark up.
+    //This is a computed so the line reappears the moment a kick finishes - resetKickoffFlags clears
+    //showKickoffControls right after SetBallPosition has already run, and the receiving team is then set up at
+    //1st & 10 with no positive yards gained yet.
+    self.showLineToGain = ko.computed(function () {
+        let onSpecialTeams = (typeof self.showKickoffControls === 'function' && self.showKickoffControls()) ||
+            (typeof self.pointAttemptAfterTouchDown === 'function' && self.pointAttemptAfterTouchDown());
+
+        return !onSpecialTeams && self.lineToGainProgress() !== null;
+    });
+
+    //x offset on the field SVG for the line to gain, or null when there is no line to draw. Measured from the
+    //offense's OWN goal line, so the home team works right and the away team works left.
+    self.lineToGainX = ko.computed(function () {
+        //stay null whenever the line is hidden, so the bound x1/x2 are never left at a stale spot
+        if (!self.showLineToGain())
+            return null;
+
+        //a point attempt lines up against the goal line rather than a scrimmage spot, so it follows the kicking team
+        let isHomeTeam = self.currentTeamWithBall() === self.homeTeamID();
+        if (self.pointAttemptTeamId) {
+            isHomeTeam = self.pointAttemptTeamId === self.homeTeamID();
+        }
+
+        return HELPERS.getFieldXPosition(self.lineToGainProgress(), isHomeTeam);
+    });
+
     self.SetupKickoffBallSpot = function () {
         console.log('SETTING UP KICKOFF BALL SPOT');
         let extraPointKickActive = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick();
