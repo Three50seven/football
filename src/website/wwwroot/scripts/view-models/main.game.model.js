@@ -79,6 +79,10 @@
         self.elapsedTimeAtLastPlay = 0;
         self.playClockRemaining(MODULES.Constants.PLAY_CLOCK_NORMAL);
         self.quarterEndPendingAfterTry = false;
+        self.twoMinuteWarningPending = false;
+        self.twoMinuteWarningDoneForHalf = false;
+        self.quarterEndPendingAfterPlay = false;
+        self.deferPeriodAlerts = false;
         self.currentDown(1);
         self.playCountForPossession(1);
         self.timeOfPossession(0);

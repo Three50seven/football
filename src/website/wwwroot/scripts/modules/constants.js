@@ -10,6 +10,7 @@ MODULES.Constants = (function () {
         TOUCHBACK_YARD_LINE: 20,
         SHOW_SPECIAL_TEAMS_CLASS: 'show-sub-menu',
         MAX_TIME_OF_QUARTER: 900, //900 seconds = 15 minutes
+        TWO_MINUTE_WARNING_SECONDS: 120, //the clock stops for a warning at 2:00 of the 2nd and 4th quarters
         PLAY_CLOCK_NORMAL: 40, //seconds the offense has to snap after the end of the previous play
         PLAY_CLOCK_SHORT: 25, //seconds the offense has to snap after an administrative stoppage (penalty, timeout, etc.)
         CHAIN_CREW_DELAY_SECONDS: 5, //extra game-clock time an incomplete pass costs in the 1st-3rd quarters while the chain crew moves

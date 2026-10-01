@@ -16,6 +16,10 @@
     self.playClockTimerId = 0;
     self.playClockRemaining = ko.observable(MODULES.Constants.PLAY_CLOCK_NORMAL);
     self.quarterEndPendingAfterTry = false;
+    self.twoMinuteWarningPending = false; //set when the clock crosses 2:00 during a play, announced after the play finishes
+    self.twoMinuteWarningDoneForHalf = false; //one warning per half (2nd and 4th quarters)
+    self.quarterEndPendingAfterPlay = false; //set when time expires during a play, announced after the play finishes
+    self.deferPeriodAlerts = false; //true only while a play/kick is being recorded, removed right after its time hits the clock
     self.isGamePaused = ko.observable(false);
     self.wasGameClockRunningBeforePause = false;
     self.wasPlayClockRunningBeforePause = false;
@@ -102,6 +106,19 @@
 
         self.elapsedTime(Math.min(self.elapsedTime() + seconds, self.initialTime()));
 
+        //let the current play finish before announcing the two-minute warning or ending the quarter
+        if (self.deferPeriodAlerts) {
+            self.CheckTwoMinuteWarning();
+            if (self.remainingTime() <= 0)
+                self.quarterEndPendingAfterPlay = true;
+            return;
+        }
+
+        self.CheckTwoMinuteWarning();
+        self.CompletePendingPeriodAlerts();
+        if (self.gameOver() || self.quarterEndPendingAfterTry)
+            return;
+
         if (self.remainingTime() <= 0) {
             if (self.pointAttemptAfterTouchDown()) {
                 self.quarterEndPendingAfterTry = true;
@@ -112,6 +129,62 @@
                 self.EndQuarter();
             }
         }
+    };
+    //announces any period stoppage crossed while a play was being resolved - the two-minute warning
+    //first, then the quarter/game end. returns true when a stoppage was announced.
+    self.CompletePendingPeriodAlerts = function () {
+        let announcedStoppage = false;
+
+        if (self.twoMinuteWarningPending && !self.gameOver()) {
+            self.twoMinuteWarningPending = false;
+            self.AnnounceTwoMinuteWarning();
+            announcedStoppage = true;
+        }
+
+        if (self.quarterEndPendingAfterPlay && !self.gameOver() && !self.quarterEndPendingAfterTry) {
+            self.quarterEndPendingAfterPlay = false;
+            if (self.remainingTime() <= 0) {
+                if (self.pointAttemptAfterTouchDown()) {
+                    self.quarterEndPendingAfterTry = true;
+                    self.StopCounter();
+                    self.StopPlayClock();
+                }
+                else {
+                    self.EndQuarter();
+                }
+                announcedStoppage = true;
+            }
+        }
+
+        return announcedStoppage;
+    };
+    //flags the two-minute warning once the clock reaches 2:00 in the 2nd or 4th quarter
+    self.CheckTwoMinuteWarning = function () {
+        if (self.gameOver() || self.twoMinuteWarningPending || self.twoMinuteWarningDoneForHalf)
+            return false;
+
+        if (self.currentQuarter() !== 2 && self.currentQuarter() !== 4)
+            return false;
+
+        if (self.remainingTime() > MODULES.Constants.TWO_MINUTE_WARNING_SECONDS)
+            return false;
+
+        if (self.remainingTime() <= 0)
+            return false;
+
+        self.twoMinuteWarningPending = true;
+        self.twoMinuteWarningDoneForHalf = true;
+        return true;
+    };
+    //announces the two-minute warning immediately - the play that crossed 2:00 is already finished
+    self.AnnounceTwoMinuteWarning = function () {
+        if (self.gameOver() || self.remainingTime() <= 0)
+            return;
+
+        self.StopCounter(); //the warning is an administrative stoppage, just like a quarter ending
+        self.StopPlayClock();
+        alert('Two minute warning - ' + self.remainingTimeDisplay() + ' remaining in the ' + UTILITIES.getNumberWithEnding(self.currentQuarter()) + ' quarter');
+        self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT);
     };
     self.CompleteQuarterAfterTry = function () {
         if (!self.quarterEndPendingAfterTry)
@@ -124,9 +197,12 @@
         self.StopCounter();
         self.elapsedTime(0);
         self.elapsedTimeAtLastPlay = 0; //a new quarter starts the game clock over
+        self.twoMinuteWarningPending = false;
+        self.quarterEndPendingAfterPlay = false;
         let endingQuarter = self.currentQuarter();
 
         if (endingQuarter === 2) { //end of the first half - timeouts reset for the second half
+            self.twoMinuteWarningDoneForHalf = false; //each half gets its own warning
             self.homeTeamTimeOuts(3);
             self.awayTeamTimeOuts(3);
         }
@@ -161,8 +237,8 @@
         }
         else {
             alert('End of the ' + UTILITIES.getNumberWithEnding(self.currentQuarter() - 1) + ' quarter');
-            if (!self.showKickoffControls())
-                self.StartCounter();
+            self.StopCounter(); //the quarter break is an administrative stoppage - the clock stays stopped until the next snap
+            self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT); //next snap only gets 25 seconds
         }
     };
     self.PreparePeriodKickoff = function (receivingTeam) {

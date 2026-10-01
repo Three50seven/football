@@ -28,6 +28,8 @@ function observable(value) {
     return fn;
 }
 
+module.exports = { createPlaymaker };
+
 // Loads playmaker.js with a stubbed `self` so recordTimeOfPossession can be exercised in isolation.
 function createPlaymaker(options = {}) {
     const calls = { advanceTime: [], playClock: [], startCounter: 0, stopCounter: 0 };
@@ -38,6 +40,7 @@ function createPlaymaker(options = {}) {
         isRunning: () => options.isRunning ?? true,
         currentQuarter: () => options.quarter ?? 1,
         pointAttemptAfterTouchDown: () => false,
+        deferPeriodAlerts: false,
         timeOfPossession: observable(0),
         StartCounter: () => { calls.startCounter += 1; },
         StopCounter: () => { calls.stopCounter += 1; },
