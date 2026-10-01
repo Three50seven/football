@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "start": "vite --host localhost --port 8080",
+    "prestart": "npm run bundle",
     "dev": "vite --host localhost --port 8080",
+    "predev": "npm run bundle",
     "test": "node --test test/*.test.cjs",
     "bundle": "gulp Bundle",
     "build": "npm run bundle && vite build",

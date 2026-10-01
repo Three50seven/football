@@ -6,6 +6,13 @@ src/website/dist/
 coverage/
 .vite/
 
+# Generated bundles - rebuilt by `npm run bundle` (gulp) and shipped via vite static-copy.
+# Do NOT broaden this to a global `*.min.js` rule: wwwroot/scripts/libraries/**/*.min.js
+# (jquery-3.3.1.min.js, knockout-sortable.min.js) are bundler INPUTS, and
+# wwwroot/content/images/** are hand-authored assets that must stay tracked.
+src/website/wwwroot/content/js/
+src/website/wwwroot/content/css/
+
 # Local environment files
 .env
 .env.*

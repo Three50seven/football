@@ -76,6 +76,7 @@
         self.gameOver(false);
         self.currentQuarter(1);
         self.elapsedTime(0);
+        self.elapsedTimeAtLastPlay = 0;
         self.playClockRemaining(MODULES.Constants.PLAY_CLOCK_NORMAL);
         self.quarterEndPendingAfterTry = false;
         self.currentDown(1);

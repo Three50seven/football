@@ -792,10 +792,40 @@
         self.StopCounter();
         self.StopPlayClock();
         self.gameOver(true);
-        sim.addCompletedGameToHistory();
 
         let winningTeam = offendingTeamId === self.homeTeamID() ? self.awayTeamInfo() : self.homeTeamInfo();
         let offendingTeamInfo = offendingTeamId === self.homeTeamID() ? self.homeTeamInfo() : self.awayTeamInfo();
+
+        // When a team forfeits, the winning team is awarded the game, winning by 2-0, regardless of the current score.
+        self.homeTeamScore(0);
+        self.awayTeamScore(0);
+        if (winningTeam === self.homeTeamInfo()) {
+            self.homeTeamScore(2);
+        } else {
+            self.awayTeamScore(2);
+        }
+
+        // Reset the box score for each team. gameBoxScore holds exactly one record per team (home and away),
+        // so writing one entry per iteration = one entry per team.
+        // NOTE: we write the records directly instead of calling self.UpdateBoxScore(), because UpdateBoxScore()
+        // rebuilds each quarter from the live quarter plus homeTeamScore()/awayTeamScore() and would immediately
+        // undo this reset (it would drop the awarded 2 points into whichever quarter is currently in progress).
+        if (self.gameBoxScore().length === 0)
+            self.InitializeBoxScore();
+
+        let boxScoreEntries = self.gameBoxScore();
+        for (let i = 0; i < boxScoreEntries.length; i++) {
+            let entry = boxScoreEntries[i];
+            entry.firstQuarterScore = 0;
+            entry.secondQuarterScore = 0;
+            entry.thirdQuarterScore = 0;
+            entry.fourthQuarterScore = 0;
+            entry.overtimeScore = 0;
+            entry.totalScore = entry.teamId === self.homeTeamID() ? self.homeTeamScore() : self.awayTeamScore();
+            self.gameBoxScore.refresh(entry);
+        }
+
+        sim.addCompletedGameToHistory();
 
         alert('FORFEIT - ' + offendingTeamInfo.teamName() + ' repeatedly failed to snap the ball in time. ' +
             'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.');
@@ -809,32 +839,41 @@
             return;
         }
 
-        let timeSpentWithBall = 0; //represents seconds off the game clock for this play
+        let simulatedPlaySeconds = 0; //seconds the play itself consumes; used to skip the game clock ahead
         let nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_NORMAL; //40s, unless the clock was stopped by this play
         //SOURCE: https://www.teamrankings.com/nfl/stat/average-time-of-possession-net-of-ot
 
         if (typeOfPlay === GAME_PLAY_TYPES.RUN) {
             //huddle/play clock plus time for the run itself, roughly 1-2 minutes from play call to the whistle
-            timeSpentWithBall = 30 + Math.max(Math.round(yards / 2), 0);
+            simulatedPlaySeconds = 30 + Math.max(Math.round(yards / 2), 0);
         }
         else if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
             //an incomplete pass (or a spike) stops the clock almost immediately and shortens the next play clock
             if (yards === 0) {
-                timeSpentWithBall = 4;
+                simulatedPlaySeconds = 4;
                 nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
             }
             else {
-                timeSpentWithBall = 25 + Math.max(Math.round(yards / 5), 0);
+                simulatedPlaySeconds = 25 + Math.max(Math.round(yards / 5), 0);
             }
         }
         else if (typeOfPlay === GAME_PLAY_TYPES.PENALTY) {
-            timeSpentWithBall = 0; //whistle blown before the snap - no game clock runs off
+            simulatedPlaySeconds = 0; //whistle blown before the snap - no game clock runs off
             nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
         }
         else {
-            timeSpentWithBall = 10; //kickoffs, returns, and other special teams plays
+            simulatedPlaySeconds = 10; //kickoffs, returns, and other special teams plays
             nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
+
+            //a return (empty play type) also burns the time the returner spends running the ball back
+            if (typeOfPlay === '')
+                simulatedPlaySeconds += Math.max(Math.round(yards / 2), 0);
         }
+
+        //seconds that already ran off the game clock while this play was being called and run - they belong
+        //to this play's time of possession too, and must not be skipped again by AdvanceTime below
+        let elapsedClockSeconds = Math.max(self.elapsedTime() - self.elapsedTimeAtLastPlay, 0);
+        let timeSpentWithBall = simulatedPlaySeconds + elapsedClockSeconds;
 
         console.log('TIME SPENT WITH BALL THIS PLAY: %s seconds', timeSpentWithBall);
 
@@ -844,7 +883,11 @@
         if (!self.isRunning() && !self.pointAttemptAfterTouchDown())
             self.StartCounter();
 
-        self.AdvanceTime(timeSpentWithBall);
+        //only skip ahead by the simulated portion - the real ticks already came off the clock above
+        self.AdvanceTime(simulatedPlaySeconds);
+
+        //remember where the clock sits so the next play only counts its own ticks
+        self.elapsedTimeAtLastPlay = self.elapsedTime();
 
         if (self.pointAttemptAfterTouchDown()) {
             self.StopCounter();

@@ -8,6 +8,7 @@
     self.isBeginningOfHalf = true; //flag to indicate when the beginning of a half occurs
     self.timerId = 0;
     self.elapsedTime = ko.observable(0);
+    self.elapsedTimeAtLastPlay = 0; //elapsedTime snapshot taken after the previous play, so each play only counts the ticks that happen during it
     self.initialTime = ko.observable(MODULES.Constants.MAX_TIME_OF_QUARTER);
     self.isRunning = ko.observable(false);
     self.gameOver = ko.observable(false);
@@ -122,6 +123,7 @@
     self.EndQuarter = function () {
         self.StopCounter();
         self.elapsedTime(0);
+        self.elapsedTimeAtLastPlay = 0; //a new quarter starts the game clock over
         let endingQuarter = self.currentQuarter();
 
         if (endingQuarter === 2) { //end of the first half - timeouts reset for the second half
