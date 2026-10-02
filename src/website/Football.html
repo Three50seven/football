@@ -360,7 +360,7 @@
                             <div id="currentQuarter" class="white" data-bind="text: currentQuarterDisplay()"></div>
                             <div id="timeRemainingInQuarter" class="gold">
                                 <span data-bind="text: remainingTimeDisplay"></span>
-                                <span id="playClock" data-bind="visible: !showKickoffControls() && !pointAttemptAfterTouchDown(), text: playClockDisplay()"></span>
+                                <span id="playClock" class="playclock" data-bind="visible: !showKickoffControls() && !pointAttemptAfterTouchDown(), text: playClockDisplay()"></span>
                             </div>
                             <div id="currentBallSpot" class="white">
                                 <span id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></span>
@@ -393,7 +393,7 @@
                                 <div>
                                     <span data-bind="text: currentQuarterDisplay"></span>
                                     <span data-bind="text: remainingTimeDisplay"></span>
-                                    <span class="gold" data-bind="text: playClockDisplay"></span>
+                                    <span class="playclock" data-bind="text: playClockDisplay"></span>
                                 </div>
                                 <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
                                 <div data-bind="text: HELPERS.getYardText()"></div>

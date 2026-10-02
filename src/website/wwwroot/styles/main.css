@@ -613,16 +613,19 @@ nav > ul {
 .gold {
 	color: gold;	
 }
+.playclock {
+    color: gold;
+    border: 1px solid gold;
+    border-radius: 3px;
+    margin-left: 6px;
+    padding: 0px 6px;
+}
 .white {
 	color: white;	
 }
 
 #playClock {
-	display: inline-block;
-	border: 1px solid gold;
-	border-radius: 3px;
-	padding: 0px 6px;
-	margin-left: 6px;
+	display: inline-block;	
 	font-size: 0.85em;
 }
 
