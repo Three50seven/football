@@ -53,11 +53,12 @@ MODULES.Constructors = (function () {
             this.gameClock = gameClock;
             this.fullTeamName = UTILITIES.getFullTeamName(this.teamName, this.teamId);
         },
-        TeamArrayRecord: function (teamId, teamColor, teamCity, teamMascot) {
+        TeamArrayRecord: function (teamId, teamColor, teamCity, teamMascot, teamAbbreviation) {
             this.teamId = teamId;
             this.teamColor = teamColor;
             this.teamCity = teamCity;
             this.teamMascot = teamMascot;
+            this.teamAbbreviation = teamAbbreviation;
             this.teamCityAndName = function () {
                 if (!this.teamCity || !this.teamMascot)
                     return '';

@@ -50,7 +50,7 @@ function createGame(options = {}) {
 
     const context = {
         console: { log() {} },
-        alert() {},
+        ShowGameAlert() {},
         ko: { observable, observableArray },
         $,
         jQuery: $,

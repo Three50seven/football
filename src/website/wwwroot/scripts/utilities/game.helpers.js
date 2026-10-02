@@ -56,5 +56,9 @@
         let yardText = ballIsInHomeTerritory ? self.homeTeamInfo().teamName() : self.awayTeamInfo().teamName();
 
         return yardText + ' ' + self.currentBallSpot();
+    },
+
+    getTeamInfo: function (teamId) {
+        return $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === teamId; })[0];
     }
 };

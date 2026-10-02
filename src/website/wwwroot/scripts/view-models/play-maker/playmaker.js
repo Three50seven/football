@@ -44,10 +44,10 @@ var playMaker = {
             return;
 
         if (score !== null && type !== null && team) {
-            feedback.text('+' + score + ' ' + labels[type] + ' - ' + team.teamCityAndName());
+            feedback.text(team.teamCityAndName() + ' -  + ' + score + ' ' + labels[type]);
         }
         else {
-            feedback.text(playText + ' - ' + (team ? team.teamCityAndName() : ''));
+            feedback.text((team ? team.teamCityAndName() : '') + ' - ' + playText + ' - ' + HELPERS.getDownText(self.currentDown(), self.yardsToFirst()) + ', ball on the ' + HELPERS.getYardText());
         }
 
         feedback.removeClass("field-score-feedback-active").css('left', '0px');
@@ -819,6 +819,7 @@ var playMaker = {
         $('#diceValues').empty();
 
         let offendingTeam = self.currentTeamWithBall();
+        let offendingTeamInfo = HELPERS.getTeamInfo(offendingTeam);;
         self.consecutiveDelayOfGamePenalties(self.consecutiveDelayOfGamePenalties() + 1);
 
         //REPEATED VIOLATIONS: an endless loop of delay of game penalties is treated as unsportsmanlike conduct, and ultimately a forfeit
@@ -839,10 +840,16 @@ var playMaker = {
             let unsportsmanlikePenaltyText = playMaker.getPenaltyText(unsportsmanlikePenaltyYards, MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
             penaltyYards += unsportsmanlikePenaltyYards;
             penaltyText += ' + Unsportsmanlike Conduct - ' + unsportsmanlikePenaltyText;
-            alert('DELAY OF GAME - repeated violation! ' + unsportsmanlikePenaltyText + ' for unsportsmanlike conduct has been assessed. One more delay of game will result in a forfeit.');
+            self.ShowGameAlert('DELAY OF GAME - repeated violation! ' + unsportsmanlikePenaltyText + ' for unsportsmanlike conduct has been assessed. One more delay of game will result in a forfeit.', {
+                title: 'Delay of Game - Unsportsmanlike Conduct',
+                tone: 'warning'
+            });
         }
         else {
-            alert('DELAY OF GAME - the offense failed to snap the ball in time. ' + delayPenaltyText + '.');
+            self.ShowGameAlert('DELAY OF GAME - the ' + offendingTeamInfo.teamName() + ' offense failed to snap the ball in time. ' + delayPenaltyText + '.', {
+                title: 'Delay of Game',
+                tone: 'penalty'
+            });
         }
 
         self.SetBallPosition();
@@ -858,12 +865,12 @@ var playMaker = {
         self.gameOver(true);
 
         let winningTeam = offendingTeamId === self.homeTeamID() ? self.awayTeamInfo() : self.homeTeamInfo();
-        let offendingTeamInfo = offendingTeamId === self.homeTeamID() ? self.homeTeamInfo() : self.awayTeamInfo();
+        let offendingTeamInfo = HELPERS.getTeamInfo(offendingTeamId);
 
         // When a team forfeits, the winning team is awarded the game, winning by 2-0, regardless of the current score.
         self.homeTeamScore(0);
         self.awayTeamScore(0);
-        if (winningTeam === self.homeTeamInfo()) {
+        if (winningTeam.teamId === self.homeTeamID()) {
             self.homeTeamScore(2);
         } else {
             self.awayTeamScore(2);
@@ -891,8 +898,11 @@ var playMaker = {
 
         sim.addCompletedGameToHistory();
 
-        alert('FORFEIT - ' + offendingTeamInfo.teamName() + ' repeatedly failed to snap the ball in time. ' +
-            'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.');
+        self.ShowGameAlert('FORFEIT - ' + offendingTeamInfo.teamName() + ' repeatedly failed to snap the ball in time. ' +
+            'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.', {
+            title: 'Game forfeited',
+            tone: 'forfeit'
+        });
     },
 
     recordTimeOfPossession: function (typeOfPlay, yards, isTurnover, stopsGameClock, deadBallStopsClock, noPlayTime) {
@@ -1003,7 +1013,7 @@ var playMaker = {
     },
 
     recordPlay: function (thisPlaysResult) {
-        let team = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === self.currentTeamWithBall(); })[0]; //get the current team making the play
+        let team = HELPERS.getTeamInfo(self.currentTeamWithBall()); //get the current team making the play
         let pluralizer = 's';
 
         self.lastTimeoutTeam(0); //a completed play clears the "no consecutive timeouts" restriction
@@ -1082,7 +1092,10 @@ var playMaker = {
             MODULES.GameVariables.TotalPlayCount += 1;
         } else {
             self.hasRolled(true);
-            alert('Choose a play');
+            self.ShowGameAlert('Choose a play', {
+                title: 'No Play Selected',
+                tone: 'info'
+            });
         }
     },
 
@@ -1138,7 +1151,7 @@ var playMaker = {
             let scoringTeamId = self.currentTeamWithBall();
             if (type === SCORE_TYPES.SAFETY)
                 scoringTeamId = scoringTeamId === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
-            let scoringTeam = $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === scoringTeamId; })[0];
+            let scoringTeam = HELPERS.getTeamInfo(scoringTeamId);
 
         if (currentTeamWithBall() === homeTeamID()) {
             //add score to home team, unless safety

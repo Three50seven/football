@@ -30,7 +30,7 @@ function observable(initialValue) {
 function createTimer(options = {}) {
     const alerts = [];
     const context = {
-        alert: (message) => alerts.push(message),
+        ShowGameAlert: (message, alertOptions) => alerts.push(message),
         clearInterval() {},
         console: { log() {} },
         jQuery: {},

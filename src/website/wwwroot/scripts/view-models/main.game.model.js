@@ -25,7 +25,10 @@
             return;
 
         if (teamIdSelected === self.homeTeamID()) {
-            alert('The away team must be different than the home team.  Please select a different team.');
+            self.ShowGameAlert('The away team must be different than the home team.  Please select a different team.', {
+                title: 'Same Team Selected',
+                tone: 'warning'
+            });
         }
         else {
             self.ClearCoinColors();
@@ -71,6 +74,9 @@
         self.StopKickoffSliders();
         self.gameStarted(false);
         self.isGamePaused(false);
+        //drop any alert still on screen or queued, so a stale quarter/game-over message can
+        //never pop up over the new coin toss
+        self.ClearGameAlerts();
         self.wasGameClockRunningBeforePause = false;
         self.wasPlayClockRunningBeforePause = false;
         self.gameOver(false);

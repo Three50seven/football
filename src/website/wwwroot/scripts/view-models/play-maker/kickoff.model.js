@@ -132,7 +132,10 @@
             playMaker.kickoff(self.kickoffPower(), self.kickoffAngle());
         }
         else {
-            alert('Select kick power and angle');
+            self.ShowGameAlert('Select kick power and angle', {
+                title: 'Kick Not Ready',
+                tone: 'info'
+            });
         }
     };
     self.SetupKickoff = function () {

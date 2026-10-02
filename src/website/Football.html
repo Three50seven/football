@@ -715,6 +715,19 @@
                         </div>
                     </div>
                 </div>        
+<!--Alert modal: a calmer, in-page replacement for the native alert(). The tone is set by
+                    ShowGameAlert(options.tone) and drives the dialog accent via gameAlertToneClass. OK, a click on
+                    the backdrop, Enter and Escape all dismiss it. Deliberately a direct child of #body rather than a
+                    child of #game-main-container, which is hidden until the game starts - team selection raises
+                    alerts too, and a dialog inside a display:none container can never be seen or dismissed.-->
+                <div id="alertOverlay" data-bind="visible: gameAlertIsOpen, event: { click: DismissGameAlert }">
+                    <div class="alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="gameAlertTitle" aria-describedby="gameAlertMessage"
+                        data-bind="css: gameAlertToneClass, event: { keydown: gameAlertOnKeyDown, click: gameAlertOnDialogClick }">
+                        <h2 id="gameAlertTitle" data-bind="text: gameAlertTitle"></h2>
+                        <p id="gameAlertMessage" data-bind="text: gameAlertMessage"></p>
+                        <button type="button" id="gameAlertOkButton" class="btn-default" data-bind="click: DismissGameAlert, text: gameAlertButtonText"></button>
+                    </div>
+                </div>
             </div>
             <div id="footer">
                 Copyright Note: All images and logos belong to the NFL - this is just

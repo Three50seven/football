@@ -31,7 +31,7 @@ function createPlayContext(options = {}) {
 
     const context = {
         console: { log() {} },
-        alert() {},
+        ShowGameAlert() {},
         ko: { observable: observable },
         $: $,
         jQuery: $,

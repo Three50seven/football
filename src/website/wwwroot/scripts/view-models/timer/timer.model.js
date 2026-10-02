@@ -23,6 +23,10 @@
     self.isGamePaused = ko.observable(false);
     self.wasGameClockRunningBeforePause = false;
     self.wasPlayClockRunningBeforePause = false;
+    //bumped by every clock start/stop. The alert dialog reads it before and after it is on
+    //screen so it can tell whether the game touched a clock while the dialog was up - see
+    //ui/alert.model.js.
+    self.clockEpoch = 0;
     self.consecutiveDelayOfGamePenalties = ko.observable(0); //tracks repeated delay of game violations by the team currently snapping the ball
 
     //FUNCTIONS
@@ -48,23 +52,37 @@
             return;
 
         clearInterval(self.timerId);
+        self.clockEpoch++;
         self.isRunning(true);
         self.timerId = window.setInterval(function () {
+            //An alert dialog is not modal, so the tick itself has to be held while one is up. The
+            //native alert() this replaced froze the whole event loop and got this for free.
+            //Note this guards the interval only, never AdvanceTime itself - recordTimeOfPossession
+            //calls AdvanceTime directly to fast-forward the simulated time of a play, and that
+            //accounting must still run even if it happens to record a play while an alert is showing.
+            if (typeof self.gameAlertIsOpen === 'function' && self.gameAlertIsOpen())
+                return;
+
             self.AdvanceTime(1);
         }, MODULES.GameVariables.TimeIntervalCountDown);
     };
     self.StopCounter = function () {
         clearInterval(self.timerId);
+        self.clockEpoch++;
         self.isRunning(false);
     };
     //starts (or restarts) the play clock the offense has to snap the ball; 40s after a normal play, 25s after an administrative stoppage
     self.StartPlayClock = function (seconds) {
         clearInterval(self.playClockTimerId);
+        self.clockEpoch++;
         self.playClockRemaining(seconds);
 
         self.playClockTimerId = window.setInterval(function () {
-            //pause the play clock while special teams/point-after formations are being set up
-            if (self.gameOver() || self.showKickoffControls() || self.pointAttemptAfterTouchDown())
+            //pause the play clock while special teams/point-after formations are being set up,
+            //and while an alert is on screen - including when the play that raised the alert then
+            //restarts the play clock behind the player's back
+            if (self.gameOver() || self.showKickoffControls() || self.pointAttemptAfterTouchDown() ||
+                (typeof self.gameAlertIsOpen === 'function' && self.gameAlertIsOpen()))
                 return;
 
             self.playClockRemaining(self.playClockRemaining() - 1);
@@ -77,6 +95,7 @@
     };
     self.StopPlayClock = function () {
         clearInterval(self.playClockTimerId);
+        self.clockEpoch++;
         self.playClockTimerId = 0;
     };
     self.PauseGame = function () {
@@ -183,8 +202,15 @@
 
         self.StopCounter(); //the warning is an administrative stoppage, just like a quarter ending
         self.StopPlayClock();
-        alert('Two minute warning - ' + self.remainingTimeDisplay() + ' remaining in the ' + UTILITIES.getNumberWithEnding(self.currentQuarter()) + ' quarter');
-        self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT);
+        //the play clock is restarted from onDismiss so the offense gets its full 25 seconds to
+        //read the warning, exactly as it did while the native alert() blocked the page
+        self.ShowGameAlert('Two minute warning - ' + self.remainingTimeDisplay() + ' remaining in the ' + UTILITIES.getNumberWithEnding(self.currentQuarter()) + ' quarter', {
+            title: 'Two Minute Warning',
+            tone: 'quarter',
+            onDismiss: function () {
+                self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT);
+            }
+        });
     };
     self.CompleteQuarterAfterTry = function () {
         if (!self.quarterEndPendingAfterTry)
@@ -212,33 +238,51 @@
         if (endingQuarter === 2) {
             let secondHalfReceiver = self.teamReceivingInitialKickoff() === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
             self.PreparePeriodKickoff(secondHalfReceiver);
-            alert('Halftime - ' + (secondHalfReceiver === self.homeTeamID() ? self.homeTeamInfo().teamCityAndName() : self.awayTeamInfo().teamCityAndName()) +
-                ' will receive the second-half kickoff.');
+            self.ShowGameAlert('Halftime - ' + (secondHalfReceiver === self.homeTeamID() ? self.homeTeamInfo().teamCityAndName() : self.awayTeamInfo().teamCityAndName()) +
+                ' will receive the second-half kickoff.', {
+                title: 'Halftime',
+                tone: 'quarter'
+            });
         }
         else if (endingQuarter === 4) {
             if (self.homeTeamScore() === self.awayTeamScore()) {
                 let overtimeReceiver = UTILITIES.getRandomInt(1, 2) === 1 ? self.homeTeamID() : self.awayTeamID();
                 self.RecordOvertimeCoinToss(overtimeReceiver);
                 self.PreparePeriodKickoff(overtimeReceiver);
-                alert('End of regulation - the score is tied, heading to overtime!');
+                self.ShowGameAlert('End of regulation - the score is tied, heading to overtime!', {
+                    title: 'End of Regulation',
+                    tone: 'quarter'
+                });
             }
             else {
                 self.gameOver(true);
                 sim.addCompletedGameToHistory();
-                alert('Game Over! Final Score: ' + self.homeTeamInfo().teamName() + ' ' + self.homeTeamScore() +
-                    ' - ' + self.awayTeamInfo().teamName() + ' ' + self.awayTeamScore());
+                self.ShowGameAlert('Final Score: ' + self.homeTeamInfo().teamName() + ' ' + self.homeTeamScore() +
+                    ' - ' + self.awayTeamInfo().teamName() + ' ' + self.awayTeamScore(), {
+                    title: 'Game Over',
+                    tone: 'final'
+                });
             }
         }
         else if (endingQuarter >= 5) {
             self.gameOver(true);
             sim.addCompletedGameToHistory();
-            alert('Game Over! Final Score: ' + self.homeTeamInfo().teamName() + ' ' + self.homeTeamScore() +
-                ' - ' + self.awayTeamInfo().teamName() + ' ' + self.awayTeamScore());
+            self.ShowGameAlert('Final Score: ' + self.homeTeamInfo().teamName() + ' ' + self.homeTeamScore() +
+                ' - ' + self.awayTeamInfo().teamName() + ' ' + self.awayTeamScore(), {
+                title: 'Game Over',
+                tone: 'final'
+            });
         }
         else {
-            alert('End of the ' + UTILITIES.getNumberWithEnding(self.currentQuarter() - 1) + ' quarter');
-            self.StopCounter(); //the quarter break is an administrative stoppage - the clock stays stopped until the next snap
-            self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT); //next snap only gets 25 seconds
+            //the quarter break is an administrative stoppage - the clock stays stopped until the next snap, and
+            //the play clock only restarts once the dialog is dismissed so the next snap still gets its full 25 seconds
+            self.ShowGameAlert('End of the ' + UTILITIES.getNumberWithEnding(endingQuarter) + ' quarter', {
+                title: 'End of the ' + UTILITIES.getNumberWithEnding(endingQuarter) + ' Quarter',
+                tone: 'quarter',
+                onDismiss: function () {
+                    self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT);
+                }
+            });
         }
     };
     self.PreparePeriodKickoff = function (receivingTeam) {
@@ -254,14 +298,20 @@
             return;
 
         if (self.lastTimeoutTeam() === teamId) {
-            alert('The same team cannot call back-to-back timeouts.');
+            self.ShowGameAlert('The same team cannot call back-to-back timeouts.', {
+                title: 'Timeout Not Allowed',
+                tone: 'warning'
+            });
             return;
         }
 
         let timeoutsRemaining = teamId === self.homeTeamID() ? self.homeTeamTimeOuts() : self.awayTeamTimeOuts();
 
         if (timeoutsRemaining <= 0) {
-            alert('No Timeouts Remaining');
+            self.ShowGameAlert('No Timeouts Remaining', {
+                title: 'No Timeouts Remaining',
+                tone: 'warning'
+            });
             return;
         }
 
@@ -273,6 +323,10 @@
         self.lastTimeoutTeam(teamId);
         self.StopCounter(); //timeout stops the clock until the next snap
         self.StartPlayClock(MODULES.Constants.PLAY_CLOCK_SHORT); //administrative stoppage - next snap only gets 25 seconds
+        self.ShowGameAlert('Timeout Called', {
+            title: HELPERS.getTeamInfo(teamId).teamName() + ' called a Timeout, they have ' + (timeoutsRemaining - 1) + ' remaining.',
+            tone: 'info'
+        });
     };
     self.CallHomeTimeout = function () {
         self.CallTeamTimeout(self.homeTeamID());

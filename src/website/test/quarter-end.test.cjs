@@ -20,9 +20,9 @@ function observable(initialValue) {
 
 test('quarter expiration waits until the point-after try is complete', () => {
     const context = {
-        alert() {},
-        clearInterval() {},
         console: { log() {} },
+        ShowGameAlert() {},
+        clearInterval() {},
         jQuery: {},
         setInterval() { return 1; },
         MODULES: {
