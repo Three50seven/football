@@ -41,16 +41,22 @@ function createBallPositionContext(state = {}) {
 
     context.homeTeamID = observable(10);
     context.awayTeamID = observable(20);
-    context.currentTeamWithBall = observable(state.teamWithBall ?? 10);
     context.showKickoffControls = observable(state.showKickoffControls ?? false);
     context.pointAttemptAfterTouchDown = observable(state.pointAttemptAfterTouchDown ?? false);
+    //the kick flags live in kickoff.model.js, but ballSpot guards them with typeof checks, so mirror that shape
+    context.isExtraPointKick = observable(state.isExtraPointKick ?? false);
+    context.isTwoPointConversion = observable(state.isTwoPointConversion ?? false);
     context.pointAttemptTeamId = state.pointAttemptTeamId ?? 0;
 
     vm.createContext(context);
     vm.runInContext(helperSource, context);
     vm.runInContext(ballPositionSource, context);
 
-    //ballSpotStart/yardsTraveled/yardsToFirst are created by the model itself, so seed them after it has run
+    //currentTeamWithBall is created by the model itself as ko.observable(0), so seed it after the script has run -
+    //setting it beforehand would just be overwritten
+    context.currentTeamWithBall(state.teamWithBall ?? 10);
+
+    //as are the ball position observables
     context.ballSpotStart(state.ballSpotStart ?? 20);
     context.yardsTraveled(state.yardsTraveled ?? 0);
     context.yardsToFirst(state.yardsToFirst ?? 10);
@@ -226,4 +232,62 @@ test('the line to gain is hidden for a point after attempt', () => {
 
     assert.equal(context.showLineToGain(), false);
     assert.equal(context.lineToGainX(), null);
+});
+
+test('a stale point attempt team does not flip the home offense to the away side', () => {
+    //pointAttemptTeamId is set on a touchdown and only cleared by a game reset, so it stays set for the rest of
+    //the game. The line must still follow the team actually holding the ball, not the team that last scored.
+    const context = createBallPositionContext({
+        teamWithBall: 10, //home offense, attacking right
+        pointAttemptTeamId: 20, //away team scored earlier and never cleared this
+        isExtraPointKick: false,
+        isTwoPointConversion: false,
+        ballSpotStart: 20
+    });
+
+    //home works right: ball at x=56, sticks 10 yards further right at x=74
+    assert.equal(context.lineToGainProgress(), 30);
+    assert.equal(context.lineToGainX(), 74);
+});
+
+test('a stale point attempt team does not flip the away offense to the home side', () => {
+    const context = createBallPositionContext({
+        teamWithBall: 20, //away offense, attacking left
+        pointAttemptTeamId: 10, //home team scored earlier and never cleared this
+        isExtraPointKick: false,
+        isTwoPointConversion: false,
+        ballSpotStart: 20
+    });
+
+    //away works left: ball at x=164, sticks 10 yards further left at x=146
+    assert.equal(context.lineToGainX(), 146);
+});
+
+test('an active point attempt still follows the kicking team', () => {
+    //a two point conversion is an active point attempt, so the ball - and the line - follow the kicking team
+    const context = createBallPositionContext({
+        teamWithBall: 10,
+        pointAttemptTeamId: 20,
+        isTwoPointConversion: true,
+        ballSpotStart: 98,
+        yardsToFirst: 2
+    });
+
+    //the two point spot is the goal line itself, so there is no separate line to gain to draw
+    assert.equal(context.lineToGainProgress(), null);
+    assert.equal(context.lineToGainX(), null);
+});
+
+test('the line to gain follows a real point attempt that still has a line to gain', () => {
+    const context = createBallPositionContext({
+        teamWithBall: 10,
+        pointAttemptTeamId: 20, //away team is kicking, so it lines up facing left
+        isExtraPointKick: true,
+        ballSpotStart: 85,
+        yardsToFirst: 3
+    });
+
+    assert.equal(context.lineToGainProgress(), 88);
+    //an active extra point follows the kicking team (away), so it is mirrored to x=200-88*1.8
+    assert.equal(context.lineToGainX(), 200 - (88 * 1.8));
 });

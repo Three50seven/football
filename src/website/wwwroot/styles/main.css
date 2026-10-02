@@ -1548,9 +1548,43 @@ input[type="submit"].btn-default:hover {
     stroke-width: 1;
 }
 /*Faint yellow marker showing the line the offense has to reach for a new set of downs.
+    Drawn as two stacked lines: a faint dark halo underneath the yellow stripe. Without the halo the yellow
+    dashes disappear whenever the marker lands exactly on a white yard line, and yellow against white is the
+    worst possible pairing for red-green colour blindness - so the halo supplies the contrast instead of the hue.
+    The halo dashes run slightly longer so a dark edge shows at both ends of every dash.
     Matches the 0.45s ball movement so the line slides into place alongside the ball.*/
-.field-line-to-gain {
-    stroke: rgba(255, 221, 87, 0.55);
+/*Faint blue line of scrimmage marking the spot of the ball.
+    Uses the same two-line halo treatment as the line to gain, for the same reason: a faint tint alone disappears
+    against a white yard line, and the halo supplies the contrast instead of the hue. The dashes are tighter than
+    the line to gain's so the two markers stay distinguishable when they coincide on 1st down.
+    Matches the 0.45s ball movement so the line slides into place alongside the ball.*/
+.field-line-of-scrimmage-halo {
+    fill: none;
+    stroke: rgba(14, 26, 48, 0.5);
+    stroke-width: 2.4;
+    stroke-dasharray: 1.9 1.7;
+    transition: x1 0.45s ease, x2 0.45s ease;
+}
+
+.field-line-of-scrimmage-stripe {
+    fill: none;
+    stroke: rgba(140, 190, 255, 0.7);
+    stroke-width: 1;
+    stroke-dasharray: 1.2 1.2;
+    transition: x1 0.45s ease, x2 0.45s ease;
+}
+
+.field-line-to-gain-halo {
+    fill: none;
+    stroke: rgba(20, 40, 26, 0.5);
+    stroke-width: 2.6;
+    stroke-dasharray: 3.1 1.9;
+    transition: x1 0.45s ease, x2 0.45s ease;
+}
+
+.field-line-to-gain-stripe {
+    fill: none;
+    stroke: rgba(255, 221, 87, 0.75);
     stroke-width: 1;
     stroke-dasharray: 2.5 1.5;
     transition: x1 0.45s ease, x2 0.45s ease;
