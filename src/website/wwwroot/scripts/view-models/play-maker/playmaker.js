@@ -1046,6 +1046,14 @@ var playMaker = {
         //now record stats for this play
         this.recordGameStats(team, thisPlaysResult);
 
+        //show alert for 4th down
+        if (self.currentDown() === 4) {
+            self.ShowGameAlert('4th Down', {
+                title: '4th Down',
+                tone: 'warning'
+            });
+        }
+
         //the play is fully displayed and logged now, so announce any quarter/two-minute stoppage it crossed
         playMaker.completePlayPeriodAlerts();
     },
