@@ -25,15 +25,19 @@
                     <button class="btn-default btn-default-small" data-bind="click: SimGame, visible: gameStarted() && !gameOver()">Sim Remaining Game</button>
                     <button class="btn-default btn-default-small" data-bind="click: ResetGameForCoinToss, visible: gameOver">Start New Game</button>
                 </div>
-                <div class="team-images">
-                    <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0"/>
-                </div>
-                <div class="team-images" data-bind="visible: awayTeamID() > 0 && homeTeamID() > 0">
-                    at
-                </div>
-                <div class="team-images">
-                    <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
-                </div>                
+                <div class="team-images-container">
+                    <div class="team-images" data-bind="visible: awayTeamID() > 0">
+                        <span data-bind="text: awayTeamInfo().teamAbbreviation"></span>
+                        <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}"/>
+                    </div>
+                    <div class="team-images" data-bind="visible: awayTeamID() > 0 && homeTeamID() > 0">
+                        at
+                    </div>
+                    <div class="team-images" data-bind="visible: homeTeamID() > 0">
+                        <span data-bind="text: homeTeamInfo().teamAbbreviation"></span>
+                        <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}"/>
+                    </div>
+                </div>            
             </div>
             <!--END of div header-->
             <div id="body">

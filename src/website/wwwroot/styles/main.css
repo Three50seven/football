@@ -1718,22 +1718,37 @@ input[type="submit"].btn-default:hover {
     transform: none;
 }
 
-.team-images { float: none; flex: 0 0 auto; }
-
-.team-images-container {
-    float: right;
-    padding: 10px;
+/* Header team logos: away logo, the "at" label, home logo.
+   They sit between the title and the header actions.  .header-text and
+   .header-actions each take an equal slice of the leftover header width, so
+   this group lands dead centre at the top of the page no matter how wide the
+   title or the buttons are.  Margins supply the spacing between the three
+   pieces (floats are ignored on flex items). */
+.team-images {
+    float: none;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    margin: 4px 8px;
 }
 
-.team-images {
-    float: right;
+.team-images-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: balance;
+}
+
+.header-text {
+    flex: 1 1 0;
 }
 
 .header-actions {
     display: flex;
     order: 2;
+    flex: 1 1 0;
     gap: 8px;
-    margin-left: auto;
+    justify-content: flex-end;
 }
 
 .dice-results {
@@ -1782,8 +1797,12 @@ input[type="submit"].btn-default:hover {
 
 @media (max-width: 760px) {
     #header { flex-wrap: wrap; }
-    .header-actions { order: 3; width: 100%; margin: 8px 0 0; }
+    .header-text { flex: 0 0 auto; }
+    /* Buttons drop to their own row; the logos centre on the title row. */
+    .header-actions { order: 3; flex: 0 0 100%; width: 100%; margin: 8px 0 0; }
     .header-actions .btn-default { flex: 1; }
+    .header-actions + .team-images { margin-left: auto; }
+    .team-images:last-child { margin-right: auto; }
     #diceValues { flex-direction: row; align-items: center; }     
 }
 
