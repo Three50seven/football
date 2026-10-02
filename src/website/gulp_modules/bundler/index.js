@@ -1,6 +1,7 @@
 ﻿"use strict";
 
 const { src, dest, series } = require("gulp");
+const fs = require("fs");
 
 let concat = require("gulp-concat"),
     cleanCss = require("gulp-clean-css"),
@@ -220,6 +221,48 @@ function BuildBundleTasks(bundles, basePath, newerOnly) {
     return bundleTasks;
 }
 
+// gulp.src() walks a glob's base directory with fs.readdir(), so globbing a
+// directory that does not exist fails with
+// "ENOENT: no such file or directory, scandir '<dir>'" - and the 'allowEmpty'
+// option does NOT suppress that (it only covers singular globs that match
+// nothing). The output directories are git-ignored (see .gitignore), so they are
+// missing entirely on a fresh checkout, which is how CI/Netlify builds this
+// project. Create them up-front instead of relying on a previous bundle step
+// having happened to write into them.
+function EnsureOutputDirectories(basePath, outputDirectories) {
+    for (let ext in outputDirectories) {
+        if (!outputDirectories.hasOwnProperty(ext)) {
+            continue;
+        }
+
+        let dir = path.join(basePath, outputDirectories[ext]);
+        fs.mkdirSync(dir, { recursive: true });
+        Log("Output directory ready: " + dir);
+    }
+}
+
+// Every bundle that is expected to write a file must have written it by the time
+// the build moves on. A bundle that silently produced nothing used to surface as
+// a confusing 'scandir' error in whichever step happened to run next.
+function FindMissingBundleOutputs(bundles) {
+    let missing = [];
+
+    for (let i = 0; i < bundles.length; i++) {
+        let bundle = bundles[i];
+
+        if (bundle.ReferenceOnly && !bundle.StaticOutputPath) {
+            // nothing is written for this bundle - it is only referenced
+            continue;
+        }
+
+        if (!fs.existsSync(bundle.OutputPath)) {
+            missing.push(bundle.Name + " -> " + bundle.OutputPath);
+        }
+    }
+
+    return missing;
+}
+
 function Log(message) {
     if (logEnabled) {
         console.log(message);
@@ -269,10 +312,26 @@ function PerformBundleProcess(options, onComplete) {
         return new Bundle(item, options.bundlingSettings, options.basePath);
     });
 
+    EnsureOutputDirectories(options.basePath, options.bundlingSettings.OutputDirectories);
+
     let bundleTasks = BuildBundleTasks(bundles, options.basePath, ToBool(options.newerOnly));
     for (let i = 0; i < bundleTasks.length; i++) {
         tasks.push(bundleTasks[i]);
     }
+
+    tasks.push(function VerifyBundleOutputs(next) {
+        let missing = FindMissingBundleOutputs(bundles);
+
+        if (missing.length) {
+            return next(new PluginError(PLUGIN_NAME,
+                "Bundling completed without producing these expected output file(s):\r\n - " + missing.join("\r\n - ")));
+        }
+
+        Log("** All expected bundle output files were created **");
+
+        if (next)
+            next();
+    });
 
     if (options.compileES5 === true) {
         let appJsSubFolders = ["/modules", "/viewmodels"];
@@ -283,7 +342,7 @@ function PerformBundleProcess(options, onComplete) {
                 Log("Babel for folder '" + appJsSubFolders[i] + "'...");
                 let dir = path.join(options.basePath, options.bundlingSettings.OutputDirectories["js"], appJsSubFolders[i]);
 
-                src(dir + '/**/*.js')
+                src(dir + '/**/*.js', { allowEmpty: true })
                     .pipe(babel({
                         "presets": [
                             [
@@ -314,7 +373,7 @@ function PerformBundleProcess(options, onComplete) {
             let dir = path.join(options.basePath, options.bundlingSettings.OutputDirectories["css"]);
             Log("** Minifying CSS Files **");
 
-            src(dir + "/**/*.min.css")
+            src(dir + "/**/*.min.css", { allowEmpty: true })
                 .pipe(cleanCss())
                 .pipe(dest(dir))
                 .on("end", function () {
@@ -330,7 +389,7 @@ function PerformBundleProcess(options, onComplete) {
             let dir = path.join(options.basePath, options.bundlingSettings.OutputDirectories["js"]);
             Log("** Minifying JS Files **");
 
-            src(dir + "/**/*.js")
+            src(dir + "/**/*.js", { allowEmpty: true })
                 .pipe(terser())
                 .pipe(dest(dir))
                 .on("end", function () {

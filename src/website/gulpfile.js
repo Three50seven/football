@@ -10,10 +10,13 @@ let bundler = require("./gulp_modules/bundler"),
     transformer = require("json-config-transform");
 
 function Clean() {
-  return cleaner({
+  // the cleaner module is synchronous and returns nothing, so wrap it in a
+  // promise - otherwise gulp reports "Did you forget to signal async completion?"
+  // and aborts the rest of the task chain.
+  return Promise.resolve(cleaner({
     basePath: "./wwwroot/",
     directories: ["content/js", "content/css"]
-  });
+  }));
 }
 
 function BundleAssets(options, onComplete) {
