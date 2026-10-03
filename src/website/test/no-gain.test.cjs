@@ -29,6 +29,11 @@ function createPlayContext(options = {}) {
     const $ = function () { return { val: () => '', text: () => {}, length: 0, css: () => $(), removeClass: () => $(), addClass: () => $(), outerWidth: () => 0 }; };
     $.grep = (arr, predicate) => arr.filter(predicate);
 
+    //a scoring play looks its team up with HELPERS.getTeamInfo(). This list stays empty because these tests
+    //drive the play logic, not the toast a found team would kick off: with no match getTeamInfo returns
+    //undefined and playmaker.js skips the toast, just like the real code does before any teams are picked.
+    const teams = [];
+
     const context = {
         console: { log() {} },
         ShowGameAlert() {},
@@ -40,13 +45,15 @@ function createPlayContext(options = {}) {
                 if (runYards <= 0 || distanceToGoalLine < 0)
                     return runYards;
                 return runYards > distanceToGoalLine ? distanceToGoalLine : runYards;
-            }
+            },
+            //mirrors game.helpers.js: a grep over the game variables' team list
+            getTeamInfo: (teamId) => $.grep(teams, (team) => team.teamId === teamId)[0]
         },
         UTILITIES: {
             getRandomInt: (min, max) => Math.floor(Math.random() * (max - min + 1) + min),
             splitAndTitleCase: (str) => str.charAt(0).toUpperCase() + str.slice(1)
         },
-        MODULES: { GameVariables: { DiceSumTotal: options.diceSum ?? 5, Teams: [] } },
+        MODULES: { GameVariables: { DiceSumTotal: options.diceSum ?? 5, Teams: teams } },
         playMaker: null
     };
     context.self = context;

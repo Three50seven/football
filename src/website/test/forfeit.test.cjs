@@ -37,8 +37,15 @@ function observableArray(initial = []) {
 // NOTE: like the browser, `self` IS the global object, because every model IIFE does `var self = this`
 // (which is the global object) and the code in playmaker.js reads/writes through that shared `self`.
 function createGame(options = {}) {
-    const homeInfo = { teamName: () => 'HOME' };
-    const awayInfo = { teamName: () => 'AWAY' };
+    //the team records carry a teamId because forfeitGame() decides who wins by comparing
+    //homeTeamInfo()/awayTeamInfo()'s teamId against homeTeamID(), and it looks the offending team up
+    //with HELPERS.getTeamInfo() out of this same list - exactly like the real game variables do.
+    const teams = [
+        { teamId: 10, teamName: () => 'HOME' },
+        { teamId: 20, teamName: () => 'AWAY' }
+    ];
+    const homeInfo = teams[0];
+    const awayInfo = teams[1];
 
     const $ = function () { return { val: () => '', text: () => {} }; };
     $.grep = function (arr, predicate) {
@@ -54,12 +61,16 @@ function createGame(options = {}) {
         ko: { observable, observableArray },
         $,
         jQuery: $,
+        HELPERS: {
+            //mirrors game.helpers.js: a grep over the game variables' team list
+            getTeamInfo: (teamId) => $.grep(teams, (team) => team.teamId === teamId)[0]
+        },
         UTILITIES: {
             getFullTeamName: (teamName) => teamName,
             getTeamImagePath: () => 'image.png',
             getTimeDisplay: (seconds) => String(seconds)
         },
-        MODULES: { Constructors: {}, Constants: { PLAY_CLOCK_NORMAL: 40, PLAY_CLOCK_SHORT: 25 }, GameVariables: {} },
+        MODULES: { Constructors: {}, Constants: { PLAY_CLOCK_NORMAL: 40, PLAY_CLOCK_SHORT: 25 }, GameVariables: { Teams: teams } },
         GAME_PLAY_TYPES: {},
         SCORE_TYPES: {},
         KICKOFF_TYPES: {},

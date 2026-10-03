@@ -79,8 +79,8 @@ function CopyProjectFiles(source, destination) {
  * Asset pipeline
  *
  * Source:
- *   wwwroot/styles/**/*.css
- *   wwwroot/scripts/**/*.js
+ *   wwwroot/styles/**//*.css
+ *   wwwroot/scripts/**//*.js
  *
  * The bundler is responsible for combining and minifying
  * the CSS and JavaScript according to the Bundling configuration

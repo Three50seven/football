@@ -393,15 +393,15 @@ function PerformBundleProcess(options, onComplete) {
                 dir + "/**/*.js",
                 "!" + dir + "/**/*.min.js"
             ], { allowEmpty: true })
-                .pipe(terser())
-                .pipe(dest(dir))
-                .on("end", function () {
-                    Log("** JS Files Minified **");
+            .pipe(terser())
+            .pipe(dest(dir))
+            .on("end", function () {
+                Log("** JS Files Minified **");
 
-                    // call next step for async logic
-                    if (next)
-                        next();
-                });
+                // call next step for async logic
+                if (next)
+                    next();
+            });
         });
     }
 
