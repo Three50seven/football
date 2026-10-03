@@ -389,7 +389,10 @@ function PerformBundleProcess(options, onComplete) {
             let dir = path.join(options.basePath, options.bundlingSettings.OutputDirectories["js"]);
             Log("** Minifying JS Files **");
 
-            src(dir + "/**/*.js", { allowEmpty: true })
+            src([
+                dir + "/**/*.js",
+                "!" + dir + "/**/*.min.js"
+            ], { allowEmpty: true })
                 .pipe(terser())
                 .pipe(dest(dir))
                 .on("end", function () {
