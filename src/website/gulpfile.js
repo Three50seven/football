@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const { src, dest, watch, series } = require("gulp");
+const sass = require("gulp-sass")(require("sass"));
 
 let bundler = require("./gulp_modules/bundler"),
     cleaner = require("./gulp_modules/cleaner"),
@@ -17,6 +18,13 @@ function Clean() {
     basePath: "./wwwroot/",
     directories: ["content/js", "content/css"]
   }));
+}
+
+function CompileSass() {
+  console.log(" **** Compiling Sass ****");
+  return src("./sass/**/*.scss")
+    .pipe(sass({ outputStyle: "compressed" }).on("error", sass.logError))
+    .pipe(dest("./styles"));
 }
 
 function BundleAssets(options, onComplete) {
@@ -52,6 +60,7 @@ function CopyProjectFiles(source, destination) {
 }
 
 const DeployAssetFiles = series(
+    CompileSass,
     (onComplete) => BundleAssets({}, onComplete),
     () => CopyProjectFiles(
         "./wwwroot/scripts/Lib/Minified/**",
