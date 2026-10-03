@@ -92,8 +92,19 @@ function Bundle(config, bundlingSettings, outputBasePath) {
 
     this.OutputPath = _outputPath;
 
+    //gulp-concat builds its output file with path.join(file.base, target), and path.join APPENDS an
+    //absolute target to the base instead of replacing it. src() sets file.base to the cwd, so handing
+    //concat this absolute path doubled it: on Linux every bundle was written to a nested copy of the
+    //project tree (src/website/opt/build/repo/src/website/wwwroot/...) instead of wwwroot/content/**, and
+    //nothing failed loudly. Windows survived by accident - path.win32.relative/resolve turn the doubled
+    //path back into a drive-absolute one - which is why this only ever showed up on the CI build.
+    //Hand gulp-concat a cwd-relative target so every platform resolves it the same way. dest(".")
+    //then lands correctly, because vinyl-fs resolves the write path as path.resolve(cwd, file.relative)
+    //and file.relative is derived from that same (now correct) file.path.
+    this.OutputPathRelative = path.relative(process.cwd(), _outputPath);
+
     this.Concat = function () {
-        return concat(this.OutputPath);
+        return concat(this.OutputPathRelative);
     };
 
     // any custom properties found on in the json config for this bundle
@@ -419,3 +430,7 @@ function PerformBundleProcess(options, onComplete) {
 }
 
 module.exports = PerformBundleProcess;
+
+//exported so the path handling above can be regression tested - a bundle's output location is only
+//observable from outside the bundling process, and getting it wrong fails silently on CI.
+module.exports.Bundle = Bundle;
