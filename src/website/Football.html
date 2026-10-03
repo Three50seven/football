@@ -25,15 +25,19 @@
                     <button class="btn-default btn-default-small" data-bind="click: SimGame, visible: gameStarted() && !gameOver()">Sim Remaining Game</button>
                     <button class="btn-default btn-default-small" data-bind="click: ResetGameForCoinToss, visible: gameOver">Start New Game</button>
                 </div>
-                <div class="team-images">
-                    <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}, visible: awayTeamID() > 0"/>
-                </div>
-                <div class="team-images" data-bind="visible: awayTeamID() > 0 && homeTeamID() > 0">
-                    at
-                </div>
-                <div class="team-images">
-                    <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}, visible: homeTeamID() > 0"/>
-                </div>                
+                <div class="team-images-container">
+                    <div class="team-images" data-bind="visible: awayTeamID() > 0">
+                        <span data-bind="text: awayTeamInfo().teamAbbreviation"></span>
+                        <img class="team-select-img" data-bind="attr:{src: awayTeamInfo().teamImage()}"/>
+                    </div>
+                    <div class="team-images" data-bind="visible: awayTeamID() > 0 && homeTeamID() > 0">
+                        at
+                    </div>
+                    <div class="team-images" data-bind="visible: homeTeamID() > 0">
+                        <span data-bind="text: homeTeamInfo().teamAbbreviation"></span>
+                        <img class="team-select-img" data-bind="attr:{src: homeTeamInfo().teamImage()}"/>
+                    </div>
+                </div>            
             </div>
             <!--END of div header-->
             <div id="body">
@@ -293,6 +297,26 @@
                                             <path d="M 22 48 V 55"></path>
                                             <path d="M 198 48 V 55"></path>
                                         </g>
+                                        <!--LINE OF SCRIMMAGE: the spot of the ball itself. Same stacked halo + stripe treatment as the line to gain,
+                                            for the same reason - a faint tint vanishes against a white yard line.
+                                            Drawn first so the yellow line to gain paints over it when the two
+                                            coincide (which is every 1st down).-->
+                                        <g id="line-of-scrimmage" class="field-line-of-scrimmage">
+                                            <line class="field-line-of-scrimmage-halo" x1="110" y1="4" x2="110" y2="99"
+                                                data-bind="attr: { x1: lineOfScrimmageX(), x2: lineOfScrimmageX() }"></line>
+                                            <line class="field-line-of-scrimmage-stripe" x1="110" y1="4" x2="110" y2="99"
+                                                data-bind="attr: { x1: lineOfScrimmageX(), x2: lineOfScrimmageX() }"></line>
+                                        </g>
+                                        <!--LINE TO GAIN: bound to lineToGainX(), so it follows the ball and reappears on its own right after a
+                                            kickoff, once the receiving team is set up at 1st & 10 with no positive yards.
+                                            Two identical lines are stacked - a very faint dark halo underneath the yellow -
+                                            so the marker still reads when it lands exactly on a white yard line.-->
+                                        <g id="line-to-gain" class="field-line-to-gain" data-bind="visible: showLineToGain()">
+                                            <line class="field-line-to-gain-halo" x1="110" y1="4" x2="110" y2="99"
+                                                data-bind="attr: { x1: lineToGainX(), x2: lineToGainX() }"></line>
+                                            <line class="field-line-to-gain-stripe" x1="110" y1="4" x2="110" y2="99"
+                                                data-bind="attr: { x1: lineToGainX(), x2: lineToGainX() }"></line>
+                                        </g>
                                         <g class="field-numbers">
                                             <text x="38" y="25">10</text><text x="56" y="25">20</text><text x="74" y="25">30</text><text x="92" y="25">40</text><text x="110" y="25">50</text>
                                             <text x="128" y="25">40</text><text x="146" y="25">30</text><text x="164" y="25">20</text><text x="182" y="25">10</text>
@@ -336,23 +360,23 @@
                             <div id="currentQuarter" class="white" data-bind="text: currentQuarterDisplay()"></div>
                             <div id="timeRemainingInQuarter" class="gold">
                                 <span data-bind="text: remainingTimeDisplay"></span>
-                                <span id="playClock" data-bind="visible: !showKickoffControls() && !pointAttemptAfterTouchDown(), text: playClockDisplay()"></span>
+                                <span id="playClock" class="playclock" data-bind="visible: !showKickoffControls() && !pointAttemptAfterTouchDown(), text: playClockDisplay()"></span>
                             </div>
                             <div id="currentBallSpot" class="white">
                                 <span id="currentDown" data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></span>
                                 <span data-bind="text: HELPERS.getYardText()"></span>
-                            </div>
-                            <p class="last-play-container">
-                                <span class="last-play-kicker">Last play</span>
-                                <span class="last-play-summary">
-                                    <img id="lastPlayTeamIcon" class="last-play-team-icon" alt="" />
-                                    <span id="lastPlayTeamName" class="last-play-team-name"></span>
-                                    <span id="lastPlaySeparator" class="last-play-separator">-</span>
-                                    <span id="playResult">0</span>
-                                </span>
-                            </p>
-                        </div>
+                            </div>                            
+                        </div>                        
                     </div>
+                    <p class="last-play-container">
+                        <span class="last-play-kicker">Last play</span>
+                        <span class="last-play-summary">
+                            <img id="lastPlayTeamIcon" class="last-play-team-icon" alt="" />
+                            <span id="lastPlayTeamName" class="last-play-team-name"></span>
+                            <span id="lastPlaySeparator" class="last-play-separator">-</span>
+                            <span id="playResult">0</span>
+                        </span>
+                    </p>
                     <div id="pauseOverlay" data-bind="visible: isGamePaused">
                         <div class="pause-dialog" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
                             <h2 id="pauseTitle">Game Paused</h2>
@@ -369,7 +393,7 @@
                                 <div>
                                     <span data-bind="text: currentQuarterDisplay"></span>
                                     <span data-bind="text: remainingTimeDisplay"></span>
-                                    <span class="gold" data-bind="text: playClockDisplay"></span>
+                                    <span class="playclock" data-bind="text: playClockDisplay"></span>
                                 </div>
                                 <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
                                 <div data-bind="text: HELPERS.getYardText()"></div>
@@ -426,7 +450,7 @@
                         </div>
                     </div>                
                     <div id="kickoffPlays" data-bind="visible:showKickoffControls() && !gameOver()">
-                        <p class="kick-panel-hint">Tap <strong>Lock</strong> (or the meter itself) to stop each slider and set the power and angle of the kick.</p>
+                        <p class="kick-panel-hint">Tap <strong>Lock</strong> to stop each slider and set the power and angle of the kick.</p>
 
                         <div class="kick-type-toggle" role="radiogroup" aria-label="Kick type" data-bind="visible: isKickoff">
                             <label class="kick-type-option">
@@ -440,7 +464,7 @@
                         </div>
 
                         <div class="kick-meters">
-                            <div class="kick-meter" id="kickPowerMeter">
+                            <div class="kick-meter" id="kickPowerMeter" data-bind="visible: showKickoffPowerSelection()">
                                 <div class="kick-meter-head">
                                     <span class="kick-meter-label">Power</span>
                                     <span class="kick-meter-value" id="kickoffPowerSelected" aria-live="polite"></span>
@@ -454,7 +478,7 @@
                                 <span class="smaller">Higher power kicks deeper &mdash; a lower value gives the returner a chance.</span>
                             </div>
 
-                            <div class="kick-meter" id="kickAngleMeter">
+                            <div class="kick-meter" id="kickAngleMeter" data-bind="visible: showKickoffAngleSelection()">
                                 <div class="kick-meter-head">
                                     <span class="kick-meter-label">Angle</span>
                                     <span class="kick-meter-value" id="kickoffAngleSelected" aria-live="polite"></span>
@@ -470,12 +494,20 @@
                             </div>
                         </div>
 
-                        <button type="button" class="btn-default kick-go-button" data-bind="click: Kickoff">
-                            <span data-bind="visible: isKickoff">Kickoff</span>
-                            <span data-bind="visible: isSafety">Kickoff</span>
-                            <span data-bind="visible: isPunt">Punt</span>
-                            <span data-bind="visible: isFieldGoal">Field Goal</span>
-                            <span data-bind="visible: isExtraPointKick">Kick Extra Point</span>
+                        <!-- Compact recap so the locked-in selection stays visible after each meter is dismissed. -->
+                        <div class="kick-summary" role="status" aria-live="polite" data-bind="visible: kickoffPower() >= 0 || kickoffAngle() >= 0">
+                            <span class="kick-summary-item" data-bind="visible: kickoffPower() >= 0, class: kickoffPowerTemperatureClass()">
+                                <span class="kick-summary-label">Power</span>
+                                <span class="kick-summary-value" data-bind="text: kickoffPower()"></span>
+                            </span>
+                            <span class="kick-summary-item" data-bind="visible: kickoffAngle() >= 0, class: kickoffAngleTemperatureClass()">
+                                <span class="kick-summary-label">Angle</span>
+                                <span class="kick-summary-value" data-bind="text: kickoffAngle()"></span>
+                            </span>
+                        </div>
+
+                        <button id="btn-kickoff" type="button" class="btn-default kick-go-button" data-bind="click: Kickoff">
+                            <span data-bind="text: kickoffButtonText()"></span>
                         </button>
                     </div>
                     <div id="mainPlaySelection" data-bind="visible:!showKickoffControls() && !gameOver()" style="text-align: center;">
@@ -687,6 +719,19 @@
                         </div>
                     </div>
                 </div>        
+<!--Alert modal: a calmer, in-page replacement for the native alert(). The tone is set by
+                    ShowGameAlert(options.tone) and drives the dialog accent via gameAlertToneClass. OK, a click on
+                    the backdrop, Enter and Escape all dismiss it. Deliberately a direct child of #body rather than a
+                    child of #game-main-container, which is hidden until the game starts - team selection raises
+                    alerts too, and a dialog inside a display:none container can never be seen or dismissed.-->
+                <div id="alertOverlay" data-bind="visible: gameAlertIsOpen, event: { click: DismissGameAlert }">
+                    <div class="alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="gameAlertTitle" aria-describedby="gameAlertMessage"
+                        data-bind="css: gameAlertToneClass, event: { keydown: gameAlertOnKeyDown, click: gameAlertOnDialogClick }">
+                        <h2 id="gameAlertTitle" data-bind="text: gameAlertTitle"></h2>
+                        <p id="gameAlertMessage" data-bind="text: gameAlertMessage"></p>
+                        <button type="button" id="gameAlertOkButton" class="btn-default" data-bind="click: DismissGameAlert, text: gameAlertButtonText"></button>
+                    </div>
+                </div>
             </div>
             <div id="footer">
                 Copyright Note: All images and logos belong to the NFL - this is just

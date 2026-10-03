@@ -26,13 +26,16 @@ MODULES.Constructors = (function () {
             this.totalScore = totalScore;
             this.teamImagePath = UTILITIES.getTeamImagePath(this.teamId);
         },
-        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '') {
+        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '', stopsGameClock = false, deadBallStopsClock = false, noPlayTime = false) {
             this.yards = yards;
             this.playResultText = playText;
             this.isTurnover = isTurnover;
             this.playType = playType;
             this.isFirstDown = isFirstDown;
             this.displayText = displayText;
+            this.stopsGameClock = stopsGameClock; //true when the ball went dead in a way that stops the game clock (an incompletion, a run out of bounds, etc.)
+            this.deadBallStopsClock = deadBallStopsClock; //true for special teams plays that went dead with the clock stopped (a touchback, a kickoff penalty, a recovered onside kick, a muffled punt)
+            this.noPlayTime = noPlayTime; //true when the play consumed no play time at all - a touchback or a kick out of bounds, where the ball never came live
         },
         PlayHistory: function (playId, teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession, score, gameClock) {
             this.playId = playId;
@@ -50,11 +53,12 @@ MODULES.Constructors = (function () {
             this.gameClock = gameClock;
             this.fullTeamName = UTILITIES.getFullTeamName(this.teamName, this.teamId);
         },
-        TeamArrayRecord: function (teamId, teamColor, teamCity, teamMascot) {
+        TeamArrayRecord: function (teamId, teamColor, teamCity, teamMascot, teamAbbreviation) {
             this.teamId = teamId;
             this.teamColor = teamColor;
             this.teamCity = teamCity;
             this.teamMascot = teamMascot;
+            this.teamAbbreviation = teamAbbreviation;
             this.teamCityAndName = function () {
                 if (!this.teamCity || !this.teamMascot)
                     return '';

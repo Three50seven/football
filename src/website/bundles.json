@@ -114,6 +114,7 @@
       "team-bundle",
       "field-bundle",
       "scripts/view-models/coin/coin.model.js",
+      "scripts/view-models/ui/alert.model.js",
       "scripts/view-models/timer/timer.model.js",
       "scripts/view-models/main.game.model.js",
       "game-stat-bundle",

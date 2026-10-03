@@ -14,56 +14,66 @@
 
         return yards;
     });
+    //currentTeamWithBall must be declared before the computeds below that read it, so the line to gain always
+    //resolves against a live observable rather than whatever happens to be on the global at that moment.
     self.currentTeamWithBall = ko.observable(0);
+
+    //Field progress (yards from the home goal line) of the line the offense must reach for a new set of downs.
+    //null means there is no line to draw - e.g. the offense is already first & goal and the goal line is the marker.
+    self.lineToGainProgress = ko.computed(function () {
+        return HELPERS.getLineToGainProgress(self.ballSpotStart(), self.yardsTraveled(), self.yardsToFirst());
+    });
+
+    //Special teams plays (kickoffs, punts, field goals) and point attempts have no down and distance to mark up.
+    //This is a computed so the line reappears the moment a kick finishes - resetKickoffFlags clears
+    //showKickoffControls right after SetBallPosition has already run, and the receiving team is then set up at
+    //1st & 10 with no positive yards gained yet.
+    self.showLineToGain = ko.computed(function () {
+        let onSpecialTeams = (typeof self.showKickoffControls === 'function' && self.showKickoffControls()) ||
+            (typeof self.pointAttemptAfterTouchDown === 'function' && self.pointAttemptAfterTouchDown());
+
+        return !onSpecialTeams && self.lineToGainProgress() !== null;
+    });
+
+    //true when the offense is the home team, which is what decides whether a spot is measured left to right or mirrored.
+    //Mirrors the direction ballSpot resolves, which needs BOTH the point attempt team and an active point attempt
+    //flag. pointAttemptTeamId is only ever cleared on a game reset, so testing it on its own would pin every later
+    //drive to whichever team last scored and put the home offense on the away side.
+    self.offenseIsHomeTeam = ko.computed(function () {
+        let isPointAttempt = self.pointAttemptTeamId &&
+            ((typeof self.isExtraPointKick === 'function' && self.isExtraPointKick()) ||
+                (typeof self.isTwoPointConversion === 'function' && self.isTwoPointConversion()));
+
+        return isPointAttempt
+            ? self.pointAttemptTeamId === self.homeTeamID()
+            : self.currentTeamWithBall() === self.homeTeamID();
+    });
+
+    //x offset on the field SVG for the line to gain, or null when there is no line to draw. Measured from the
+    //offense's OWN goal line, so the home team works right and the away team works left.
+    self.lineToGainX = ko.computed(function () {
+        //stay null whenever the line is hidden, so the bound x1/x2 are never left at a stale spot
+        if (!self.showLineToGain())
+            return null;
+
+        return HELPERS.getFieldXPosition(self.lineToGainProgress(), self.offenseIsHomeTeam());
+    });
+
+    //x offset for the line of scrimmage - the spot of the ball itself. Unlike the line to gain this is always drawn:
+    //the ball really does sit on this line for the next snap, including in the red zone and during special teams.
+    self.lineOfScrimmageX = ko.computed(function () {
+        //clamped like ballSpot, so a ball in an end zone still marks where it actually is
+        let fieldProgress = HELPERS.clampFieldProgress(self.ballSpotStart() + self.yardsTraveled());
+        return HELPERS.getFieldXPosition(fieldProgress, self.offenseIsHomeTeam());
+    });
+
     self.SetupKickoffBallSpot = function () {
         console.log('SETTING UP KICKOFF BALL SPOT');
         let extraPointKickActive = typeof self.isExtraPointKick === 'function' && self.isExtraPointKick();
         let kickoffActive = typeof self.isKickoff === 'function' && self.isKickoff();
         let safetyKickActive = typeof self.isSafety === 'function' && self.isSafety();
         console.log('isExtraPointKick: %s, isKickoff: %s, isSafety: %s', extraPointKickActive, kickoffActive, safetyKickActive);
-        //if (isExtraPointKick() || isKickoff() || isSafety()) {
-        //    //set spot depending on type of kick, default is normal kickoff
-        //    let spot = MODULES.Constants.KICKOFF_SPOT;
-
-        //    let kickingTeam = self.homeTeamID();
-
-        //    //if the team with ball is the home team, they are receiving, so set kicking team to away team
-        //    if (self.currentTeamWithBall() === self.homeTeamID()) {
-        //        kickingTeam = self.awayTeamID();
-        //    }                
-
-        //    //KICKOFF => if kicking team is away team, kick from right of field, otherwise kick from left of field (default)
-        //    //SAFETY => same side of field as KICKOFF, just use different kickoff spot
-        //    //EXTRA POINT => if kicking team is home team, kick from right of field, otherwise kick from left of field (default)
-        //    //since receiving team is already marked as having the ball on kickoffs, add 30 + 2 (ball width) to mark kickoff spot
-        //    //for safety it will be 60 + 2 (ball width)
-        //    if (isKickoff()) {
-        //        console.log('SPOT BEFORE CHANGE (KICKOFF): %s', spot);
-        //        if (kickingTeam === self.awayTeamID()) {
-        //            spot = spot + 32;
-        //        }
-        //    }
-
-        //    if (isSafety()) {
-        //        spot = MODULES.Constants.SAFETY_KICKOFF_SPOT;
-        //        console.log('SPOT BEFORE CHANGE (SAFETY): %s', spot);
-        //        if (kickingTeam === self.awayTeamID()) {
-        //            spot = spot + 62;
-        //    }
-
-        //    if (isExtraPointKick()) {
-        //        spot = MODULES.Constants.EXTRA_POINT_KICK_SPOT;
-
-        //        console.log('SPOT BEFORE CHANGE (EXTRA POINT): %s', spot);
-        //        if (kickingTeam === self.homeTeamID()) {
-        //            spot = 100 - spot; //subtract spot from 100 to move ball to right side of field
-        //        }
-        //    }
-
-        //    self.ballSpotStart(spot);
-
-        //    console.log('AFTER KICKOFF SPOT SET => Home Team: %s, Away Team: %s, Kicking Team %s, Spot: %s', self.homeTeamID(), self.awayTeamID(), kickingTeam, spot);
-        //}
+        
         if (extraPointKickActive || kickoffActive || safetyKickActive) {
             self.yardsTraveled(0);
             $('#home-team-trail, #away-team-trail').css('width', '0px');

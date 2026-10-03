@@ -613,16 +613,19 @@ nav > ul {
 .gold {
 	color: gold;	
 }
+.playclock {
+    color: gold;
+    border: 1px solid gold;
+    border-radius: 3px;
+    margin-left: 6px;
+    padding: 0px 6px;
+}
 .white {
 	color: white;	
 }
 
 #playClock {
-	display: inline-block;
-	border: 1px solid gold;
-	border-radius: 3px;
-	padding: 0px 6px;
-	margin-left: 6px;
+	display: inline-block;	
 	font-size: 0.85em;
 }
 
@@ -961,15 +964,6 @@ input[type="radio"][name="selectCoinTossWinner"] {
     .team-selected-away .team-select-img {
         animation: none;
     }
-}
-
-.team-images-container {
-    float: right;
-    padding: 10px;
-}
-
-.team-images {
-    float: right;
 }
 
 /*Coin Toss Animations and Styles
@@ -1547,6 +1541,48 @@ input[type="submit"].btn-default:hover {
     stroke: rgba(255, 255, 255, 0.95);
     stroke-width: 1;
 }
+/*Faint yellow marker showing the line the offense has to reach for a new set of downs.
+    Drawn as two stacked lines: a faint dark halo underneath the yellow stripe. Without the halo the yellow
+    dashes disappear whenever the marker lands exactly on a white yard line, and yellow against white is the
+    worst possible pairing for red-green colour blindness - so the halo supplies the contrast instead of the hue.
+    The halo dashes run slightly longer so a dark edge shows at both ends of every dash.
+    Matches the 0.45s ball movement so the line slides into place alongside the ball.*/
+/*Faint blue line of scrimmage marking the spot of the ball.
+    Uses the same two-line halo treatment as the line to gain, for the same reason: a faint tint alone disappears
+    against a white yard line, and the halo supplies the contrast instead of the hue. The dashes are tighter than
+    the line to gain's so the two markers stay distinguishable when they coincide on 1st down.
+    Matches the 0.45s ball movement so the line slides into place alongside the ball.*/
+.field-line-of-scrimmage-halo {
+    fill: none;
+    stroke: rgba(14, 26, 48, 0.5);
+    stroke-width: 2.4;
+    stroke-dasharray: 1.9 1.7;
+    transition: x1 0.45s ease, x2 0.45s ease;
+}
+
+.field-line-of-scrimmage-stripe {
+    fill: none;
+    stroke: rgba(140, 190, 255, 0.7);
+    stroke-width: 1;
+    stroke-dasharray: 1.2 1.2;
+    transition: x1 0.45s ease, x2 0.45s ease;
+}
+
+.field-line-to-gain-halo {
+    fill: none;
+    stroke: rgba(20, 40, 26, 0.5);
+    stroke-width: 2.6;
+    stroke-dasharray: 3.1 1.9;
+    transition: x1 0.45s ease, x2 0.45s ease;
+}
+
+.field-line-to-gain-stripe {
+    fill: none;
+    stroke: rgba(255, 221, 87, 0.75);
+    stroke-width: 1;
+    stroke-dasharray: 2.5 1.5;
+    transition: x1 0.45s ease, x2 0.45s ease;
+}
 .field-hash-row {
     fill: none;
     stroke: rgba(255, 255, 255, 0.9);
@@ -1685,12 +1721,37 @@ input[type="submit"].btn-default:hover {
     transform: none;
 }
 
-.team-images { float: none; flex: 0 0 auto; }
+/* Header team logos: away logo, the "at" label, home logo.
+   They sit between the title and the header actions.  .header-text and
+   .header-actions each take an equal slice of the leftover header width, so
+   this group lands dead centre at the top of the page no matter how wide the
+   title or the buttons are.  Margins supply the spacing between the three
+   pieces (floats are ignored on flex items). */
+.team-images {
+    float: none;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    margin: 4px 8px;
+}
+
+.team-images-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: balance;
+}
+
+.header-text {
+    flex: 1 1 0;
+}
+
 .header-actions {
     display: flex;
     order: 2;
+    flex: 1 1 0;
     gap: 8px;
-    margin-left: auto;
+    justify-content: flex-end;
 }
 
 .dice-results {
@@ -1739,8 +1800,12 @@ input[type="submit"].btn-default:hover {
 
 @media (max-width: 760px) {
     #header { flex-wrap: wrap; }
-    .header-actions { order: 3; width: 100%; margin: 8px 0 0; }
+    .header-text { flex: 0 0 auto; }
+    /* Buttons drop to their own row; the logos centre on the title row. */
+    .header-actions { order: 3; flex: 0 0 100%; width: 100%; margin: 8px 0 0; }
     .header-actions .btn-default { flex: 1; }
+    .header-actions + .team-images { margin-left: auto; }
+    .team-images:last-child { margin-right: auto; }
     #diceValues { flex-direction: row; align-items: center; }     
 }
 
@@ -1817,6 +1882,95 @@ input[type="submit"].btn-default:hover {
 #pauseHistory, #pauseStats, .football-stats td,
 #pauseHistory, #pauseStats, .football-stats th {
     padding: 7px;
+}
+
+/* Alert dialog - the in-page stand-in for the native window.alert().
+   Deliberately calmer than #pauseOverlay: the pause menu is a hard stop the player asked for, while an
+   alert (quarter break, two minute warning, penalty) is a heads-up that should read as an announcement
+   rather than an interruption. Lighter backdrop, no blur, and a per-tone accent so a forfeit never looks
+   like a quarter break. */
+#alertOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1002; /* above #pauseOverlay - an alert is the more urgent of the two */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(4, 10, 17, 0.55);
+}
+
+.alert-dialog {
+    /* every tone only overrides the accent, so the dialog keeps one shared layout */
+    --alert-accent: #7ED1FB;
+    --alert-accent-soft: rgba(126, 209, 251, 0.16);
+    width: min(100%, 380px);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 22px 24px;
+    border: 1px solid var(--broadcast-line);
+    border-top: 3px solid var(--alert-accent);
+    border-radius: 10px;
+    background: var(--broadcast-panel);
+    box-shadow: 0 14px 34px rgba(2, 10, 19, 0.42);
+    color: var(--broadcast-ink);
+    text-align: center;
+    animation: alert-dialog-in 0.18s ease-out;
+}
+
+.game-alert-tone-info { --alert-accent: #7ED1FB; --alert-accent-soft: rgba(126, 209, 251, 0.16); }
+.game-alert-tone-quarter { --alert-accent: #F4B942; --alert-accent-soft: rgba(244, 185, 66, 0.16); }
+.game-alert-tone-final { --alert-accent: #5FE09B; --alert-accent-soft: rgba(95, 224, 155, 0.16); }
+.game-alert-tone-warning { --alert-accent: #FFB020; --alert-accent-soft: rgba(255, 176, 32, 0.18); }
+.game-alert-tone-penalty { --alert-accent: #F17918; --alert-accent-soft: rgba(241, 121, 24, 0.18); }
+.game-alert-tone-forfeit { --alert-accent: #E2705F; --alert-accent-soft: rgba(226, 112, 95, 0.18); }
+
+.alert-dialog h2 {
+    margin: 0 0 8px;
+    color: var(--alert-accent);
+    font-size: 0.78rem;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.alert-dialog p {
+    margin: 0 0 18px;
+    color: var(--broadcast-ink);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.alert-dialog .btn-default {
+    min-width: 120px;
+    background: var(--alert-accent-soft);
+    border-color: var(--alert-accent);
+    color: var(--broadcast-ink);
+}
+
+.alert-dialog .btn-default:hover,
+.alert-dialog .btn-default:focus {
+    background: var(--alert-accent);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    color: #0b1119;
+    transform: none;
+}
+
+.alert-dialog .btn-default:focus-visible {
+    outline: 3px solid var(--alert-accent);
+    outline-offset: 2px;
+}
+
+/* Slides down from just above centre - reads as a "heads up" rather than a modal slam. */
+@keyframes alert-dialog-in {
+    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .alert-dialog {
+        animation: none;
+    }
 }
 
 /* Kickoff controls: kick-type toggle plus the two timing meters the player locks in. */
@@ -2020,6 +2174,52 @@ input[type="submit"].btn-default:hover {
     pointer-events: none;
 }
 
+/* Compact recap of the locked-in kick settings. Shown once a value is committed
+   so the player still sees their selection after the full meter is dismissed. */
+.kick-summary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: min(100%, 420px);
+    margin: 0 auto 16px;
+}
+
+.kick-summary-item {
+    --kick-temp: #5FE09B;
+    --kick-temp-soft: rgba(95, 224, 155, 0.32);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--kick-temp);
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--kick-temp-soft) 0%, var(--broadcast-panel-raised) 100%);
+}
+
+/* Value "temperature": green is the ideal result and warms toward red as risk rises. */
+.kick-summary-item.temp-green { --kick-temp: #5FE09B; --kick-temp-soft: rgba(95, 224, 155, 0.32); }
+.kick-summary-item.temp-yellow-green { --kick-temp: #A8D94E; --kick-temp-soft: rgba(168, 217, 78, 0.26); }
+.kick-summary-item.temp-yellow { --kick-temp: #F6D23C; --kick-temp-soft: rgba(246, 210, 60, 0.26); }
+.kick-summary-item.temp-orange-yellow { --kick-temp: #FFB020; --kick-temp-soft: rgba(255, 176, 32, 0.28); }
+.kick-summary-item.temp-orange { --kick-temp: #F17918; --kick-temp-soft: rgba(241, 121, 24, 0.30); }
+.kick-summary-item.temp-red { --kick-temp: #FF5C5C; --kick-temp-soft: rgba(255, 92, 92, 0.30); }
+
+.kick-summary-label {
+    color: var(--broadcast-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.kick-summary-value {
+    color: var(--kick-temp);
+    font-size: 1.05rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
 .btn-default.kick-go-button {
     display: block;
     width: min(100%, 420px);
@@ -2064,6 +2264,11 @@ input[type="submit"].btn-default:hover {
         font-size: 1.3rem;
     }
 
+    .kick-summary {
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
     .btn-default.kick-go-button {
         width: 100%;
         font-size: 1.1rem;
@@ -2073,5 +2278,194 @@ input[type="submit"].btn-default:hover {
 @media (prefers-reduced-motion: reduce) {
     .kick-type-option > span {
         transition: none;
+    }
+}
+/* ==========================================================================
+   Large-screen tuning.
+
+   Everything above this point is sized for a phone first, which is why the field
+   is allowed its full 850px, the scoreboard strip carries 62px-tall cells, and the
+   kickoff meters use 34px tracks with 30px thumbs. None of that is necessary in a
+   desktop browser: the sticky field + scoreboard block alone grows taller than a
+   laptop viewport, pushing the kickoff sliders and the play buttons off screen.
+
+   This block caps that sticky block at ~42vh and steps the surrounding chrome
+   down to match. The field's aspect ratio is fixed at 220:103, so budgeting it in
+   vh works by converting the height budget back into a width budget:
+   (42vh - 116px of panel chrome) * (220 / 103). 116px is the padding, margins
+   and scoreboard strip the field sits inside.
+
+   Every rule here is inside a min-width query, so the phone layout - and its
+   existing max-width rules - is completely untouched.
+   ========================================================================== */
+@media (min-width: 1024px) {
+    #body {
+        padding: 20px 0 52px;
+    }
+
+    #header {
+        min-height: 64px;
+    }
+
+    #mainFieldDisplay {
+        padding: 14px;
+    }
+
+    #field-container-img {
+        /* the vh term is what keeps a short, wide window from filling up with the field */
+        width: min(100%, 640px, max(300px, calc((42vh - 116px) * 2.135)));
+        margin: 8px auto 12px;
+    }
+
+    /* Hard backstop for the sticky stack. Sized with slack so it only ever bites at
+       extreme font zoom - the field above is already budgeted to fit inside it. */
+    #game-sticky-info {
+        max-height: 46vh;
+    }
+
+    /* Scoreboard strip: same five cells, just tighter. */
+    #currentGameInfo {
+        padding: 8px;
+    }
+
+    #currentGameInfo > div {
+        min-height: 48px;
+        padding: 8px 10px;
+    }
+
+    #homeTeamScore,
+    #awayTeamScore {
+        font-size: 1.4rem;
+    }
+
+    #timeRemainingInQuarter {
+        font-size: 1.15rem;
+    }
+
+    #currentQuarter {
+        font-size: 0.8rem;
+    }
+
+    .last-play-container {
+        margin: 16px 0 12px;
+    }
+
+    /* Kickoff meters: the 34px track and 30px thumb are touch affordances for a
+       thumb, and they stop paying for themselves on a mouse-driven screen. */
+    #kickoffPlays,
+    #mainPlaySelection,
+    #game-info-container {
+        margin-top: 18px;
+        padding: 18px 24px;
+    }
+
+    .kick-meters {
+        /* keep the two meters side by side instead of letting them stretch edge to edge */
+        max-width: 620px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .kick-meter {
+        padding: 12px 14px;
+    }
+
+    .kick-meter .slider {
+        height: 24px;
+    }
+
+    .kick-meter .slider::-webkit-slider-runnable-track {
+        height: 9px;
+    }
+
+    .kick-meter .slider::-moz-range-track {
+        height: 9px;
+    }
+
+    .kick-meter .slider::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+        margin-top: -6.5px;
+    }
+
+    .kick-meter .slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+    }
+
+    .kick-meter-value {
+        font-size: 1.2rem;
+    }
+
+    .btn-default.kick-lock-button {
+        margin: 10px 0 6px;
+        padding: 10px 14px;
+        font-size: 0.92rem;
+    }
+
+    .btn-default.kick-go-button {
+        padding: 12px 18px;
+        font-size: 1.1rem;
+    }
+
+    /* Full scoreboard tables: pull the type and row padding back so a long play
+       history stays scannable rather than turning into a wall of oversized text. */
+    .football-stats {
+        font-size: 0.82rem;
+    }
+
+    .football-stats td,
+    .football-stats th {
+        padding: 8px 11px;
+    }
+
+    #playHistoryScroller {
+        height: 300px;
+    }
+
+    label {
+        font-size: 1rem;
+    }
+
+    .dice-roll-button {
+        font-size: 1.15rem;
+        min-width: 180px;
+        padding: 10px 18px;
+    }
+
+    #diceValues {
+        min-height: 28px;
+    }
+
+    .die-result {
+        grid-template-columns: repeat(3, 8px);
+        grid-template-rows: repeat(3, 8px);
+        gap: 4px;
+        width: 44px;
+        height: 44px;
+        padding: 6px;
+    }
+
+    .die-pip {
+        width: 8px;
+        height: 8px;
+    }
+
+    /* The alert is already the softest thing on the page; on a big screen it can
+       afford to be even more of a heads-up than an interruption. */
+    #alertOverlay {
+        background: rgba(4, 10, 17, 0.45);
+    }
+
+    .alert-dialog {
+        width: min(100%, 420px);
+    }
+}
+
+/* On a genuinely large monitor there is vertical room to give the field back some
+   of its width, still held to the same 42vh budget. */
+@media (min-width: 1600px) and (min-height: 900px) {
+    #field-container-img {
+        width: min(100%, 700px, max(300px, calc((42vh - 116px) * 2.135)));
     }
 }
