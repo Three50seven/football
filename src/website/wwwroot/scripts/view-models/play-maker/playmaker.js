@@ -292,7 +292,7 @@ var playMaker = {
             }
             else {
                 self.yardsToFirst(self.yardsToFirst() - _yards); //subtract the yards from the current yards to First Down
-                self.currentDown(self.currentDown() + 1);  //increment the current Down
+                self.currentDown(self.currentDown() + 1);  //increment the current Down                
             }
         }
 
@@ -1044,15 +1044,7 @@ var playMaker = {
         playMaker.display(displayText, team);
 
         //now record stats for this play
-        this.recordGameStats(team, thisPlaysResult);
-
-        //show alert for 4th down
-        if (self.currentDown() === 4) {
-            self.ShowGameAlert('4th Down', {
-                title: '4th Down',
-                tone: 'warning'
-            });
-        }
+        this.recordGameStats(team, thisPlaysResult);        
 
         //the play is fully displayed and logged now, so announce any quarter/two-minute stoppage it crossed
         playMaker.completePlayPeriodAlerts();
@@ -1091,6 +1083,14 @@ var playMaker = {
             $("#diceValues").empty();
 
             let thisPlaysResult = playMaker.getPlayResult(playSelected, pointAttemptPlayType);
+
+            //show alert for 4th down
+            if (self.currentDown() === 4) {
+                self.ShowGameAlert('4th Down', {
+                    title: '4th Down',
+                    tone: 'warning'
+                });
+            }
 
             //turnover plays are already recorded (with the correct pre-turnover team/down) inside getPlayResult
             if (!thisPlaysResult.isTurnover && !thisPlaysResult.wasRecorded) {
