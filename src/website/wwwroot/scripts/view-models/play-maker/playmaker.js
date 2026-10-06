@@ -53,8 +53,8 @@ var playMaker = {
         //the toast only ever wears a tone class; main.css maps .field-score-feedback-tone-* onto
         //--toast-accent (mirroring the alert dialog's --alert-accent split), so every color lives
         //in CSS. Strip all tones on the reset line so one play's accent cannot leak into the next.
-        let toneClass = 'field-score-feedback-tone-' + playMaker.getPlayToastTone(type, playText);
-        feedback.removeClass("field-score-feedback-active " + playMaker.fieldScoreFeedbackToneClasses)
+        let toneClass = 'field-score-feedback-tone-' + HELPERS.getPlayToastTone(type, playText);
+        feedback.removeClass("field-score-feedback-active " + HELPERS.fieldScoreFeedbackToneClasses)
             .css('left', '0px');
 
         let ballLeft = parseFloat(ball.css('margin-left')) || 0;
@@ -68,44 +68,6 @@ var playMaker = {
             feedbackLeft = Math.max(4, ballLeft - feedbackWidth - 10);
         feedback.css('left', feedbackLeft + 'px');
 
-    },
-
-    //every .field-score-feedback-tone-* class main.css understands - stripped on each show so a
-    //tone from a previous play can never outlive it (the new tone is added right after)
-    fieldScoreFeedbackToneClasses: 'field-score-feedback-tone-score field-score-feedback-tone-penalty field-score-feedback-tone-turnover field-score-feedback-tone-negative field-score-feedback-tone-neutral',
-
-    //Maps a toast to one of the .field-score-feedback-tone-* classes in main.css. The markup
-    //stays tone-agnostic and CSS owns every color, the same way gameAlertToneClass works in
-    //ui/alert.model.js - a new tone only needs a class here and a rule there.
-    //Score toasts (addScore) carry a SCORE_TYPES value; generic play toasts (display) carry
-    //only their text, so those tones are read off the wording the play engine produces.
-    getPlayToastTone: function (type, playText) {
-        if (type !== null && type !== undefined) {
-            //a safety is scored against the offense - red, with losses and turnovers; every
-            //other SCORE_TYPES value is points on the board for the team this toast names
-            if (type === SCORE_TYPES.SAFETY)
-                return 'negative';
-
-            return 'score';
-        }
-
-        let text = playText || '';
-
-        //a missed kick reads NO GOOD - check it before the generic GOOD that marks a made kick;
-        //the touchdown marker is SCORE_TYPES.TOUCHDOWN.toUpperCase() as produced by getPlayResult
-        if (/\bNO GOOD\b/i.test(text))
-            return 'neutral';
-        if (/\bTOUCHDOWN\b|\bGOOD\b/i.test(text))
-            return 'score';
-        if (/penalt|delay of game|no yardage/i.test(text))
-            return 'penalty';
-        if (/intercept|fumble|turnover|change of possession|muffed/i.test(text))
-            return 'turnover';
-        if (/sack|for a loss|for -\d+ yards|\bSAFETY\b/i.test(text))
-            return 'negative';
-
-        //ordinary gains, incompletes, coins and simulated quarters keep the classic gold accent
-        return 'neutral';
     },
 
     //the 2nd and 4th quarters are the ends of each half and overtime are when an offense is most likely to try to stop the clock
@@ -597,7 +559,7 @@ var playMaker = {
 
         //self.currentTeamWithBall(receivingTeam); //this will be the team running or getting a touchback.
 
-        console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
+        console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);        
 
         //create a play result and record it in the play history
         //a touchback or a kick out of bounds never puts the ball in play, so it consumes no play time at all.
@@ -613,6 +575,11 @@ var playMaker = {
             self.yardsTraveled(0);
         }
         playMaker.recordPlay(kickoffResult);
+
+        // show alert for kickoff penalty
+        if (isPenalty) {
+            self.ShowGameAlert(_kickoffResultText, {title: 'Kickoff Penalty',tone: 'penalty'});
+        }
 
         //show return of kick (if any), but only for kicks that allow for returns
         if (isReturnTypeKickoff) {
@@ -944,7 +911,7 @@ var playMaker = {
 
         self.ShowGameAlert('FORFEIT - ' + offendingTeamInfo.teamName() + ' repeatedly failed to snap the ball in time. ' +
             'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.', {
-            title: 'Game forfeited',
+            title: 'Game Forfeited',
             tone: 'forfeit'
         });
     },
@@ -1128,13 +1095,9 @@ var playMaker = {
 
             let thisPlaysResult = playMaker.getPlayResult(playSelected, pointAttemptPlayType);
 
-            //show alert for 4th down
-            if (self.currentDown() === 4) {
-                self.ShowGameAlert('4th Down', {
-                    title: '4th Down',
-                    tone: 'warning'
-                });
-            }
+            //show potential play result alerts
+            console.log('Play result:', thisPlaysResult);
+            playMaker.ShowPlayResultAlerts(thisPlaysResult);
 
             //turnover plays are already recorded (with the correct pre-turnover team/down) inside getPlayResult
             if (!thisPlaysResult.isTurnover && !thisPlaysResult.wasRecorded) {
@@ -1229,5 +1192,24 @@ var playMaker = {
         }
 
         self.StopCounter(); //the clock stops after any score, until the next kickoff/snap
+    },
+    ShowPlayResultAlerts: function (playResult) {
+        let offensiveTeam = HELPERS.getTeamInfo(self.currentTeamWithBall());
+
+        //show alert for 4th down
+        if (self.currentDown() === 4) {
+            self.ShowGameAlert('4th Down - ' + offensiveTeam.teamName() + ' - ' + HELPERS.getDownText(self.currentDown(), self.yardsToFirst()), {
+                title: '4th Down',
+                tone: 'warning'
+            });
+        }
+
+        //show alert for turnovers - by this time, the possession has already changed
+        if (playResult.isTurnover) {
+            self.ShowGameAlert(playResult.getTurnoverType() + ' - ' + offensiveTeam.teamName() + ' take over at the ' + HELPERS.getYardText() + ' yard line', {
+                title: 'Turnover',
+                tone: 'forfeit'
+            });
+        }
     }
 };

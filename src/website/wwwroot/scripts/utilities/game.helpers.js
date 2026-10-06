@@ -60,5 +60,44 @@
 
     getTeamInfo: function (teamId) {
         return $.grep(MODULES.GameVariables.Teams, function (team) { return team.teamId === teamId; })[0];
+    },
+
+    //every .field-score-feedback-tone-* class main.css understands - stripped on each show so a
+    //tone from a previous play can never outlive it (the new tone is added right after)
+    fieldScoreFeedbackToneClasses: 'field-score-feedback-tone-score field-score-feedback-tone-penalty field-score-feedback-tone-turnover field-score-feedback-tone-negative field-score-feedback-tone-neutral',
+
+    getPlayToastTone: function (type, playText) {
+        //Maps a toast to one of the .field-score-feedback-tone-* classes in main.css. The markup
+        //stays tone-agnostic and CSS owns every color, the same way gameAlertToneClass works in
+        //ui/alert.model.js - a new tone only needs a class here and a rule there.
+        //Score toasts (addScore) carry a SCORE_TYPES value; generic play toasts (display) carry
+        //only their text, so those tones are read off the wording the play engine produces.
+        
+        if (type !== null && type !== undefined) {
+            //a safety is scored against the offense - red, with losses and turnovers; every
+            //other SCORE_TYPES value is points on the board for the team this toast names
+            if (type === SCORE_TYPES.SAFETY)
+                return 'negative';
+
+            return 'score';
+        }
+
+        let text = playText || '';
+
+        //a missed kick reads NO GOOD - check it before the generic GOOD that marks a made kick;
+        //the touchdown marker is SCORE_TYPES.TOUCHDOWN.toUpperCase() as produced by getPlayResult
+        if (/\bNO GOOD\b/i.test(text))
+            return 'neutral';
+        if (/\bTOUCHDOWN\b|\bGOOD\b/i.test(text))
+            return 'score';
+        if (/penalt|delay of game|no yardage/i.test(text))
+            return 'penalty';
+        if (/intercept|fumble|turnover|change of possession|muffed/i.test(text))
+            return 'turnover';
+        if (/sack|for a loss|for -\d+ yards|\bSAFETY\b/i.test(text))
+            return 'negative';
+
+        //ordinary gains, incompletes, coins and simulated quarters keep the classic gold accent
+        return 'neutral';                
     }
 };
