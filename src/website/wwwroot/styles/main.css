@@ -1641,11 +1641,18 @@ input[type="submit"].btn-default:hover {
     z-index: 4;
 }
 
+/* Field-score feedback toast. Follows the same --alert-accent pattern as .alert-dialog below:
+   the shared layout only reads --toast-accent/-soft, and a tone class repaints those two
+   variables, so recoloring a tone stays a CSS-only change. The tone rules are written
+   #id.class because a bare class selector can never out-specify the ID defaults here.
+   playmaker.js picks the tone via displayPlayToast/getPlayToastTone. */
 #field-score-feedback {
+    --toast-accent: #f8d34a;
+    --toast-accent-soft: rgba(248, 211, 74, 0.16);
     background: rgba(4, 18, 13, 0.94);
-    border: 1px solid #f8d34a;
+    border: 1px solid var(--toast-accent);
     border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 10px var(--toast-accent-soft);
     color: #ffffff;
     display: none;
     font-family: "Trebuchet MS", sans-serif;
@@ -1664,6 +1671,17 @@ input[type="submit"].btn-default:hover {
     animation: field-score-pop 2.8s ease both;
     display: block;
 }
+
+/* Toast tone overrides - only the accent pair changes, exactly like .game-alert-tone-* below.
+   score: points (green), penalty: flags (gold), turnover/negative: interceptions, fumbles,
+   sacks, losses and safeties (red), neutral: ordinary plays keep the classic gold.
+   neutral must never be transparent - it would strip both the border and the glow from
+   the most common toast state and read as a broken accent. */
+#field-score-feedback.field-score-feedback-tone-score { --toast-accent: #08b659; --toast-accent-soft: rgba(95, 224, 155, 0.18); }
+#field-score-feedback.field-score-feedback-tone-penalty { --toast-accent: #f8d34a; --toast-accent-soft: rgba(248, 211, 74, 0.16); }
+#field-score-feedback.field-score-feedback-tone-turnover { --toast-accent: #E2705F; --toast-accent-soft: rgba(226, 112, 95, 0.2); }
+#field-score-feedback.field-score-feedback-tone-negative { --toast-accent: #E2705F; --toast-accent-soft: rgba(226, 112, 95, 0.2); }
+#field-score-feedback.field-score-feedback-tone-neutral { --toast-accent: #afafad; --toast-accent-soft: rgba(192, 192, 192, 0.16); }
 
 .last-play-container.last-play-update {
     animation: last-play-update 0.65s ease-out;

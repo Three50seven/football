@@ -50,18 +50,24 @@ var playMaker = {
             feedback.text((team ? team.teamCityAndName() : '') + ' - ' + playText + ' - ' + HELPERS.getDownText(self.currentDown(), self.yardsToFirst()) + ', ball on the ' + HELPERS.getYardText());
         }
 
-        feedback.removeClass("field-score-feedback-active").css('left', '0px');
+        //the toast only ever wears a tone class; main.css maps .field-score-feedback-tone-* onto
+        //--toast-accent (mirroring the alert dialog's --alert-accent split), so every color lives
+        //in CSS. Strip all tones on the reset line so one play's accent cannot leak into the next.
+        let toneClass = 'field-score-feedback-tone-' + HELPERS.getPlayToastTone(type, playText);
+        feedback.removeClass("field-score-feedback-active " + HELPERS.fieldScoreFeedbackToneClasses)
+            .css('left', '0px');
 
         let ballLeft = parseFloat(ball.css('margin-left')) || 0;
         let fieldWidth = field.width();
         feedback.css('max-width', Math.max(fieldWidth * 0.72, 120) + 'px');
-        feedback.addClass("field-score-feedback-active");
+        feedback.addClass("field-score-feedback-active").addClass(toneClass);
 
         let feedbackWidth = feedback.outerWidth();
         let feedbackLeft = ballLeft + 10;
         if (feedbackLeft + feedbackWidth > fieldWidth - 4)
             feedbackLeft = Math.max(4, ballLeft - feedbackWidth - 10);
         feedback.css('left', feedbackLeft + 'px');
+
     },
 
     //the 2nd and 4th quarters are the ends of each half and overtime are when an offense is most likely to try to stop the clock
@@ -553,7 +559,7 @@ var playMaker = {
 
         //self.currentTeamWithBall(receivingTeam); //this will be the team running or getting a touchback.
 
-        console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);
+        console.log('Kickoff type: %s, Kickoff distance: %s, kickoff return: %s, TeamID With Ball: %s', kickoffType, _yards, _returnYards, receivingTeam);        
 
         //create a play result and record it in the play history
         //a touchback or a kick out of bounds never puts the ball in play, so it consumes no play time at all.
@@ -569,6 +575,11 @@ var playMaker = {
             self.yardsTraveled(0);
         }
         playMaker.recordPlay(kickoffResult);
+
+        // show alert for kickoff penalty
+        if (isPenalty) {
+            self.ShowGameAlert(_kickoffResultText, {title: 'Kickoff Penalty',tone: 'penalty'});
+        }
 
         //show return of kick (if any), but only for kicks that allow for returns
         if (isReturnTypeKickoff) {
@@ -900,7 +911,7 @@ var playMaker = {
 
         self.ShowGameAlert('FORFEIT - ' + offendingTeamInfo.teamName() + ' repeatedly failed to snap the ball in time. ' +
             'Officials have ruled this an unfair act, and the game is awarded to ' + winningTeam.teamName() + ' by forfeit.', {
-            title: 'Game forfeited',
+            title: 'Game Forfeited',
             tone: 'forfeit'
         });
     },
@@ -1084,13 +1095,9 @@ var playMaker = {
 
             let thisPlaysResult = playMaker.getPlayResult(playSelected, pointAttemptPlayType);
 
-            //show alert for 4th down
-            if (self.currentDown() === 4) {
-                self.ShowGameAlert('4th Down', {
-                    title: '4th Down',
-                    tone: 'warning'
-                });
-            }
+            //show potential play result alerts
+            console.log('Play result:', thisPlaysResult);
+            playMaker.ShowPlayResultAlerts(thisPlaysResult);
 
             //turnover plays are already recorded (with the correct pre-turnover team/down) inside getPlayResult
             if (!thisPlaysResult.isTurnover && !thisPlaysResult.wasRecorded) {
@@ -1185,5 +1192,24 @@ var playMaker = {
         }
 
         self.StopCounter(); //the clock stops after any score, until the next kickoff/snap
+    },
+    ShowPlayResultAlerts: function (playResult) {
+        let offensiveTeam = HELPERS.getTeamInfo(self.currentTeamWithBall());
+
+        //show alert for 4th down
+        if (self.currentDown() === 4) {
+            self.ShowGameAlert('4th Down - ' + offensiveTeam.teamName() + ' - ' + HELPERS.getDownText(self.currentDown(), self.yardsToFirst()), {
+                title: '4th Down',
+                tone: 'warning'
+            });
+        }
+
+        //show alert for turnovers - by this time, the possession has already changed
+        if (playResult.isTurnover) {
+            self.ShowGameAlert(playResult.getTurnoverType() + ' - ' + offensiveTeam.teamName() + ' take over at the ' + HELPERS.getYardText() + ' yard line', {
+                title: 'Turnover',
+                tone: 'forfeit'
+            });
+        }
     }
 };

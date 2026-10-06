@@ -36,6 +36,22 @@ MODULES.Constructors = (function () {
             this.stopsGameClock = stopsGameClock; //true when the ball went dead in a way that stops the game clock (an incompletion, a run out of bounds, etc.)
             this.deadBallStopsClock = deadBallStopsClock; //true for special teams plays that went dead with the clock stopped (a touchback, a kickoff penalty, a recovered onside kick, a muffled punt)
             this.noPlayTime = noPlayTime; //true when the play consumed no play time at all - a touchback or a kick out of bounds, where the ball never came live
+            this.getTurnoverType = function () {
+                if (this.isTurnover) {
+                    console.log(`inside the PlayResult`,this.playResultText);
+                    // determine the turnover type from playResultText
+                    if (this.playResultText.toLowerCase().includes('intercept')) {
+                        return 'INTERCEPTION';
+                    } else if (this.playResultText.toLowerCase().includes('fumble')) {
+                        return 'FUMBLE';
+                    } else if (this.playResultText.toLowerCase().includes('turnover on downs')) {
+                        return 'TURNOVER ON DOWNS';
+                    } else
+                        return 'TURNOVER';
+                }
+                else
+                    return '';                
+            };
         },
         PlayHistory: function (playId, teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession, score, gameClock) {
             this.playId = playId;
