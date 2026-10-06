@@ -8,6 +8,8 @@ const read = (relativePath) => fs.readFileSync(
     path.join(__dirname, '..', 'wwwroot', 'scripts', relativePath), 'utf8');
 
 const lookupSource = read(path.join('modules', 'lookup.types.js'));
+const utilitiesSource = read(path.join('utilities', 'utilities.js'));
+const helpersSource = read(path.join('utilities', 'game.helpers.js'));
 const playmakerSource = read(path.join('view-models', 'play-maker', 'playmaker.js'));
 
 // Loads the real lookup types and playmaker.js with a small jQuery stand-in that records the
@@ -52,18 +54,23 @@ function createToastContext() {
         console: { log() {} },
         $,
         jQuery: $,
-        HELPERS: {
-            getDownText: (down, yardsToFirst) => `${down} & ${yardsToFirst}`,
-            getYardText: () => ' midfield'
-        },
+        MODULES: { Constants: {} },
         currentDown: () => 1,
         yardsToFirst: () => 10,
+        yardsToTouchdown: () => 50,
+        currentTeamWithBall: () => 10,
+        homeTeamID: () => 10,
+        homeTeamInfo: () => ({ teamName: () => 'Denver' }),
+        awayTeamInfo: () => ({ teamName: () => 'Kansas City' }),
+        currentBallSpot: () => 50,
         team: { teamCityAndName: () => 'Denver Broncos' }
     };
     context.self = context;
 
     vm.createContext(context);
     vm.runInContext(lookupSource, context);
+    vm.runInContext(utilitiesSource, context);
+    vm.runInContext(helpersSource, context);
     vm.runInContext(playmakerSource, context);
 
     return {
@@ -75,7 +82,7 @@ function createToastContext() {
         toneClasses: () => Array.from(classes).filter((name) => name.startsWith('field-score-feedback-tone-')),
         showToast: (score, type, playText) =>
             context.playMaker.displayPlayToast(score, type, playText ?? null, context.team),
-        tone: (type, playText) => context.playMaker.getPlayToastTone(type, playText ?? null)
+        tone: (type, playText) => context.HELPERS.getPlayToastTone(type, playText ?? null)
     };
 }
 

@@ -430,6 +430,10 @@
                                             <th>Total Time of Possession</th>
                                             <th>Turnovers</th>
                                             <th>1<sup>st</sup> Downs</th>
+                                            <th>3<sup>rd</sup> Downs Conv</th>
+                                            <th>4<sup>th</sup> Downs Conv</th>
+                                            <th>FG Att</th>
+                                            <th>FG Made</th>
                                         </tr>
                                     </thead>
                                     <tbody data-bind="foreach: gamePlayStats">
@@ -442,6 +446,10 @@
                                             <td data-bind="text: totalTimePossessionDisplay"></td>
                                             <td data-bind="text: totalTurnovers"></td>
                                             <td data-bind="text: totalFirstDowns"></td>
+                                            <td data-bind="text: totalThirdDownConversions"></td>
+                                            <td data-bind="text: totalFourthDownConversions"></td>
+                                            <td data-bind="text: totalFieldGoalAttempts"></td>
+                                            <td data-bind="text: totalFieldGoalsMade"></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -661,6 +669,10 @@
                                                 <th>Total Time of Possession</th>
                                                 <th>Turnovers</th>
                                                 <th>1<sup>st</sup> Downs</th>
+                                                <th>3<sup>rd</sup> Downs Conv</th>
+                                                <th>4<sup>th</sup> Downs Conv</th>
+                                                <th>FG Att</th>
+                                                <th>FG Made</th>
                                             </tr>
                                         </thead>
                                         <tbody data-bind="foreach: gamePlayStats">
@@ -673,6 +685,10 @@
                                                 <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
                                                 <td><span data-bind="text: totalTurnovers"></span></td>
                                                 <td><span data-bind="text: totalFirstDowns"></span></td>
+                                                <td><span data-bind="text: totalThirdDownConversions"></span></td>
+                                                <td><span data-bind="text: totalFourthDownConversions"></span></td>
+                                                <td><span data-bind="text: totalFieldGoalAttempts"></span></td>
+                                                <td><span data-bind="text: totalFieldGoalsMade"></span></td>
                                             </tr>
                                         </tbody>
                                     </table>

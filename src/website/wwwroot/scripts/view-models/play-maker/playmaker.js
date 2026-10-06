@@ -107,6 +107,7 @@ var playMaker = {
     },
 
     getPlayResult: function (playSelected, pointAttemptPlayType) {
+        let downAtSnap = self.currentDown();
         let _yards = 0;
         let _playResultText = UTILITIES.splitAndTitleCase(playSelected);
         let _positiveYards = false;
@@ -303,9 +304,12 @@ var playMaker = {
         }
 
         console.log('YARDS: ' + _yards);
+        let isConverted = !turnover && (isFirstDown || isTouchdown);
+        let isThirdDownConversion = downAtSnap === 3 && isConverted;
+        let isFourthDownConversion = downAtSnap === 4 && isConverted;
         //flag a clock-stopping play (an incompletion or a run out of bounds) explicitly so the game clock logic never has
         //to infer it from the yardage; a live-ball turnover (interception/fumble) means the ball was caught or stripped
-        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown, '', (isIncompletePass || isOutOfBounds) && !isLiveBallTurnover);
+        let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown, '', (isIncompletePass || isOutOfBounds) && !isLiveBallTurnover, false, false, isThirdDownConversion, isFourthDownConversion);
 
         self.SetBallPosition();
 
@@ -566,7 +570,9 @@ var playMaker = {
         //a recovered onside kick or a muffled punt is different - the ball was live and returned, so that time counts.
         let kickResultStopsClock = isTouchback || isPenalty || isOnsideRecoveredByKickingTeam || isMuffedPunt;
         let kickResultNoPlayTime = isTouchback || isPenalty;
-        let kickoffResult = new MODULES.Constructors.PlayResult(recordedKickYards, _kickoffResultText, false, kickoffType, false, '', false, kickResultStopsClock, kickResultNoPlayTime);
+        let isFieldGoalAttempt = kickoffType === KICKOFF_TYPES.FIELDGOAL;
+        let isFieldGoalMade = isFieldGoalAttempt;
+        let kickoffResult = new MODULES.Constructors.PlayResult(recordedKickYards, _kickoffResultText, false, kickoffType, false, '', false, kickResultStopsClock, kickResultNoPlayTime, false, false, isFieldGoalAttempt, isFieldGoalMade);
 
         //record/show play results       
         self.currentTeamWithBall(kickingTeam); //set current team with ball to kickoff team briefly to record the correct team name in the history
@@ -686,7 +692,7 @@ var playMaker = {
     handleFailedFieldGoal: function (kickResultText, isBlocked, kickYards) {
         let attemptingTeam = self.currentTeamWithBall();
         let defensiveTeam = attemptingTeam === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
-        let kickResult = new MODULES.Constructors.PlayResult(kickYards, kickResultText, true, GAME_PLAY_TYPES.FIELDGOAL);
+        let kickResult = new MODULES.Constructors.PlayResult(kickYards, kickResultText, true, GAME_PLAY_TYPES.FIELDGOAL, false, '', false, false, false, false, false, true, false);
 
         playMaker.recordPlay(kickResult);
         playMaker.resetKickoffFlags(KICKOFF_TYPES.FIELDGOAL);
@@ -1081,6 +1087,20 @@ var playMaker = {
 
         if (thisPlaysResult.isFirstDown)
             playStatsRecord.totalFirstDowns = 1;
+
+        if (thisPlaysResult.isThirdDownConversion)
+            playStatsRecord.totalThirdDownConversions = 1;
+
+        if (thisPlaysResult.isFourthDownConversion)
+            playStatsRecord.totalFourthDownConversions = 1;
+
+        let isFieldGoal = (thisPlaysResult.playType || '').toLowerCase() === 'fieldgoal';
+        let isReturn = (thisPlaysResult.playResultText || '').toLowerCase().includes('return');
+        if (thisPlaysResult.isFieldGoalAttempt || (isFieldGoal && !isReturn))
+            playStatsRecord.totalFieldGoalAttempts = 1;
+
+        if (thisPlaysResult.isFieldGoalMade || (isFieldGoal && !isReturn && (thisPlaysResult.playResultText || '').includes('GOOD') && !(thisPlaysResult.playResultText || '').includes('NO GOOD')))
+            playStatsRecord.totalFieldGoalsMade = 1;
 
         self.UpdateGameStat(playStatsRecord);
     },
