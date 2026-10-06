@@ -50,18 +50,62 @@ var playMaker = {
             feedback.text((team ? team.teamCityAndName() : '') + ' - ' + playText + ' - ' + HELPERS.getDownText(self.currentDown(), self.yardsToFirst()) + ', ball on the ' + HELPERS.getYardText());
         }
 
-        feedback.removeClass("field-score-feedback-active").css('left', '0px');
+        //the toast only ever wears a tone class; main.css maps .field-score-feedback-tone-* onto
+        //--toast-accent (mirroring the alert dialog's --alert-accent split), so every color lives
+        //in CSS. Strip all tones on the reset line so one play's accent cannot leak into the next.
+        let toneClass = 'field-score-feedback-tone-' + playMaker.getPlayToastTone(type, playText);
+        feedback.removeClass("field-score-feedback-active " + playMaker.fieldScoreFeedbackToneClasses)
+            .css('left', '0px');
 
         let ballLeft = parseFloat(ball.css('margin-left')) || 0;
         let fieldWidth = field.width();
         feedback.css('max-width', Math.max(fieldWidth * 0.72, 120) + 'px');
-        feedback.addClass("field-score-feedback-active");
+        feedback.addClass("field-score-feedback-active").addClass(toneClass);
 
         let feedbackWidth = feedback.outerWidth();
         let feedbackLeft = ballLeft + 10;
         if (feedbackLeft + feedbackWidth > fieldWidth - 4)
             feedbackLeft = Math.max(4, ballLeft - feedbackWidth - 10);
         feedback.css('left', feedbackLeft + 'px');
+
+    },
+
+    //every .field-score-feedback-tone-* class main.css understands - stripped on each show so a
+    //tone from a previous play can never outlive it (the new tone is added right after)
+    fieldScoreFeedbackToneClasses: 'field-score-feedback-tone-score field-score-feedback-tone-penalty field-score-feedback-tone-turnover field-score-feedback-tone-negative field-score-feedback-tone-neutral',
+
+    //Maps a toast to one of the .field-score-feedback-tone-* classes in main.css. The markup
+    //stays tone-agnostic and CSS owns every color, the same way gameAlertToneClass works in
+    //ui/alert.model.js - a new tone only needs a class here and a rule there.
+    //Score toasts (addScore) carry a SCORE_TYPES value; generic play toasts (display) carry
+    //only their text, so those tones are read off the wording the play engine produces.
+    getPlayToastTone: function (type, playText) {
+        if (type !== null && type !== undefined) {
+            //a safety is scored against the offense - red, with losses and turnovers; every
+            //other SCORE_TYPES value is points on the board for the team this toast names
+            if (type === SCORE_TYPES.SAFETY)
+                return 'negative';
+
+            return 'score';
+        }
+
+        let text = playText || '';
+
+        //a missed kick reads NO GOOD - check it before the generic GOOD that marks a made kick;
+        //the touchdown marker is SCORE_TYPES.TOUCHDOWN.toUpperCase() as produced by getPlayResult
+        if (/\bNO GOOD\b/i.test(text))
+            return 'neutral';
+        if (/\bTOUCHDOWN\b|\bGOOD\b/i.test(text))
+            return 'score';
+        if (/penalt|delay of game|no yardage/i.test(text))
+            return 'penalty';
+        if (/intercept|fumble|turnover|change of possession|muffed/i.test(text))
+            return 'turnover';
+        if (/sack|for a loss|for -\d+ yards|\bSAFETY\b/i.test(text))
+            return 'negative';
+
+        //ordinary gains, incompletes, coins and simulated quarters keep the classic gold accent
+        return 'neutral';
     },
 
     //the 2nd and 4th quarters are the ends of each half and overtime are when an offense is most likely to try to stop the clock
