@@ -12,6 +12,7 @@ const playmakerSource = fs.readFileSync(
 const GAME_PLAY_TYPES = {
     RUN: 'run',
     PASS: 'pass',
+    SPIKE: 'spike',
     TWOPOINTCONVERSION: 'twopointconversion'
 };
 
@@ -166,4 +167,41 @@ test('a point-after try has no time of possession and never runs the clock', () 
     assert.equal(self.timeOfPossession(), 0);
     assert.equal(calls.advanceTime.length, 0);
     assert.equal(calls.stopCounter, 1);
+});
+
+test('a spike burns only a couple of seconds and stops the game clock in any quarter', () => {
+    const { playMaker, self, calls } = createPlaymaker({ quarter: 1, elapsedTime: 4, elapsedTimeAtLastPlay: 0 });
+
+    playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.SPIKE, -2);
+
+    // 2 (snap and immediate spike) + 4 real ticks - no huddle estimate, no chain-crew delay
+    assert.equal(self.timeOfPossession(), 6);
+    assert.equal(calls.advanceTime[0], 2);
+    assert.deepEqual(calls.playClock, [25]); // a stopped clock shortens the next play clock
+    assert.equal(calls.stopCounter, 1); // a spike kills the game clock until the next snap
+    assert.equal(calls.startCounter, 0);
+});
+
+test('a spike takes less time off the clock than an incompletion', () => {
+    const spike = createPlaymaker({ quarter: 1, elapsedTime: 3, elapsedTimeAtLastPlay: 0 });
+    spike.playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.SPIKE, -2);
+
+    const incompletion = createPlaymaker({ quarter: 1, elapsedTime: 3, elapsedTimeAtLastPlay: 0 });
+    incompletion.playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.PASS, 0, false, true);
+
+    // spike: 2 simulated seconds vs 4 + a 5 second chain-crew delay for an incompletion
+    assert.equal(spike.self.timeOfPossession(), 5);
+    assert.equal(incompletion.self.timeOfPossession(), 12);
+    assert.ok(spike.self.timeOfPossession() < incompletion.self.timeOfPossession());
+});
+
+test('a completed pass still costs far more clock than a spike', () => {
+    const spike = createPlaymaker({ elapsedTime: 0, elapsedTimeAtLastPlay: 0 });
+    spike.playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.SPIKE, -2);
+
+    const completion = createPlaymaker({ elapsedTime: 0, elapsedTimeAtLastPlay: 0 });
+    completion.playMaker.recordTimeOfPossession(GAME_PLAY_TYPES.PASS, 15);
+
+    assert.equal(spike.self.timeOfPossession(), 2);
+    assert.equal(completion.self.timeOfPossession(), 28); // 25 + round(15/5)
 });

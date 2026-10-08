@@ -124,6 +124,7 @@ var playMaker = {
         let isPenalty = false; //true when a penalty has occurred on this play
         let chosenPenalty = null; //the drawn Penalties-table entry, with enforced yards and resolved committing side
         let penaltyCommittedBy = null; //OFFENSE or DEFENSE - the unit flagged for the foul
+        let isLossOfDown = false; //true when the foul costs the offense a down (e.g. intentional grounding) - scoped per play so it never leaks into the next snap
 
         self.playCountForPossession(self.playCountForPossession() + 1);
         self.consecutiveDelayOfGamePenalties(0); //the ball was snapped, so the delay of game streak is broken
@@ -1084,7 +1085,14 @@ var playMaker = {
             //huddle/play clock plus time for the run itself, roughly 1-2 minutes from play call to the whistle
             simulatedPlaySeconds = 30 + Math.max(Math.round(yards / 2), 0);
         }
-        else if (typeOfPlay === GAME_PLAY_TYPES.PASS || typeOfPlay === GAME_PLAY_TYPES.SPIKE) {
+        else if (typeOfPlay === GAME_PLAY_TYPES.SPIKE) {
+            //a spike is the quickest snap in football - the ball is killed straight into the ground to stop
+            //the clock - so it burns only a couple of seconds, far less than an incompletion or a completed
+            //pass, and it never carries a chain-crew delay (the chains do not move on a spike)
+            simulatedPlaySeconds = 2;
+            nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
+        }
+        else if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
             //an incomplete pass stops the clock almost immediately and shortens the next play clock
             //(only an incompletion stops the clock on a pass, so stopsGameClock is reliable here)
             if (stopsGameClock) {
@@ -1113,12 +1121,13 @@ var playMaker = {
                 simulatedPlaySeconds += Math.max(Math.round(yards / 2), 0);
         }
 
-        //the game clock stops on a turnover, on a clock-stopping play (an incomplete pass or a run out of bounds)
-        //in the 4th quarter (or overtime), and on any special teams play that went dead with the clock stopped
-        //(deadBallStopsClock - a touchback, a kickoff penalty, a recovered onside kick, or a muffled punt) - so the
-        //offense cannot keep the clock moving, and it stays stopped until the next snap. In the 1st-3rd quarters
-        //incompletions and runs out of bounds leave the clock running, but the chain crew delay is charged.
-        let leaveClockStopped = isTurnover || deadBallStopsClock || (stopsGameClock && self.currentQuarter() >= 4);
+        //the game clock stops on a turnover, on a spike (its whole purpose, in any quarter), on a clock-stopping
+        //play (an incomplete pass or a run out of bounds) in the 4th quarter (or overtime), and on any special
+        //teams play that went dead with the clock stopped (deadBallStopsClock - a touchback, a kickoff penalty,
+        //a recovered onside kick, or a muffled punt) - so the offense cannot keep the clock moving, and it stays
+        //stopped until the next snap. In the 1st-3rd quarters incompletions and runs out of bounds leave the clock
+        //running, but the chain crew delay is charged.
+        let leaveClockStopped = isTurnover || deadBallStopsClock || typeOfPlay === GAME_PLAY_TYPES.SPIKE || (stopsGameClock && self.currentQuarter() >= 4);
         if (stopsGameClock && self.currentQuarter() < 4)
             simulatedPlaySeconds += MODULES.Constants.CHAIN_CREW_DELAY_SECONDS;
 
