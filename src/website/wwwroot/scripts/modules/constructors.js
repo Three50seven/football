@@ -1,7 +1,7 @@
 //CONSTRUCTORS
 MODULES.Constructors = (function () {
     return {
-        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenaltyYards = 0, totalThirdDownConversions = 0, totalFourthDownConversions = 0, totalFieldGoalAttempts = 0, totalFieldGoalsMade = 0) {
+        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenalties = 0, totalPenaltyYards = 0, totalThirdDownConversions = 0, totalFourthDownConversions = 0, totalFieldGoalAttempts = 0, totalFieldGoalsMade = 0) {
             this.teamId = teamId;
             this.teamName = teamName;
             this.totalPlayCount = totalPlayCount;
@@ -10,6 +10,7 @@ MODULES.Constructors = (function () {
             this.totalTimePossession = totalTimePossession;
             this.totalTurnovers = totalTurnovers;
             this.totalFirstDowns = totalFirstDowns;
+            this.totalPenalties = totalPenalties;
             this.totalPenaltyYards = totalPenaltyYards;
             this.totalThirdDownConversions = totalThirdDownConversions;
             this.totalFourthDownConversions = totalFourthDownConversions;
@@ -30,7 +31,7 @@ MODULES.Constructors = (function () {
             this.totalScore = totalScore;
             this.teamImagePath = UTILITIES.getTeamImagePath(this.teamId);
         },
-        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '', stopsGameClock = false, deadBallStopsClock = false, noPlayTime = false, isThirdDownConversion = false, isFourthDownConversion = false, isFieldGoalAttempt = false, isFieldGoalMade = false) {
+        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '', stopsGameClock = false, deadBallStopsClock = false, noPlayTime = false, isThirdDownConversion = false, isFourthDownConversion = false, isFieldGoalAttempt = false, isFieldGoalMade = false, isPenalty = false) {
             this.yards = yards;
             this.playResultText = playText;
             this.isTurnover = isTurnover;
@@ -44,6 +45,7 @@ MODULES.Constructors = (function () {
             this.isFourthDownConversion = isFourthDownConversion;
             this.isFieldGoalAttempt = isFieldGoalAttempt;
             this.isFieldGoalMade = isFieldGoalMade;
+            this.isPenalty = isPenalty;
             this.getTurnoverType = function () {
                 if (this.isTurnover) {
                     console.log(`inside the PlayResult`,this.playResultText);

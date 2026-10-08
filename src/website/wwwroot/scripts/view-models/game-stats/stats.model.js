@@ -6,14 +6,12 @@
     self.InitializeGameStats = function () {
         //insert two team records for this game
         let homeTeamPlayStat = new MODULES.Constructors.GamePlayStatRecord(
-            self.homeTeamID(),
-            self.homeTeamInfo().teamName(),
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            self.homeTeamID(), self.homeTeamInfo().teamName(),
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         );
         let awayTeamPlayStat = new MODULES.Constructors.GamePlayStatRecord(
-            self.awayTeamID(),
-            self.awayTeamInfo().teamName(),
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            self.awayTeamID(), self.awayTeamInfo().teamName(),
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         );
 
         self.gamePlayStats.push(homeTeamPlayStat);
@@ -29,6 +27,7 @@
             team.totalTimePossession += teamStatUpdates.totalTimePossession;
             team.totalTurnovers += teamStatUpdates.totalTurnovers;
             team.totalFirstDowns += teamStatUpdates.totalFirstDowns;
+            team.totalPenalties += teamStatUpdates.totalPenalties;
             team.totalPenaltyYards += teamStatUpdates.totalPenaltyYards;
             team.totalThirdDownConversions = (team.totalThirdDownConversions || 0) + (teamStatUpdates.totalThirdDownConversions || 0);
             team.totalFourthDownConversions = (team.totalFourthDownConversions || 0) + (teamStatUpdates.totalFourthDownConversions || 0);

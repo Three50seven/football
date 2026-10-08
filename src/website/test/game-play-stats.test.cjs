@@ -94,13 +94,28 @@ function createGameContext() {
                 BLOCKED_FIELD_GOAL_TOUCHDOWN_CHANCE_PERCENT: 0,
                 SPIKE_YARDS_LOST: 2,
                 DELAY_OF_GAME_PENALTY_YARDS: 5,
-                MAX_CONSECUTIVE_DELAY_OF_GAME_PENALTIES: 3,
-                UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS: 15
+                MAX_CONSECUTIVE_DELAY_OF_GAME_PENALTIES: 3
             },
             GameVariables: {
                 TotalPlayCount: 0,
                 DiceSumTotal: 10,
-                Teams: teams
+                Teams: teams,
+                //mirrors the Penalties table in game.variables.js so vm-loaded playmaker paths can draw flags
+                Penalties: [
+                    { name: 'False Start', yards: 5, penaltySideOfBall: 'OFFENSE', penaltyType: 'PRESNAP', chance: 5, automaticFirstDown: false },
+                    { name: 'Offside', yards: 5, penaltySideOfBall: 'ANY', penaltyType: 'PRESNAP', chance: 2, automaticFirstDown: false },
+                    { name: 'Defensive Pass Interference', yards: 15, penaltySideOfBall: 'DEFENSE', penaltyType: 'PASS', chance: 5, automaticFirstDown: true },
+                    { name: 'Offensive Pass Interference', yards: 10, penaltySideOfBall: 'OFFENSE', penaltyType: 'PASS', chance: 5, automaticFirstDown: false },
+                    { name: 'Holding', yards: 10, penaltySideOfBall: 'ANY', penaltyType: 'GENERAL', chance: 5, automaticFirstDown: false },
+                    { name: 'Roughing the Passer', yards: 15, penaltySideOfBall: 'DEFENSE', penaltyType: 'PASS', chance: 1, automaticFirstDown: true },
+                    { name: 'Personal Foul', yards: 15, penaltySideOfBall: 'ANY', penaltyType: 'GENERAL', chance: 1, automaticFirstDown: true },
+                    { name: 'Tripping', yards: 10, penaltySideOfBall: 'ANY', penaltyType: 'GENERAL', chance: 1, automaticFirstDown: false },
+                    { name: 'Clipping', yards: 15, penaltySideOfBall: 'ANY', penaltyType: 'GENERAL', chance: 1, automaticFirstDown: false },
+                    { name: 'Face Mask', yards: 15, penaltySideOfBall: 'ANY', penaltyType: 'GENERAL', chance: 1, automaticFirstDown: true },
+                    { name: 'Illegal Formation', yards: 5, penaltySideOfBall: 'OFFENSE', penaltyType: 'PRESNAP', chance: 1, automaticFirstDown: false },
+                    { name: 'Unsportsmanlike Conduct', yards: 15, penaltySideOfBall: 'ANY', penaltyType: 'GENERAL', chance: 1, automaticFirstDown: false },
+                    { name: 'Delay of Game', yards: 5, penaltySideOfBall: 'OFFENSE', penaltyType: 'PRESNAP', automaticFirstDown: false }
+                ]
             }
         },
         homeTeamID: observable(10),
@@ -167,7 +182,7 @@ function createGameContext() {
 test('GamePlayStatRecord initializes all new properties with correct defaults', () => {
     const game = createGameContext();
     const stat = new game.MODULES.Constructors.GamePlayStatRecord(
-        10, 'HOME', 5, 20, 30, 100, 1, 2, 5, 3, 1, 2, 1
+        10, 'HOME', 5, 20, 30, 100, 1, 2, 5, 5, 3, 1, 2, 1
     );
 
     assert.equal(stat.teamId, 10);
@@ -176,6 +191,7 @@ test('GamePlayStatRecord initializes all new properties with correct defaults', 
     assert.equal(stat.totalYardsPassing, 30);
     assert.equal(stat.totalTurnovers, 1);
     assert.equal(stat.totalFirstDowns, 2);
+    assert.equal(stat.totalPenalties, 5);
     assert.equal(stat.totalPenaltyYards, 5);
     assert.equal(stat.totalThirdDownConversions, 3);
     assert.equal(stat.totalFourthDownConversions, 1);
@@ -201,7 +217,7 @@ test('recordGameStats increments totalThirdDownConversions on a 3rd down convers
     assert.equal(homeTeam.totalThirdDownConversions, 0);
 
     const playResult = new game.MODULES.Constructors.PlayResult(
-        12, 'Pass Complete', false, game.GAME_PLAY_TYPES.PASS, true, '', false, false, false, true, false
+        12, 'Pass Complete', false, game.GAME_PLAY_TYPES.PASS, true, '', false, false, false, true, false, false, false
     );
 
     game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
@@ -218,7 +234,7 @@ test('recordGameStats increments totalFourthDownConversions on a 4th down conver
     assert.equal(homeTeam.totalFourthDownConversions, 0);
 
     const playResult = new game.MODULES.Constructors.PlayResult(
-        3, 'Run Successful', false, game.GAME_PLAY_TYPES.RUN, true, '', false, false, false, false, true
+        3, 'Run Successful', false, game.GAME_PLAY_TYPES.RUN, true, '', false, false, false, false, true, false, false
     );
 
     game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
@@ -255,6 +271,73 @@ test('recordGameStats increments field goal attempts but not made for a missed f
 
     assert.equal(homeTeam.totalFieldGoalAttempts, 1);
     assert.equal(homeTeam.totalFieldGoalsMade, 0);
+});
+
+test('recordGameStats records penalty count and penalty yards for an isPenalty play result', () => {
+    const game = createGameContext();
+    const homeTeam = game.gamePlayStats()[0];
+
+    const playResult = new game.MODULES.Constructors.PlayResult(
+        -5, 'Delay of Game - 5 Yard Penalty', false, '', false, '', false, false, false, false, false, false, false, true
+    );
+    playResult.penalty = { name: 'Delay of Game', yards: 5, penaltySideOfBall: 'OFFENSE', automaticFirstDown: false };
+
+    game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
+
+    assert.equal(homeTeam.totalPenalties, 1);
+    assert.equal(homeTeam.totalPenaltyYards, -5);
+});
+
+test('recordGameStats charges a defensive foul to the defending team, not the offense', () => {
+    const game = createGameContext();
+    const homeTeam = game.gamePlayStats()[0];
+    const awayTeam = game.gamePlayStats()[1];
+
+    const playResult = new game.MODULES.Constructors.PlayResult(
+        15, 'Roughing the Passer - AUTOMATIC FIRST DOWN - PENALTY: Roughing the Passer (15 YARDS)', false, game.GAME_PLAY_TYPES.PASS, true, '', false, false, false, false, false, false, false, true
+    );
+    playResult.penalty = { name: 'Roughing the Passer', yards: 15, penaltySideOfBall: 'DEFENSE', automaticFirstDown: true };
+
+    game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
+
+    assert.equal(homeTeam.totalYardsPassing, 0); //the acceptance wipes the pass gain
+    assert.equal(homeTeam.totalPenalties, 0);
+    assert.equal(homeTeam.totalPenaltyYards, 0);
+    assert.equal(awayTeam.totalPenalties, 1);
+    assert.equal(awayTeam.totalPenaltyYards, -15);
+    assert.equal(homeTeam.totalFirstDowns, 1); //automatic first down still credits the offense
+});
+
+test('recordGameStats charges an offensive holding foul to the offense with no rush/pass yards', () => {
+    const game = createGameContext();
+    const homeTeam = game.gamePlayStats()[0];
+
+    const playResult = new game.MODULES.Constructors.PlayResult(
+        -10, 'Run - PENALTY: Holding (10 YARDS)', false, game.GAME_PLAY_TYPES.RUN, false, '', false, false, false, false, false, false, false, true
+    );
+    playResult.penalty = { name: 'Holding', yards: 10, penaltySideOfBall: 'OFFENSE', automaticFirstDown: false };
+
+    game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
+
+    assert.equal(homeTeam.totalYardsRushing, 0);
+    assert.equal(homeTeam.totalPenalties, 1);
+    assert.equal(homeTeam.totalPenaltyYards, -10);
+});
+
+test('recordGameStats counts both flags on a repeated delay of game', () => {
+    const game = createGameContext();
+    const homeTeam = game.gamePlayStats()[0];
+
+    const playResult = new game.MODULES.Constructors.PlayResult(
+        -20, 'Delay of Game - 5 Yard Penalty + Unsportsmanlike Conduct - 15 Yard Penalty', false, '', false, '', false, false, false, false, false, false, false, true
+    );
+    playResult.penalty = { name: 'Delay of Game', yards: 20, penaltySideOfBall: 'OFFENSE', automaticFirstDown: false };
+    playResult.penaltyCount = 2;
+
+    game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
+
+    assert.equal(homeTeam.totalPenalties, 2);
+    assert.equal(homeTeam.totalPenaltyYards, -20);
 });
 
 test('getPlayResult correctly identifies 3rd down conversion on 3rd down gain reaching first down marker', () => {

@@ -4,7 +4,8 @@ MODULES.GameVariables = (function () {
     var _diceSumTotal = 0;
     var _teams = new TeamArray();
     var _timeIntervalCountDown = 1000; //Modify this value to set how fast the clock counts down for a quarter, 1000 = 1 second, 500 = half second, etc.
-    var _kickoffSliderDifficulty = 5; //change to higher number to slow down kick sliders, change to lower number to speed up    
+    var _kickoffSliderDifficulty = 5; //change to higher number to slow down kick sliders, change to lower number to speed up
+    var _penalties = new PenaltiesArray();
 
     //object constructor for a new teams array, stored in, MODULES.GameVariables.Teams
     function TeamArray() {
@@ -48,12 +49,38 @@ MODULES.GameVariables = (function () {
         return teamArray;
     }
 
+    function PenaltiesArray() {
+        var penaltyArray = new Array();
+        //read the enums off MODULES (populated by lookup.types.js) with plain-string
+        //fallbacks, so this table never crashes when a bundle order loads it first
+        var sideOfBall = (typeof MODULES !== 'undefined' && MODULES !== null && MODULES.PENALTY_SIDE_OF_BALL_TYPES) || { OFFENSE: 'OFFENSE', DEFENSE: 'DEFENSE', ANY: 'ANY' };
+        var penaltyKind = (typeof MODULES !== 'undefined' && MODULES !== null && MODULES.PENALTY_TYPES) || { PRESNAP: 'PRESNAP', PASS: 'PASS', GENERAL: 'GENERAL' };
+
+        penaltyArray.push({ name: 'False Start', yards: 5, penaltySideOfBall: sideOfBall.OFFENSE, penaltyType: penaltyKind.PRESNAP, chance: MODULES.Constants.FALSE_START_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Offside', yards: 5, penaltySideOfBall: sideOfBall.ANY, penaltyType: penaltyKind.PRESNAP, chance: MODULES.Constants.OFFSIDE_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Defensive Pass Interference', yards: 15, penaltySideOfBall: sideOfBall.DEFENSE, penaltyType: penaltyKind.PASS, chance: MODULES.Constants.DEFENSIVE_PASS_INTERFERENCE_CHANCE_PERCENT, automaticFirstDown: true });
+        penaltyArray.push({ name: 'Offensive Pass Interference', yards: 10, penaltySideOfBall: sideOfBall.OFFENSE, penaltyType: penaltyKind.PASS, chance: MODULES.Constants.OFFENSIVE_PASS_INTERFERENCE_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Holding', yards: 10, penaltySideOfBall: sideOfBall.ANY, penaltyType: penaltyKind.GENERAL, chance: MODULES.Constants.HOLDING_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Roughing the Passer', yards: 15, penaltySideOfBall: sideOfBall.DEFENSE, penaltyType: penaltyKind.PASS, chance: MODULES.Constants.ROUGHING_THE_PASSER_CHANCE_PERCENT, automaticFirstDown: true });
+        penaltyArray.push({ name: 'Personal Foul', yards: 15, penaltySideOfBall: sideOfBall.ANY, penaltyType: penaltyKind.GENERAL, chance: MODULES.Constants.PERSONAL_FOUL_CHANCE_PERCENT, automaticFirstDown: true });
+        penaltyArray.push({ name: 'Tripping', yards: 10, penaltySideOfBall: sideOfBall.ANY, penaltyType: penaltyKind.GENERAL, chance: MODULES.Constants.TRIPPING_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Clipping', yards: 15, penaltySideOfBall: sideOfBall.ANY, penaltyType: penaltyKind.GENERAL, chance: MODULES.Constants.CLIPPING_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Face Mask', yards: 15, penaltySideOfBall: sideOfBall.ANY, penaltyType: penaltyKind.GENERAL, chance: MODULES.Constants.FACE_MASK_CHANCE_PERCENT, automaticFirstDown: true });
+        penaltyArray.push({ name: 'Illegal Formation', yards: 5, penaltySideOfBall: sideOfBall.OFFENSE, penaltyType: penaltyKind.PRESNAP, chance: MODULES.Constants.ILLEGAL_FORMATION_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Unsportsmanlike Conduct', yards: 15, penaltySideOfBall: sideOfBall.ANY, penaltyType: penaltyKind.GENERAL, chance: MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_CHANCE_PERCENT, automaticFirstDown: false });
+        penaltyArray.push({ name: 'Delay of Game', yards: 5, penaltySideOfBall: sideOfBall.OFFENSE, penaltyType: penaltyKind.PRESNAP, automaticFirstDown: false }); //dead-ball call - always enforced, no chance roll
+        penaltyArray.push({ name: 'Intentional Grounding', yards: 10, penaltySideOfBall: sideOfBall.OFFENSE, penaltyType: penaltyKind.PASS, automaticFirstDown: false }); //spot foul off a throwaway - always enforced on the roll, no chance roll
+
+        return penaltyArray;
+    }
+
     return {
         TotalPlayCount: _totalPlayCount,
         DiceSumTotal: _diceSumTotal,
         Teams: _teams,
         TimeIntervalCountDown: _timeIntervalCountDown,
-        KickoffSliderDifficulty: _kickoffSliderDifficulty
+        KickoffSliderDifficulty: _kickoffSliderDifficulty,
+        Penalties: _penalties
     };
 
 })();

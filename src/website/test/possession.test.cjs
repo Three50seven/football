@@ -12,7 +12,6 @@ const playmakerSource = fs.readFileSync(
 const GAME_PLAY_TYPES = {
     RUN: 'run',
     PASS: 'pass',
-    PENALTY: 'penalty',
     TWOPOINTCONVERSION: 'twopointconversion'
 };
 

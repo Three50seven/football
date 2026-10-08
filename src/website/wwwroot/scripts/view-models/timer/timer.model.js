@@ -1,4 +1,4 @@
-﻿(function ($) {
+(function ($) {
     var self = this;
 
     //Timer Source: https://stackoverflow.com/questions/20467548/knockout-js-how-to-implement-countdown-timer
@@ -225,6 +225,10 @@
         self.elapsedTimeAtLastPlay = 0; //a new quarter starts the game clock over
         self.twoMinuteWarningPending = false;
         self.quarterEndPendingAfterPlay = false;
+        
+        // Reset throwaways for the new quarter
+        if (self.homeTeamThrowaways) self.homeTeamThrowaways(0);
+        if (self.awayTeamThrowaways) self.awayTeamThrowaways(0);
         let endingQuarter = self.currentQuarter();
 
         if (endingQuarter === 2) { //end of the first half - timeouts reset for the second half

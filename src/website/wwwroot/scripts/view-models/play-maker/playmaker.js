@@ -121,6 +121,9 @@ var playMaker = {
         let isOverthrownIncomplete = false; //a pass thrown beyond the back of the end zone is incomplete, not a touchdown
         let isIncompletePass = false; //true when this pass fell incomplete - kept separate from a completion that gained zero yards
         let isOutOfBounds = false; //true when the ball carrier was forced out of bounds - also a clock-stopping play
+        let isPenalty = false; //true when a penalty has occurred on this play
+        let chosenPenalty = null; //the drawn Penalties-table entry, with enforced yards and resolved committing side
+        let penaltyCommittedBy = null; //OFFENSE or DEFENSE - the unit flagged for the foul
 
         self.playCountForPossession(self.playCountForPossession() + 1);
         self.consecutiveDelayOfGamePenalties(0); //the ball was snapped, so the delay of game streak is broken
@@ -181,6 +184,46 @@ var playMaker = {
             return conversionResult;
         }
 
+        // THROWAWAY PLAY - Let Quarterback throw the ball away to avoid a sack or potential interception on a bad roll (simulates reading the defense)
+        if (playSelected === GAME_PLAY_TYPES.THROWAWAY) {
+            _yards = 0;
+            _playResultText = 'THROWAWAY - NO YARDAGE';
+            isIncompletePass = true;
+            isLossOfDown = false; // flag to indicate if the play results in a loss of down
+
+            let intentionalGroundingChance = MODULES.Constants.INTENTIONAL_GROUNDING_CHANCE_PERCENT;
+            let currentTeamId = self.currentTeamWithBall();
+            let throwawaysUsed = currentTeamId === self.homeTeamID() ? self.homeTeamThrowaways() : self.awayTeamThrowaways();
+            let maxThrowaways = MODULES.Constants.THROWAWAY_PER_QUARTER;
+
+            if (throwawaysUsed > maxThrowaways) {
+                // Increase the chance for each throwaway over the limit.
+                intentionalGroundingChance += (throwawaysUsed - maxThrowaways) * 15;
+            }
+
+            // add a chance of an intential grounding penalty
+            if (UTILITIES.getRandomInt(1, 100) <= intentionalGroundingChance) {
+                let chanceOfSpotFoul = UTILITIES.getRandomInt(1, 100);
+                if (chanceOfSpotFoul <= 10) {
+                    _yards -= UTILITIES.getRandomInt(1, 10); // apply a loss of more yards that are deducted from the total yard loss of 10 (like a sack behind the line of scrimmage)
+                }
+
+                //spot foul off the Penalties table - the constant only backstops a missing entry
+                let intentionalGroundingPenalty = playMaker.getPenaltyByName('Intentional Grounding');
+                let groundingYards = intentionalGroundingPenalty ? intentionalGroundingPenalty.yards : 10;
+                _yards -= Math.max(groundingYards + _yards, 0); // enforce the full loss from the post-sack spot
+                _playResultText = 'THROWAWAY - INTENTIONAL GROUNDING PENALTY - ' + groundingYards + ' YARD PENALTY - Loss of Down';
+
+                //add a flag to show a penalty alert - the foul is committed by the offense
+                isPenalty = true;
+                isLossOfDown = true; // intentional grounding results in a loss of down
+                chosenPenalty = intentionalGroundingPenalty
+                    ? { name: intentionalGroundingPenalty.name, yards: groundingYards, penaltySideOfBall: intentionalGroundingPenalty.penaltySideOfBall, automaticFirstDown: intentionalGroundingPenalty.automaticFirstDown }
+                    : { name: 'Intentional Grounding', yards: groundingYards, penaltySideOfBall: MODULES.PENALTY_SIDE_OF_BALL_TYPES.OFFENSE, automaticFirstDown: false };
+                penaltyCommittedBy = chosenPenalty.penaltySideOfBall;
+            }
+        }
+
         //POSITIVE YARDAGE PLAYS
         if (_positiveYards && playSelected === GAME_PLAY_TYPES.PASS) {
             _yards = UTILITIES.getRandomInt(1, yardageMax);
@@ -226,6 +269,58 @@ var playMaker = {
             _playResultText = _playResultText + ' for no gain';
         }
 
+        // Check for random penalties on normal plays
+        if (!isPenalty && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+            if (UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.MAIN_PENALTY_PERCENT) {
+                //work on a copy so the shared Penalties table is never mutated by the filters below
+                let eligible = (MODULES.GameVariables.Penalties || []).slice();
+                //narrow to flags that can occur on this play call - PASS-type flags only on
+                //passes, GENERAL-type flags on either; PRESNAP flags never fire here
+                if (playSelected === GAME_PLAY_TYPES.PASS) {
+                    eligible = eligible.filter(p => p.penaltyType === MODULES.PENALTY_TYPES.PASS || p.penaltyType === MODULES.PENALTY_TYPES.GENERAL);
+                }
+                else {
+                    eligible = eligible.filter(p => p.penaltyType === MODULES.PENALTY_TYPES.GENERAL);
+                }
+                //roll once for which unit commits the foul, then keep only flags that unit can commit;
+                //an ANY-sided flag is committable by either unit, a fixed-side flag only by its own unit
+                penaltyCommittedBy = UTILITIES.getRandomInt(0, 1) === 0 ? MODULES.PENALTY_SIDE_OF_BALL_TYPES.OFFENSE : MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE;
+                eligible = eligible.filter(p => p.penaltySideOfBall === MODULES.PENALTY_SIDE_OF_BALL_TYPES.ANY || p.penaltySideOfBall === penaltyCommittedBy);
+                //each surviving flag keeps its own chance of actually being thrown
+                eligible = eligible.filter(p => UTILITIES.getRandomInt(1, 100) <= p.chance);
+                //choose a random penalty from the remaining eligible penalties
+                if (eligible.length > 0) {
+                    let drawn = eligible[UTILITIES.getRandomInt(0, eligible.length - 1)];
+                    //an ANY-sided flag is committed by whichever unit the roll above picked
+                    penaltyCommittedBy = drawn.penaltySideOfBall === MODULES.PENALTY_SIDE_OF_BALL_TYPES.ANY ? penaltyCommittedBy : drawn.penaltySideOfBall;
+                    isPenalty = true;
+
+                    //determine if the penalty results in an automatic first down
+                    if (drawn.automaticFirstDown) {
+                        _playResultText += ' - AUTOMATIC FIRST DOWN';
+                    }
+
+                    //a foul by the offense moves the ball backwards (half-the-distance near
+                    //its own goal, via the shared cap); a foul by the defense moves it forwards
+                    let enforcedYards = drawn.yards;
+                    if (penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.OFFENSE) {
+                        enforcedYards = playMaker.getCappedOffensivePenaltyYards(drawn.yards);
+                        _yards -= enforcedYards;
+                    }
+                    else {
+                        //a penalty cannot score - cap a defensive enforcement at the goal line
+                        enforcedYards = Math.min(enforcedYards, Math.max(distanceToGoalLine - 1, 0));
+                        _yards += enforcedYards;
+                    }
+
+                    //attach the enforced (post-cap) entry so recordGameStats attributes it as-is
+                    chosenPenalty = { name: drawn.name, yards: enforcedYards, penaltySideOfBall: penaltyCommittedBy, automaticFirstDown: drawn.automaticFirstDown };
+
+                    _playResultText += ' - PENALTY: ' + drawn.name + ' (' + Math.abs(enforcedYards) + ' YARDS)';
+                }
+            }
+        }
+
         if (playSelected === GAME_PLAY_TYPES.PASS && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.INTERCEPTION_CHANCE_PERCENT) {
             turnover = true;
             isLiveBallTurnover = true;
@@ -258,7 +353,7 @@ var playMaker = {
         }
 
         //SAFETY
-        if (!turnover && self.yardsToTouchdown() > 100 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+        if (!turnover && self.yardsToTouchdown() > 100 && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN || playSelected === GAME_PLAY_TYPES.THROWAWAY)) {
             _playResultText = SCORE_TYPES.SAFETY.toUpperCase();
             playMaker.addScore(SCORE_TYPES.SAFETY);
             self.isSafety(true);
@@ -286,8 +381,24 @@ var playMaker = {
         else if (isTouchdown) {
             self.yardsToFirst(10);
             self.currentDown(1);
+        }        
+        else if (isPenalty && chosenPenalty && !isLossOfDown) {
+            //an accepted penalty replays the down at the new spot - it never costs
+            //(or earns) a down by itself; a defensive foul that reaches the sticks
+            //or carries an automatic first down moves the chains instead
+            let committedByDefense = penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE;
+            
+            if (committedByDefense && (chosenPenalty.automaticFirstDown || _yards >= yardsNeededForFirstDown)) {
+                self.yardsToFirst(10); //reset yards to first for next set of downs
+                self.currentDown(1); //reset to first down
+                isFirstDown = true;
+            }
+            else {
+                self.yardsToFirst(yardsNeededForFirstDown - _yards); //replay the same down at the new spot
+                //currentDown unchanged - even a 4th-down foul replays 4th down, no turnover, unless isLossOfDown flag is true (e.g. intential grounding)
+            }
         }
-        else if (_yards >= self.yardsToFirst() && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
+        else if (_yards >= self.yardsToFirst() && !isLossOfDown && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             self.yardsToFirst(10); //reset yards to first for next set of downs
             self.currentDown(1); //reset to first down
             isFirstDown = !isTouchdown; //a touchdown is recorded as a score, not a first down
@@ -310,6 +421,12 @@ var playMaker = {
         //flag a clock-stopping play (an incompletion or a run out of bounds) explicitly so the game clock logic never has
         //to infer it from the yardage; a live-ball turnover (interception/fumble) means the ball was caught or stripped
         let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown, '', (isIncompletePass || isOutOfBounds) && !isLiveBallTurnover, false, false, isThirdDownConversion, isFourthDownConversion);
+        playResult.isPenalty = isPenalty;
+        //attach the drawn Penalties-table entry (already resolved to the committing
+        //side with enforced post-cap yards) so recordGameStats can attribute it as-is
+        if (chosenPenalty) {
+            playResult.penalty = chosenPenalty;
+        }
 
         self.SetBallPosition();
 
@@ -768,7 +885,7 @@ var playMaker = {
 
         if (self.yardsToTouchdown() > 100) {
             playResultText = 'SAFETY - Spike in Own End Zone';
-            let safetyResult = new MODULES.Constructors.PlayResult(spikeYards, playResultText, true, GAME_PLAY_TYPES.PASS);
+            let safetyResult = new MODULES.Constructors.PlayResult(spikeYards, playResultText, true, GAME_PLAY_TYPES.SPIKE);
 
             playMaker.addScore(SCORE_TYPES.SAFETY);
             playMaker.recordPlay(safetyResult);
@@ -786,7 +903,7 @@ var playMaker = {
         if (!turnover)
             self.currentDown(self.currentDown() + 1);
 
-        let playResult = new MODULES.Constructors.PlayResult(spikeYards, playResultText, turnover, GAME_PLAY_TYPES.PASS);
+        let playResult = new MODULES.Constructors.PlayResult(spikeYards, playResultText, turnover, GAME_PLAY_TYPES.SPIKE);        
 
         self.SetBallPosition();
 
@@ -804,18 +921,29 @@ var playMaker = {
         self.StopCounter(); //a spike stops the main game clock until the next snap
 
         self.ShowHideSpecialTeamsMenu();
+
+        playMaker.ShowPlayResultAlerts(playResult);
     },
 
     applyOffensivePenaltyYards: function (penaltyYards) {
+        let appliedPenaltyYards = playMaker.getCappedOffensivePenaltyYards(penaltyYards);
+
+        self.yardsTraveled(self.yardsTraveled() - appliedPenaltyYards);
+        self.yardsToFirst(self.yardsToFirst() + appliedPenaltyYards);
+
+        return appliedPenaltyYards;
+    },
+
+    //half-the-distance rule shared by dead-ball flags (delay of game) and live
+    //in-play offensive fouls - a pure calculation so getPlayResult can cap the
+    //penalty before folding it into _yards without touching field position twice
+    getCappedOffensivePenaltyYards: function (penaltyYards) {
         let distanceToOwnGoal = 100 - self.yardsToTouchdown();
         let appliedPenaltyYards = penaltyYards;
 
         if (penaltyYards >= distanceToOwnGoal) {
             appliedPenaltyYards = Math.min(Math.ceil(distanceToOwnGoal / 2), Math.max(distanceToOwnGoal - 1, 0));
         }
-
-        self.yardsTraveled(self.yardsTraveled() - appliedPenaltyYards);
-        self.yardsToFirst(self.yardsToFirst() + appliedPenaltyYards);
 
         return appliedPenaltyYards;
     },
@@ -825,6 +953,11 @@ var playMaker = {
             return 'No Yardage - Ball at the 1 Yard Line';
 
         return appliedPenaltyYards === fullPenaltyYards ? fullPenaltyYards + ' Yard Penalty' : appliedPenaltyYards + ' Yard Half-the-Distance Penalty';
+    },
+
+    //single lookup for the Penalties table so flag yardage lives in one place (game.variables.js)
+    getPenaltyByName: function (name) {
+        return ((MODULES.GameVariables.Penalties || []).filter(function (p) { return p.name === name; }))[0] || null;
     },
 
     //the play clock expired before the snap - whistle the play dead and assess a 5 yard delay of game penalty
@@ -846,17 +979,24 @@ var playMaker = {
         }
 
         self.playCountForPossession(self.playCountForPossession() + 1);
-        let penaltyYards = playMaker.applyOffensivePenaltyYards(MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS);
-        let delayPenaltyText = playMaker.getPenaltyText(penaltyYards, MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS);
+        //dead-ball flag yardage comes from the Penalties table - the constant only backstops a missing entry
+        let delayEntry = playMaker.getPenaltyByName('Delay of Game');
+        let fullDelayYards = delayEntry ? delayEntry.yards : (MODULES.Constants.DELAY_OF_GAME_PENALTY_YARDS || 5);
+        let penaltyYards = playMaker.applyOffensivePenaltyYards(fullDelayYards);
+        let delayPenaltyText = playMaker.getPenaltyText(penaltyYards, fullDelayYards);
         let penaltyText = 'Delay of Game - ' + delayPenaltyText;
+        let penaltyCount = 1;
 
 
         if (self.consecutiveDelayOfGamePenalties() === 2) {
-            //a second straight delay of game is also assessed as unsportsmanlike conduct
-            let unsportsmanlikePenaltyYards = playMaker.applyOffensivePenaltyYards(MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
-            let unsportsmanlikePenaltyText = playMaker.getPenaltyText(unsportsmanlikePenaltyYards, MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS);
+            //a second straight delay of game is also assessed as unsportsmanlike conduct, by name from the table
+            let unsportsmanlikeEntry = playMaker.getPenaltyByName('Unsportsmanlike Conduct');
+            let fullUnsportsmanlikeYards = unsportsmanlikeEntry ? unsportsmanlikeEntry.yards : (MODULES.Constants.UNSPORTSMANLIKE_CONDUCT_PENALTY_YARDS || 15); //table is the source of truth; CONSTANT backstops a missing entry
+            let unsportsmanlikePenaltyYards = playMaker.applyOffensivePenaltyYards(fullUnsportsmanlikeYards);
+            let unsportsmanlikePenaltyText = playMaker.getPenaltyText(unsportsmanlikePenaltyYards, fullUnsportsmanlikeYards);
             penaltyYards += unsportsmanlikePenaltyYards;
             penaltyText += ' + Unsportsmanlike Conduct - ' + unsportsmanlikePenaltyText;
+            penaltyCount = 2; //two flags were thrown on the one dead-ball whistle
             self.ShowGameAlert('DELAY OF GAME - repeated violation! ' + unsportsmanlikePenaltyText + ' for unsportsmanlike conduct has been assessed. One more delay of game will result in a forfeit.', {
                 title: 'Delay of Game - Unsportsmanlike Conduct',
                 tone: 'warning'
@@ -871,7 +1011,12 @@ var playMaker = {
 
         self.SetBallPosition();
 
-        let playResult = new MODULES.Constructors.PlayResult(-penaltyYards, penaltyText, false, GAME_PLAY_TYPES.PENALTY);
+        //dead-ball flag: whistle blew before the snap, so there is no run/pass play type -
+        //the isPenalty flag plus the attached Penalties-table entry carry the attribution
+        let delayPenalty = { name: 'Delay of Game', yards: penaltyYards, penaltySideOfBall: MODULES.PENALTY_SIDE_OF_BALL_TYPES.OFFENSE, automaticFirstDown: false };
+        let playResult = new MODULES.Constructors.PlayResult(-penaltyYards, penaltyText, false, '', false, '', false, false, false, false, false, false, false, true);
+        playResult.penalty = delayPenalty;
+        playResult.penaltyCount = penaltyCount;
         playMaker.recordPlay(playResult);
     },
 
@@ -922,7 +1067,7 @@ var playMaker = {
         });
     },
 
-    recordTimeOfPossession: function (typeOfPlay, yards, isTurnover, stopsGameClock, deadBallStopsClock, noPlayTime) {
+    recordTimeOfPossession: function (typeOfPlay, yards, isTurnover, stopsGameClock, deadBallStopsClock, noPlayTime, isPenalty = false) {
         if (typeOfPlay === GAME_PLAY_TYPES.TWOPOINTCONVERSION || typeOfPlay === KICKOFF_TYPES.EXTRAPOINT) {
             self.timeOfPossession(0);
             self.StopCounter();
@@ -939,7 +1084,7 @@ var playMaker = {
             //huddle/play clock plus time for the run itself, roughly 1-2 minutes from play call to the whistle
             simulatedPlaySeconds = 30 + Math.max(Math.round(yards / 2), 0);
         }
-        else if (typeOfPlay === GAME_PLAY_TYPES.PASS) {
+        else if (typeOfPlay === GAME_PLAY_TYPES.PASS || typeOfPlay === GAME_PLAY_TYPES.SPIKE) {
             //an incomplete pass stops the clock almost immediately and shortens the next play clock
             //(only an incompletion stops the clock on a pass, so stopsGameClock is reliable here)
             if (stopsGameClock) {
@@ -950,8 +1095,8 @@ var playMaker = {
                 simulatedPlaySeconds = 25 + Math.max(Math.round(yards / 5), 0);
             }
         }
-        else if (typeOfPlay === GAME_PLAY_TYPES.PENALTY) {
-            simulatedPlaySeconds = 0; //whistle blown before the snap - no game clock runs off
+        else if (isPenalty && (typeOfPlay === '' || typeOfPlay === undefined || typeOfPlay === null)) {
+            simulatedPlaySeconds = 0; //whistle blown before the snap - no game clock run-off
             nextPlayClockSeconds = MODULES.Constants.PLAY_CLOCK_SHORT;
         }
         else if (noPlayTime) {
@@ -1042,7 +1187,8 @@ var playMaker = {
         console.log('This Play:' + thisPlaysResult.playResultText + ' by the ' + team.teamName() + ' for ' + yardsText);
 
         //RECORD TIME OF POSSESSION (before logging, so the play history shows this play's time)
-        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards, thisPlaysResult.isTurnover, thisPlaysResult.stopsGameClock, thisPlaysResult.deadBallStopsClock, thisPlaysResult.noPlayTime);
+        //a dead-ball penalty (whistle before the snap, empty play type) burns no game clock
+        this.recordTimeOfPossession(thisPlaysResult.playType, thisPlaysResult.yards, thisPlaysResult.isTurnover, thisPlaysResult.stopsGameClock, thisPlaysResult.deadBallStopsClock, thisPlaysResult.noPlayTime, thisPlaysResult.isPenalty);
 
         //MODULES.Constructors.PlayHistory: teamId, teamName, down, playCount, playYards, playResult, ballSpot, quarter, timeOfPossession
         self.AddPlayHistory(new MODULES.Constructors.PlayHistory(self.teamPlayHistory().length + 1, self.currentTeamWithBall(),
@@ -1068,18 +1214,40 @@ var playMaker = {
     },
 
     recordGameStats: function (team, thisPlaysResult) {
-        let playStatsRecord = new MODULES.Constructors.GamePlayStatRecord(team.teamId, team.teamName, 1, 0, 0, self.timeOfPossession(), 0, 0); //construct new GamePlayStatRecord
+        let playStatsRecord = new MODULES.Constructors.GamePlayStatRecord(team.teamId, team.teamName, 1, 0, 0,  self.timeOfPossession(), 0, 0, 0); //construct new GamePlayStatRecord
 
-        if (thisPlaysResult.playType === GAME_PLAY_TYPES.RUN) {
+        //an accepted in-play penalty wipes the run/pass gain, so only the penalty counts below
+        if (!thisPlaysResult.isPenalty && thisPlaysResult.playType === GAME_PLAY_TYPES.RUN) {
             playStatsRecord.totalYardsRushing = thisPlaysResult.yards;
         }
 
-        if (thisPlaysResult.playType === GAME_PLAY_TYPES.PASS) {
+        if (!thisPlaysResult.isPenalty && thisPlaysResult.playType === GAME_PLAY_TYPES.PASS) {
             playStatsRecord.totalYardsPassing = thisPlaysResult.yards;
         }
 
-        if (thisPlaysResult.playType === GAME_PLAY_TYPES.PENALTY) {
-            playStatsRecord.totalPenaltyYards = thisPlaysResult.yards; //already a negative value (e.g. -5)
+        if (thisPlaysResult.isPenalty) {
+            //penaltySideOfBall on the attached entry is the COMMITTING unit; default to
+            //OFFENSE for legacy/dead-ball results that carry no entry
+            let penaltySide = thisPlaysResult.penalty && thisPlaysResult.penalty.penaltySideOfBall
+                ? thisPlaysResult.penalty.penaltySideOfBall
+                : MODULES.PENALTY_SIDE_OF_BALL_TYPES.OFFENSE;
+            let penaltyYardsAbs = thisPlaysResult.penalty
+                ? Math.abs(thisPlaysResult.penalty.yards)
+                : Math.abs(thisPlaysResult.yards);
+
+            let penaltyCount = thisPlaysResult.penaltyCount || 1; //a repeated delay of game carries two flags
+            if (penaltySide === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE) {
+                //a defensive foul is drawn by the offense but committed by the defense -
+                //the count and yards belong to the defending team, not the team with the ball
+                let defenseTeamId = team.teamId === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+                let defenseInfo = HELPERS.getTeamInfo(defenseTeamId);
+                let defenseRecord = new MODULES.Constructors.GamePlayStatRecord(defenseTeamId, defenseInfo.teamName(), 0, 0, 0, 0, 0, 0, penaltyCount, -penaltyYardsAbs);
+                self.UpdateGameStat(defenseRecord);
+            }
+            else {
+                playStatsRecord.totalPenalties = penaltyCount;
+                playStatsRecord.totalPenaltyYards = -penaltyYardsAbs;
+            }
         }
 
         if (thisPlaysResult.isTurnover)
@@ -1229,6 +1397,13 @@ var playMaker = {
             self.ShowGameAlert(playResult.getTurnoverType() + ' - ' + offensiveTeam.teamName() + ' take over at the ' + HELPERS.getYardText() + ' yard line', {
                 title: 'Turnover',
                 tone: 'forfeit'
+            });
+        }
+
+        if (playResult.isPenalty) {
+            self.ShowGameAlert(playResult.playResultText, {
+                title: 'Penalty',
+                tone: 'penalty'
             });
         }
     }
