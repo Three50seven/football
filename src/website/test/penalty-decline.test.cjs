@@ -8,10 +8,12 @@ const { createGameContext } = require('./helpers/play-context.cjs');
 // 3rd/4th-down snap the defense already won, or a touchdown the flag cannot beat).
 //
 // Each snap is scripted through a single Penalties entry, so the test controls which unit
-// drew the flag. Rolls are consumed in the order a run play asks for them:
-//   1. big-play check, 2. run yardage, 3. MAIN_PENALTY_PERCENT check,
-//   4. committing-unit roll (0 = OFFENSE, 1 = DEFENSE), 5. the entry's own chance roll,
-//   6. the pick among eligible entries, 7. fumble check, 8. out-of-bounds check
+// drew the flag. The turnover chances are rolled before the flag is drawn, so rolls are
+// consumed in this order:
+//   1. big-play check, 2. play yardage, 3. interception check (pass only),
+//   4. fumble check (only when the play can fumble), 5. MAIN_PENALTY_PERCENT check,
+//   6. committing-unit roll (0 = OFFENSE, 1 = DEFENSE), 7. the entry's own chance roll,
+//   8. the pick among eligible entries, 9. out-of-bounds check (run only)
 // (the out-of-bounds roll is only reached on a short gain, so a leftover value is harmless)
 function createPenaltyPlay(options = {}) {
     const game = createGameContext();
@@ -31,15 +33,18 @@ function createPenaltyPlay(options = {}) {
     game.StartCounter = () => {};
     game.AdvanceTime = () => {};
 
+    //a pass asks for an interception check and a fumble check, a run only the fumble check;
+    //only a run can run out of bounds afterwards
+    const turnoverRolls = options.play === 'pass' ? [100, 100] : [100];
     const queue = [
         1,                          //big-play check - keep the yardage cap at 15
-        options.yardsRoll ?? 8,     //run yardage (the loss itself when the dice sum is low)
+        options.yardsRoll ?? 8,     //play yardage (the loss itself when the dice sum is low)
+        ...turnoverRolls,           //interception check / fumble check - never fire
         1,                          //MAIN_PENALTY_PERCENT check
         options.committedBy ?? 0,   //0 = OFFENSE, 1 = DEFENSE
         1,                          //the entry's chance roll
         0,                          //pick the only eligible entry
-        100,                        //fumble check - never
-        100                         //out-of-bounds check - never
+        ...(options.play === 'pass' ? [] : [100]) //out-of-bounds check - never
     ];
     game.UTILITIES.getRandomInt = () => (queue.length ? queue.shift() : 100);
 
@@ -200,6 +205,7 @@ test('a 10 yard completion with offensive pass interference is 1st and 20, not 1
         down: 1,
         yardsRoll: 10,
         committedBy: 0,
+        play: 'pass',
         penalty: { name: 'Offensive Pass Interference', yards: 10, penaltySideOfBall: 'OFFENSE', penaltyType: 'PASS', chance: 100, automaticFirstDown: false }
     });
 

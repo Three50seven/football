@@ -71,8 +71,11 @@ function createGameContext() {
             Constants: {
                 END_ZONE_YARDS: 10,
                 NO_GAIN_PASS_COMPLETION_CHANCE_PERCENT: 0,
+                MAIN_PENALTY_PERCENT: 0,
                 INTERCEPTION_CHANCE_PERCENT: 0,
+                INTERCEPTION_RETURN_TOUCHDOWN_CHANCE_PERCENT: 0,
                 FUMBLE_CHANCE_PERCENT: 0,
+                FUMBLE_RECOVERY_RETURN_TOUCHDOWN_CHANCE_PERCENT: 0,
                 RUN_OUT_OF_BOUNDS_MAX_YARDS: 5,
                 RUN_OUT_OF_BOUNDS_CHANCE_PERCENT: 0,
                 RUN_OUT_OF_BOUNDS_LEADING_END_OF_HALF_CHANCE_PERCENT: 0,

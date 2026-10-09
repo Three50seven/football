@@ -126,6 +126,8 @@ var playMaker = {
         let chosenPenalty = null; //the drawn Penalties-table entry, with enforced yards and resolved committing side
         let penaltyCommittedBy = null; //OFFENSE or DEFENSE - the unit flagged for the foul
         let isLossOfDown = false; //true when the foul costs the offense a down (e.g. intentional grounding) - scoped per play so it never leaks into the next snap
+        let liveBallTurnoverType = ''; //INTERCEPTION or FUMBLE - which ball the defense just recovered
+        let isTurnoverNegatedByPenalty = false; //true when a defensive flag handed the recovered ball back to the offense
 
         self.playCountForPossession(self.playCountForPossession() + 1);
         self.consecutiveDelayOfGamePenalties(0); //the ball was snapped, so the delay of game streak is broken
@@ -271,6 +273,26 @@ var playMaker = {
             _playResultText = _playResultText + ' for no gain';
         }
 
+        //TURNOVER CHECKS - run before the flag is drawn so the penalty decision below already
+        //knows whether the defense is about to recover this ball (an interception or a fumble)
+        if (playSelected === GAME_PLAY_TYPES.PASS && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.INTERCEPTION_CHANCE_PERCENT) {
+            turnover = true;
+            isLiveBallTurnover = true;
+            liveBallTurnoverType = 'INTERCEPTION';
+            _playResultText = 'Pass INTERCEPTED';
+        }
+        else {
+            let canFumble = playSelected === GAME_PLAY_TYPES.RUN ||
+                (playSelected === GAME_PLAY_TYPES.PASS && (_positiveYards || _negativeYards) && !isOverthrownIncomplete);
+
+            if (canFumble && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.FUMBLE_CHANCE_PERCENT) {
+                turnover = true;
+                isLiveBallTurnover = true;
+                liveBallTurnoverType = 'FUMBLE';
+                _playResultText += ' - FUMBLE RECOVERED BY DEFENSE';
+            }
+        }
+
         // Check for random penalties on normal plays
         if (!isPenalty && (playSelected === GAME_PLAY_TYPES.PASS || playSelected === GAME_PLAY_TYPES.RUN)) {
             if (UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.MAIN_PENALTY_PERCENT) {
@@ -307,9 +329,10 @@ var playMaker = {
                     //the flag is judged on the play's outcome BEFORE enforcement touches _yards -
                     //on yardage alone the offended team always gains by accepting (_yards -
                     //enforcedYards only ever helps the defense, _yards + enforcedYards only ever
-                    //helps the offense), so only the down or the score can justify declining
+                    //helps the offense), so only the down or the score can justify declining.
+                    //a play that just turned the ball over never scored, whatever its yardage says
                     let playOutcomeYards = _yards;
-                    let playAlreadyScored = playOutcomeYards >= distanceToGoalLine;
+                    let playAlreadyScored = !turnover && playOutcomeYards >= distanceToGoalLine;
                     let penaltyDeclined = false;
                     if (penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.OFFENSE) {
                         enforcedYards = playMaker.getCappedOffensivePenaltyYards(drawn.yards);
@@ -338,14 +361,32 @@ var playMaker = {
                         //a penalty cannot score - cap a defensive enforcement at the goal line
                         enforcedYards = Math.min(enforcedYards, Math.max(distanceToGoalLine - 1, 0));
 
-                        //the offense decides: accepting can only push the offense forward, and an
-                        //automatic first down is always worth taking, so the only outcome worth
-                        //keeping is one no flag can beat - a touchdown already on the board.
-                        //Enforcing would book the score as the flag instead of the play itself
-                        penaltyDeclined = playAlreadyScored;
+                        if (turnover) {
+                            //the defense just recovered this ball (an interception or a fumble),
+                            //so a foul by the defense sends the possession back to the offense:
+                            //the offense accepts the flag and wipes the turnover it just conceded
+                            //- on any down, even a 4th-down attempt, where the enforced flag hands
+                            //the offense its down (or its try at it) back
+                            //
+                            //the recovery is wiped, and with it the play's own yardage -
+                            //only the flag is enforced, walked off from the line of scrimmage
+                            //(the cap above keeps it short of the goal line, so an accepted
+                            //flag can never put the ball across it)
+                            _yards = enforcedYards;
+                            turnover = false;
+                            isLiveBallTurnover = false;
+                            isTurnoverNegatedByPenalty = true;
+                        }
+                        else {
+                            //the offense decides: accepting can only push the offense forward, and an
+                            //automatic first down is always worth taking, so the only outcome worth
+                            //keeping is one no flag can beat - a touchdown already on the board.
+                            //Enforcing would book the score as the flag instead of the play itself
+                            penaltyDeclined = playAlreadyScored;
 
-                        if (!penaltyDeclined) {
-                            _yards += enforcedYards;
+                            if (!penaltyDeclined) {
+                                _yards += enforcedYards;
+                            }
                         }
                     }                   
 
@@ -363,25 +404,9 @@ var playMaker = {
                     //drew or for one that was declined
                     _penaltyText = ' PENALTY: On the ' + (penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE ? 'Defense' : 'Offense') + 
                         ' - ' + drawn.name + ' (' + Math.abs(enforcedYards) + ' YARDS)' + 
-                        (drawn.automaticFirstDown && penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE ? ' - AUTOMATIC FIRST DOWN' : '') + 
-                        ' - Penalty ' + (penaltyDeclined ? 'Declined' : 'Enforced');
+                        (drawn.automaticFirstDown && !penaltyDeclined && penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE ? ' - AUTOMATIC FIRST DOWN' : '') + 
+                        ' - PENALTY ' + (penaltyDeclined ? 'DECLINED' : 'ENFORCED');
                 }
-            }
-        }
-
-        if (playSelected === GAME_PLAY_TYPES.PASS && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.INTERCEPTION_CHANCE_PERCENT) {
-            turnover = true;
-            isLiveBallTurnover = true;
-            _playResultText = 'Pass INTERCEPTED';
-        }
-        else {
-            let canFumble = playSelected === GAME_PLAY_TYPES.RUN ||
-                (playSelected === GAME_PLAY_TYPES.PASS && (_positiveYards || _negativeYards) && !isOverthrownIncomplete);
-
-            if (canFumble && UTILITIES.getRandomInt(1, 100) <= MODULES.Constants.FUMBLE_CHANCE_PERCENT) {
-                turnover = true;
-                isLiveBallTurnover = true;
-                _playResultText += ' - FUMBLE RECOVERED BY DEFENSE';
             }
         }
 
@@ -419,9 +444,18 @@ var playMaker = {
             _playResultText = _playResultText + ' - Out of Bounds';
         }
 
-        //Show the penalty text if a penalty occurred - whether it was accepted or declined
-        if (_penaltyText) {
+        //Show the penalty text if a penalty occurred - whether it was accepted or declined.
+        //One exception: a touchdown replaces the play text wholesale, so a flag declined behind
+        //that score (a score already beats it) never gets appended to it - a flag that WAS
+        //enforced still shows, so the yardage the score was booked with stays visible
+        if (_penaltyText && (isPenalty || !isTouchdown)) {
             _playResultText += _penaltyText;
+        }
+
+        //a flag on the defense hands the possession back to the offense - the recovery the
+        //defense was about to make is wiped out with the accepted foul
+        if (isTurnoverNegatedByPenalty) {
+            _playResultText += ' - TURNOVER NEGATED - POSSESSION RETAINED BY OFFENSE';
         }
 
         //DETERMINE DOWN
@@ -488,28 +522,61 @@ var playMaker = {
 
         //TURNOVER
         if (turnover) {
-            let isDefensiveTouchback = isLiveBallTurnover && self.yardsToTouchdown() <= 0;
+            //a recovered fumble or an interception can be taken back the other way: roll the
+            //chance of a return for a touchdown first (a pick 6 or a fumble return), since a
+            //return that scores never ends in a touchback or at the recovery spot
+            let isReturnTouchdown = false;
+            if (isLiveBallTurnover) {
+                let returnTouchdownChance = liveBallTurnoverType === 'INTERCEPTION'
+                    ? MODULES.Constants.INTERCEPTION_RETURN_TOUCHDOWN_CHANCE_PERCENT
+                    : MODULES.Constants.FUMBLE_RECOVERY_RETURN_TOUCHDOWN_CHANCE_PERCENT;
+                isReturnTouchdown = UTILITIES.getRandomInt(1, 100) <= returnTouchdownChance;
+            }
+
+            //a recovery left in an end zone is dead where it happened - either end zone: the
+            //ball never comes out, so the recovering team takes over on its own touchback yard
+            //line with a fresh set of downs (exactly how a turnover on downs spots the ball)
+            let isDefensiveTouchback = isLiveBallTurnover && !isReturnTouchdown &&
+                (self.yardsToTouchdown() <= 0 || self.yardsToTouchdown() >= 100);
 
             //before turning over the ball, record the play of the team turning over the ball
+            if (isReturnTouchdown)
+                _playResultText += liveBallTurnoverType === 'INTERCEPTION'
+                    ? ' - RETURNED FOR A TOUCHDOWN (PICK 6)'
+                    : ' - RETURNED FOR A TOUCHDOWN';
             if (isDefensiveTouchback)
                 _playResultText += ' - TOUCHBACK';
             else if (!isLiveBallTurnover)
                 _playResultText = _playResultText + (isTurnoverOnDowns ? ' - TURNOVER ON DOWNS' : ' Change of Possession');
             playResult.playResultText = _playResultText;
+            playResult.isReturnTouchdown = isReturnTouchdown;
             playMaker.recordPlay(playResult);
 
             //now handle turnover events
             _yards = 0;
             //a safety/2pt conversion above already placed the ball for the next kickoff - don't overwrite it here
-            if (isDefensiveTouchback) {
+            if (isReturnTouchdown) {
+                //the return ends in the end zone - the point-after setup re-spots the ball
+            }
+            else if (isDefensiveTouchback) {
                 self.ballSpotStart(MODULES.Constants.TOUCHBACK_YARD_LINE);
             }
             else if (!isKickoffAlreadySetup) {
                 self.ballSpotStart(self.yardsToTouchdown());
             }
-            self.yardsTraveled(0); //reset yards traveled for possession
+            if (!isReturnTouchdown)
+                self.yardsTraveled(0); //reset yards traveled for possession
 
             self.ChangePossession();
+
+            if (isReturnTouchdown) {
+                //the recovering team scores on the return - the normal point-after flow takes
+                //over from here (Make Attempt -> kickoff by the team that just scored)
+                self.pointAttemptTeamId = self.currentTeamWithBall();
+                playMaker.addScore(SCORE_TYPES.TOUCHDOWN);
+                self.pointAttemptAfterTouchDown(true);
+                $('#home-team-trail, #away-team-trail').css('width', '0px');
+            }
         }
 
         self.ShowHideSpecialTeamsMenu();
@@ -1454,7 +1521,9 @@ var playMaker = {
         }
 
         //show alert for turnovers - by this time, the possession has already changed
-        if (playResult.isTurnover) {
+        //a return that ended in a touchdown never shows the "take over" alert - the scoring
+        //toast announced the points instead, and the recovering team has no ball to take over yet
+        if (playResult.isTurnover && !playResult.isReturnTouchdown) {
             self.ShowGameAlert(playResult.getTurnoverType() + ' - ' + offensiveTeam.teamName() + ' take over at the ' + HELPERS.getYardText() + ' yard line', {
                 title: 'Turnover',
                 tone: 'forfeit'
