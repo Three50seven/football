@@ -1,4 +1,4 @@
-﻿(function ($) {
+(function ($) {
     var self = this;
     
     self.gamePlayStats = ko.observableArray();  
@@ -6,14 +6,12 @@
     self.InitializeGameStats = function () {
         //insert two team records for this game
         let homeTeamPlayStat = new MODULES.Constructors.GamePlayStatRecord(
-            self.homeTeamID(),
-            self.homeTeamInfo().teamName(),
-            0, 0, 0, 0, 0, 0
+            self.homeTeamID(), self.homeTeamInfo().teamName(),
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         );
         let awayTeamPlayStat = new MODULES.Constructors.GamePlayStatRecord(
-            self.awayTeamID(),
-            self.awayTeamInfo().teamName(),
-            0, 0, 0, 0, 0, 0
+            self.awayTeamID(), self.awayTeamInfo().teamName(),
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         );
 
         self.gamePlayStats.push(homeTeamPlayStat);
@@ -29,7 +27,12 @@
             team.totalTimePossession += teamStatUpdates.totalTimePossession;
             team.totalTurnovers += teamStatUpdates.totalTurnovers;
             team.totalFirstDowns += teamStatUpdates.totalFirstDowns;
+            team.totalPenalties += teamStatUpdates.totalPenalties;
             team.totalPenaltyYards += teamStatUpdates.totalPenaltyYards;
+            team.totalThirdDownConversions = (team.totalThirdDownConversions || 0) + (teamStatUpdates.totalThirdDownConversions || 0);
+            team.totalFourthDownConversions = (team.totalFourthDownConversions || 0) + (teamStatUpdates.totalFourthDownConversions || 0);
+            team.totalFieldGoalAttempts = (team.totalFieldGoalAttempts || 0) + (teamStatUpdates.totalFieldGoalAttempts || 0);
+            team.totalFieldGoalsMade = (team.totalFieldGoalsMade || 0) + (teamStatUpdates.totalFieldGoalsMade || 0);
             team.totalTimePossessionDisplay = UTILITIES.getTimeDisplay(team.totalTimePossession); //recalculate display text since it isn't an observable
 
             self.gamePlayStats.refresh(team);
@@ -38,7 +41,7 @@
             console.log('ERROR: gamePlayStats array was never initialized. Initializing...');
             self.InitializeGameStats();
             console.log('Updating Box Score...');
-            self.UpdateGameStat();
+            self.UpdateGameStat(teamStatUpdates);
         }
     };
     self.ShowOtherGameInfo = function () {

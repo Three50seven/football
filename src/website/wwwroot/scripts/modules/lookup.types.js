@@ -15,7 +15,8 @@ var GAME_PLAY_TYPES = {
     EXTRAPOINT: 'extraPoint',
     TWOPOINTCONVERSION: 'twoPointConversion',
     FIELDGOAL: 'fieldGoal',
-    PENALTY: 'penalty'
+    THROWAWAY: 'throwaway',
+    SPIKE: 'spike'
 };
 
 var SCORE_TYPES = {
@@ -25,3 +26,20 @@ var SCORE_TYPES = {
     EXTRAPOINT: 'extrapoint',
     TWOPOINTCONVERSION: 'twopointconversion'
 };
+
+var PENALTY_SIDE_OF_BALL_TYPES = {
+    OFFENSE: 'OFFENSE',
+    DEFENSE: 'DEFENSE',
+    ANY: 'ANY' 
+};
+
+//expose penalty enums on MODULES for use in game.variables.js and elsewhere
+var PENALTY_TYPES = {
+    PRESNAP: 'PRESNAP', //only presnap situations can draw this type of penalty
+    PASS: 'PASS', //only pass plays can draw this type of penalty
+    GENERAL: 'GENERAL' //pass or run plays can draw this type of penalty
+};
+if (typeof MODULES !== 'undefined' && MODULES !== null) {
+    MODULES.PENALTY_SIDE_OF_BALL_TYPES = PENALTY_SIDE_OF_BALL_TYPES;
+    MODULES.PENALTY_TYPES = PENALTY_TYPES;
+}

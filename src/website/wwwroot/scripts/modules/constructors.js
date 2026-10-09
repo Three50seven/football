@@ -1,7 +1,7 @@
 //CONSTRUCTORS
 MODULES.Constructors = (function () {
     return {
-        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenaltyYards = 0) {
+        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenalties = 0, totalPenaltyYards = 0, totalThirdDownConversions = 0, totalFourthDownConversions = 0, totalFieldGoalAttempts = 0, totalFieldGoalsMade = 0) {
             this.teamId = teamId;
             this.teamName = teamName;
             this.totalPlayCount = totalPlayCount;
@@ -10,7 +10,12 @@ MODULES.Constructors = (function () {
             this.totalTimePossession = totalTimePossession;
             this.totalTurnovers = totalTurnovers;
             this.totalFirstDowns = totalFirstDowns;
+            this.totalPenalties = totalPenalties;
             this.totalPenaltyYards = totalPenaltyYards;
+            this.totalThirdDownConversions = totalThirdDownConversions;
+            this.totalFourthDownConversions = totalFourthDownConversions;
+            this.totalFieldGoalAttempts = totalFieldGoalAttempts;
+            this.totalFieldGoalsMade = totalFieldGoalsMade;
             this.fullTeamName = UTILITIES.getFullTeamName(this.teamName, this.teamId);
             this.totalTimePossessionDisplay = UTILITIES.getTimeDisplay(this.totalTimePossession);
         },
@@ -26,7 +31,7 @@ MODULES.Constructors = (function () {
             this.totalScore = totalScore;
             this.teamImagePath = UTILITIES.getTeamImagePath(this.teamId);
         },
-        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '', stopsGameClock = false, deadBallStopsClock = false, noPlayTime = false) {
+        PlayResult: function (yards, playText, isTurnover = false, playType = '', isFirstDown = false, displayText = '', stopsGameClock = false, deadBallStopsClock = false, noPlayTime = false, isThirdDownConversion = false, isFourthDownConversion = false, isFieldGoalAttempt = false, isFieldGoalMade = false, isPenalty = false) {
             this.yards = yards;
             this.playResultText = playText;
             this.isTurnover = isTurnover;
@@ -36,6 +41,11 @@ MODULES.Constructors = (function () {
             this.stopsGameClock = stopsGameClock; //true when the ball went dead in a way that stops the game clock (an incompletion, a run out of bounds, etc.)
             this.deadBallStopsClock = deadBallStopsClock; //true for special teams plays that went dead with the clock stopped (a touchback, a kickoff penalty, a recovered onside kick, a muffled punt)
             this.noPlayTime = noPlayTime; //true when the play consumed no play time at all - a touchback or a kick out of bounds, where the ball never came live
+            this.isThirdDownConversion = isThirdDownConversion;
+            this.isFourthDownConversion = isFourthDownConversion;
+            this.isFieldGoalAttempt = isFieldGoalAttempt;
+            this.isFieldGoalMade = isFieldGoalMade;
+            this.isPenalty = isPenalty;
             this.getTurnoverType = function () {
                 if (this.isTurnover) {
                     console.log(`inside the PlayResult`,this.playResultText);

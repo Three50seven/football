@@ -1,7 +1,9 @@
-﻿(function ($) {
+(function ($) {
     var self = this;
 
     self.teamPlayHistory = ko.observableArray();
+    self.homeTeamThrowaways = ko.observable(0);
+    self.awayTeamThrowaways = ko.observable(0);
 
     self.AddPlayHistory = function (playHistory) {
         self.teamPlayHistory.push(playHistory);
@@ -24,6 +26,18 @@
 
     self.MakeRunPlay = function () {
         self.MakePlay(GAME_PLAY_TYPES.RUN);
+    };
+
+    self.MakeThrowAwayPass = function () {
+        let currentTeam = self.currentTeamWithBall();
+
+        if (currentTeam === self.homeTeamID()) {
+            self.homeTeamThrowaways(self.homeTeamThrowaways() + 1);
+        } else {
+            self.awayTeamThrowaways(self.awayTeamThrowaways() + 1);
+        }
+
+        self.MakePlay(GAME_PLAY_TYPES.THROWAWAY);
     };
 
     self.SpikeBall = function () {

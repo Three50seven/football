@@ -430,6 +430,10 @@
                                             <th>Total Time of Possession</th>
                                             <th>Turnovers</th>
                                             <th>1<sup>st</sup> Downs</th>
+                                            <th>3<sup>rd</sup> Downs Conv</th>
+                                            <th>4<sup>th</sup> Downs Conv</th>
+                                            <th>FG Att</th>
+                                            <th>FG Made</th>
                                         </tr>
                                     </thead>
                                     <tbody data-bind="foreach: gamePlayStats">
@@ -442,6 +446,10 @@
                                             <td data-bind="text: totalTimePossessionDisplay"></td>
                                             <td data-bind="text: totalTurnovers"></td>
                                             <td data-bind="text: totalFirstDowns"></td>
+                                            <td data-bind="text: totalThirdDownConversions"></td>
+                                            <td data-bind="text: totalFourthDownConversions"></td>
+                                            <td data-bind="text: totalFieldGoalAttempts"></td>
+                                            <td data-bind="text: totalFieldGoalsMade"></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -577,6 +585,10 @@
                                     <span class="quick-play-kicker">Call Play</span>
                                     <span class="quick-play-label">Run</span>
                                 </button>
+                                <button type="button" id="makeThrowAwayPass" class="play-call-button" data-bind="click: MakeThrowAwayPass">
+                                    <span class="quick-play-kicker">Call Play</span>
+                                    <span class="quick-play-label">Throw Away</span>
+                                </button>
                             </div>
                             <div class="dice-results">Dice Total: <span id="diceTotal">0</span>
                                 <div id="diceValues"></div>
@@ -661,6 +673,10 @@
                                                 <th>Total Time of Possession</th>
                                                 <th>Turnovers</th>
                                                 <th>1<sup>st</sup> Downs</th>
+                                                <th>3<sup>rd</sup> Downs Conv</th>
+                                                <th>4<sup>th</sup> Downs Conv</th>
+                                                <th>FG Att</th>
+                                                <th>FG Made</th>
                                             </tr>
                                         </thead>
                                         <tbody data-bind="foreach: gamePlayStats">
@@ -673,6 +689,10 @@
                                                 <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
                                                 <td><span data-bind="text: totalTurnovers"></span></td>
                                                 <td><span data-bind="text: totalFirstDowns"></span></td>
+                                                <td><span data-bind="text: totalThirdDownConversions"></span></td>
+                                                <td><span data-bind="text: totalFourthDownConversions"></span></td>
+                                                <td><span data-bind="text: totalFieldGoalAttempts"></span></td>
+                                                <td><span data-bind="text: totalFieldGoalsMade"></span></td>
                                             </tr>
                                         </tbody>
                                     </table>
