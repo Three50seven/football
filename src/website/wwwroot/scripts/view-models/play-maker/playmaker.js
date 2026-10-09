@@ -110,6 +110,7 @@ var playMaker = {
         let downAtSnap = self.currentDown();
         let _yards = 0;
         let _playResultText = UTILITIES.splitAndTitleCase(playSelected);
+        let _penaltyText = '';
         let _positiveYards = false;
         let _negativeYards = false;
         let bigYardPlay = UTILITIES.getRandomInt(1, 100) >= 85;
@@ -296,28 +297,74 @@ var playMaker = {
                     penaltyCommittedBy = drawn.penaltySideOfBall === MODULES.PENALTY_SIDE_OF_BALL_TYPES.ANY ? penaltyCommittedBy : drawn.penaltySideOfBall;
                     isPenalty = true;
 
-                    //determine if the penalty results in an automatic first down
-                    if (drawn.automaticFirstDown) {
-                        _playResultText += ' - AUTOMATIC FIRST DOWN';
-                    }
-
                     //a foul by the offense moves the ball backwards (half-the-distance near
                     //its own goal, via the shared cap); a foul by the defense moves it forwards
+                    //first - determine benefits and whether the offended team would choose to decline the penalty
+                    //an offended team may decline any penalty unless a specific rule expressly states otherwise 
+                    //(such as certain personal foul or disqualification rules that still result in an ejection or 
+                    //fine regardless of whether the yardage/down penalty is accepted or declined).
                     let enforcedYards = drawn.yards;
+                    //the flag is judged on the play's outcome BEFORE enforcement touches _yards -
+                    //on yardage alone the offended team always gains by accepting (_yards -
+                    //enforcedYards only ever helps the defense, _yards + enforcedYards only ever
+                    //helps the offense), so only the down or the score can justify declining
+                    let playOutcomeYards = _yards;
+                    let playAlreadyScored = playOutcomeYards >= distanceToGoalLine;
+                    let penaltyDeclined = false;
                     if (penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.OFFENSE) {
                         enforcedYards = playMaker.getCappedOffensivePenaltyYards(drawn.yards);
-                        _yards -= enforcedYards;
+
+                        //the defense decides: accepting can only push the offense further back, so
+                        //the only outcome worth keeping is the down the play just won - a failed
+                        //3rd/4th-down snap. Accepting replays that down (see DETERMINE DOWN below)
+                        //and hands it back, so declining preserves the 4th down or the turnover on
+                        //downs the defense just forced. A flag also never rescues a score -
+                        //enforcement can pull a touchdown back off the board
+                        let failedToConvert = playOutcomeYards < self.yardsToFirst();
+                        let offenseJustLostTheDown = downAtSnap >= 3;
+                        penaltyDeclined = !playAlreadyScored && offenseJustLostTheDown && failedToConvert;
+
+                        if (!penaltyDeclined) {
+                            //an accepted offensive foul replays the down from behind the line of
+                            //scrimmage: the play's own gain (or loss) is wiped and the flag is
+                            //walked off from the snap - 1st & 10 plus a 10 yard flag is 1st & 20,
+                            //matching how applyOffensivePenaltyYards walks a dead-ball flag off
+                            //the sticks (subtracting from the gain instead would let a 10 yard
+                            //completion cancel a 10 yard flag and leave the sticks untouched)
+                            _yards = -enforcedYards;
+                        }
                     }
                     else {
                         //a penalty cannot score - cap a defensive enforcement at the goal line
                         enforcedYards = Math.min(enforcedYards, Math.max(distanceToGoalLine - 1, 0));
-                        _yards += enforcedYards;
+
+                        //the offense decides: accepting can only push the offense forward, and an
+                        //automatic first down is always worth taking, so the only outcome worth
+                        //keeping is one no flag can beat - a touchdown already on the board.
+                        //Enforcing would book the score as the flag instead of the play itself
+                        penaltyDeclined = playAlreadyScored;
+
+                        if (!penaltyDeclined) {
+                            _yards += enforcedYards;
+                        }
+                    }                   
+
+                    //apply the penalty if it was not declined
+                    if (penaltyDeclined) {
+                        isPenalty = false;
+                    }
+                    else {
+                        //attach the enforced (post-cap) entry so recordGameStats attributes it as-is
+                        chosenPenalty = { name: drawn.name, yards: enforcedYards, penaltySideOfBall: penaltyCommittedBy, automaticFirstDown: drawn.automaticFirstDown };                        
                     }
 
-                    //attach the enforced (post-cap) entry so recordGameStats attributes it as-is
-                    chosenPenalty = { name: drawn.name, yards: enforcedYards, penaltySideOfBall: penaltyCommittedBy, automaticFirstDown: drawn.automaticFirstDown };
-
-                    _playResultText += ' - PENALTY: ' + drawn.name + ' (' + Math.abs(enforcedYards) + ' YARDS)';
+                    //an automatic first down only ever rewards the offended offense, so it is
+                    //part of enforcing a defensive flag - never shown for a flag the offense
+                    //drew or for one that was declined
+                    _penaltyText = ' PENALTY: On the ' + (penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE ? 'Defense' : 'Offense') + 
+                        ' - ' + drawn.name + ' (' + Math.abs(enforcedYards) + ' YARDS)' + 
+                        (drawn.automaticFirstDown && penaltyCommittedBy === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE ? ' - AUTOMATIC FIRST DOWN' : '') + 
+                        ' - Penalty ' + (penaltyDeclined ? 'Declined' : 'Enforced');
                 }
             }
         }
@@ -370,6 +417,11 @@ var playMaker = {
         if (playMaker.rollOutOfBounds(playSelected, _yards, yardsNeededForFirstDown, isTouchdown, isLiveBallTurnover)) {
             isOutOfBounds = true;
             _playResultText = _playResultText + ' - Out of Bounds';
+        }
+
+        //Show the penalty text if a penalty occurred - whether it was accepted or declined
+        if (_penaltyText) {
+            _playResultText += _penaltyText;
         }
 
         //DETERMINE DOWN
