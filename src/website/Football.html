@@ -426,7 +426,8 @@
                                             <th># of Plays Total</th>
                                             <th>Total Yards Rushing</th>
                                             <th>Total Yards Passing</th>
-                                            <th>Penalty Yards</th>
+                                            <th>Penalty Yards Against</th>
+                                            <th>Penalties Committed On</th>
                                             <th>Total Time of Possession</th>
                                             <th>Turnovers</th>
                                             <th>1<sup>st</sup> Downs</th>
@@ -443,6 +444,7 @@
                                             <td data-bind="text: totalYardsRushing"></td>
                                             <td data-bind="text: totalYardsPassing"></td>
                                             <td data-bind="text: totalPenaltyYards"></td>
+                                            <td data-bind="text: $data.penaltySideLabel()"></td>
                                             <td data-bind="text: totalTimePossessionDisplay"></td>
                                             <td data-bind="text: totalTurnovers"></td>
                                             <td data-bind="text: totalFirstDowns"></td>
@@ -669,7 +671,8 @@
                                                 <th># of Plays Total</th>
                                                 <th>Total Yards Rushing</th>
                                                 <th>Total Yards Passing</th>
-                                                <th>Penalty Yards</th>
+                                                <th>Penalty Yards Against</th>
+                                                <th>Penalties Committed On</th>
                                                 <th>Total Time of Possession</th>
                                                 <th>Turnovers</th>
                                                 <th>1<sup>st</sup> Downs</th>
@@ -686,6 +689,7 @@
                                                 <td><span data-bind="text: totalYardsRushing"></span></td>
                                                 <td><span data-bind="text: totalYardsPassing"></span></td>
                                                 <td><span data-bind="text: totalPenaltyYards"></span></td>
+                                                <td><span data-bind="text: $data.penaltySideLabel()"></span></td>
                                                 <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
                                                 <td><span data-bind="text: totalTurnovers"></span></td>
                                                 <td><span data-bind="text: totalFirstDowns"></span></td>

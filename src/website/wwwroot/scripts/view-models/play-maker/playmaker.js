@@ -385,6 +385,8 @@ var playMaker = {
                             penaltyDeclined = playAlreadyScored;
 
                             if (!penaltyDeclined) {
+                                //apply the play gain first; enforcement cannot carry the ball into the end zone
+                                enforcedYards = Math.min(drawn.yards, Math.max(distanceToGoalLine - playOutcomeYards - 1, 0));
                                 _yards += enforcedYards;
                             }
                         }
@@ -1344,15 +1346,7 @@ var playMaker = {
     recordGameStats: function (team, thisPlaysResult) {
         let playStatsRecord = new MODULES.Constructors.GamePlayStatRecord(team.teamId, team.teamName, 1, 0, 0,  self.timeOfPossession(), 0, 0, 0); //construct new GamePlayStatRecord
 
-        //an accepted in-play penalty wipes the run/pass gain, so only the penalty counts below
-        if (!thisPlaysResult.isPenalty && thisPlaysResult.playType === GAME_PLAY_TYPES.RUN) {
-            playStatsRecord.totalYardsRushing = thisPlaysResult.yards;
-        }
-
-        if (!thisPlaysResult.isPenalty && thisPlaysResult.playType === GAME_PLAY_TYPES.PASS) {
-            playStatsRecord.totalYardsPassing = thisPlaysResult.yards;
-        }
-
+        let playYards = thisPlaysResult.yards;
         if (thisPlaysResult.isPenalty) {
             //penaltySideOfBall on the attached entry is the COMMITTING unit; default to
             //OFFENSE for legacy/dead-ball results that carry no entry
@@ -1364,19 +1358,30 @@ var playMaker = {
                 : Math.abs(thisPlaysResult.yards);
 
             let penaltyCount = thisPlaysResult.penaltyCount || 1; //a repeated delay of game carries two flags
+            //defensive enforcement is added to the valid gain; offensive enforcement wipes the play
+            playYards = penaltySide === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE
+                ? thisPlaysResult.yards - penaltyYardsAbs
+                : 0;
             if (penaltySide === MODULES.PENALTY_SIDE_OF_BALL_TYPES.DEFENSE) {
                 //a defensive foul is drawn by the offense but committed by the defense -
                 //the count and yards belong to the defending team, not the team with the ball
                 let defenseTeamId = team.teamId === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
                 let defenseInfo = HELPERS.getTeamInfo(defenseTeamId);
-                let defenseRecord = new MODULES.Constructors.GamePlayStatRecord(defenseTeamId, defenseInfo.teamName(), 0, 0, 0, 0, 0, 0, penaltyCount, -penaltyYardsAbs);
+                let defenseRecord = new MODULES.Constructors.GamePlayStatRecord(defenseTeamId, defenseInfo.teamName(), 0, 0, 0, 0, 0, 0, penaltyCount, -penaltyYardsAbs, 0, 0, 0, 0, 'DEFENSE');
                 self.UpdateGameStat(defenseRecord);
             }
             else {
                 playStatsRecord.totalPenalties = penaltyCount;
                 playStatsRecord.totalPenaltyYards = -penaltyYardsAbs;
+                playStatsRecord.totalPenaltySide = 'OFFENSE';
             }
         }
+
+        if (thisPlaysResult.playType === GAME_PLAY_TYPES.RUN)
+            playStatsRecord.totalYardsRushing = playYards;
+
+        if (thisPlaysResult.playType === GAME_PLAY_TYPES.PASS)
+            playStatsRecord.totalYardsPassing = playYards;
 
         if (thisPlaysResult.isTurnover)
             playStatsRecord.totalTurnovers = 1;

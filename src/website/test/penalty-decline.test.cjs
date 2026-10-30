@@ -130,6 +130,33 @@ test('a defensive flag is enforced on top of the play - the offense takes the ya
     assert.equal(result.isFirstDown, true); //past the sticks with the flag folded in
     assert.equal(game.currentDown(), 1);
     assert.equal(game.yardsToFirst(), 10);
+
+    game.playMaker.recordGameStats(game.homeTeamInfo(), result);
+    const [home, away] = game.gamePlayStats();
+    assert.equal(home.totalYardsRushing, 8);
+    assert.equal(home.totalPenaltyYards, 0);
+    assert.equal(away.totalPenaltyYards, -10);
+    assert.equal(away.totalPenaltySide, 'DEFENSE');
+});
+
+test('a defensive penalty is capped after the play gain and cannot score a touchdown', () => {
+    const game = createPenaltyPlay({ yardsRoll: 8, committedBy: 1 });
+    const startTraveled = game.yardsTraveled();
+    game.yardsToTouchdown = () => 15 - (game.yardsTraveled() - startTraveled);
+    game.UpdateBoxScore = () => {};
+    game.setTimeout = () => {};
+
+    const result = game.playMaker.getPlayResult(game.GAME_PLAY_TYPES.RUN);
+
+    assert.equal(result.yards, 14); //8 play yards, then 6 enforced yards to the one-yard line
+    assert.equal(result.penalty.yards, 6);
+    assert.equal(game.yardsToTouchdown(), 1);
+    assert.equal(game.homeTeamScore(), 0);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), result);
+    const [home, away] = game.gamePlayStats();
+    assert.equal(home.totalYardsRushing, 8);
+    assert.equal(home.totalPenaltyYards, 0);
+    assert.equal(away.totalPenaltyYards, -6);
 });
 
 test('a defensive flag is enforced even when the play lost yardage - the offense recovers ground', () => {
@@ -219,4 +246,3 @@ test('a 10 yard completion with offensive pass interference is 1st and 20, not 1
     assert.equal(game.currentDown(), 1);
     assert.equal(game.yardsToFirst(), 20); //the reported bug: this stayed 1st & 10 while the gain cancelled the flag
 });
-

@@ -1,7 +1,7 @@
 //CONSTRUCTORS
 MODULES.Constructors = (function () {
     return {
-        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenalties = 0, totalPenaltyYards = 0, totalThirdDownConversions = 0, totalFourthDownConversions = 0, totalFieldGoalAttempts = 0, totalFieldGoalsMade = 0) {
+        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenalties = 0, totalPenaltyYards = 0, totalThirdDownConversions = 0, totalFourthDownConversions = 0, totalFieldGoalAttempts = 0, totalFieldGoalsMade = 0, totalPenaltySide = 'NONE') {
             this.teamId = teamId;
             this.teamName = teamName;
             this.totalPlayCount = totalPlayCount;
@@ -12,6 +12,13 @@ MODULES.Constructors = (function () {
             this.totalFirstDowns = totalFirstDowns;
             this.totalPenalties = totalPenalties;
             this.totalPenaltyYards = totalPenaltyYards;
+            this.totalPenaltySide = totalPenaltySide;
+            this.penaltySideLabel = function () {
+                if (this.totalPenaltySide === 'OFFENSE') return 'Offense';
+                if (this.totalPenaltySide === 'DEFENSE') return 'Defense';
+                if (this.totalPenaltySide === 'BOTH') return 'Offense & Defense';
+                return '-';
+            };
             this.totalThirdDownConversions = totalThirdDownConversions;
             this.totalFourthDownConversions = totalFourthDownConversions;
             this.totalFieldGoalAttempts = totalFieldGoalAttempts;

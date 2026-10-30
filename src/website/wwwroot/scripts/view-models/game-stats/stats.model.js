@@ -29,6 +29,12 @@
             team.totalFirstDowns += teamStatUpdates.totalFirstDowns;
             team.totalPenalties += teamStatUpdates.totalPenalties;
             team.totalPenaltyYards += teamStatUpdates.totalPenaltyYards;
+            let incomingSide = teamStatUpdates.totalPenaltySide;
+            if (incomingSide !== 'NONE') {
+                team.totalPenaltySide = team.totalPenaltySide === 'NONE' || team.totalPenaltySide === incomingSide
+                    ? incomingSide
+                    : 'BOTH';
+            }
             team.totalThirdDownConversions = (team.totalThirdDownConversions || 0) + (teamStatUpdates.totalThirdDownConversions || 0);
             team.totalFourthDownConversions = (team.totalFourthDownConversions || 0) + (teamStatUpdates.totalFourthDownConversions || 0);
             team.totalFieldGoalAttempts = (team.totalFieldGoalAttempts || 0) + (teamStatUpdates.totalFieldGoalAttempts || 0);

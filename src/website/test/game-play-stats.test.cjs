@@ -286,6 +286,7 @@ test('recordGameStats records penalty count and penalty yards for an isPenalty p
 
     assert.equal(homeTeam.totalPenalties, 1);
     assert.equal(homeTeam.totalPenaltyYards, -5);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
 });
 
 test('recordGameStats charges a defensive foul to the defending team, not the offense', () => {
@@ -300,11 +301,13 @@ test('recordGameStats charges a defensive foul to the defending team, not the of
 
     game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
 
-    assert.equal(homeTeam.totalYardsPassing, 0); //the acceptance wipes the pass gain
+    assert.equal(homeTeam.totalYardsPassing, 0); //this result contains only penalty yardage
     assert.equal(homeTeam.totalPenalties, 0);
     assert.equal(homeTeam.totalPenaltyYards, 0);
     assert.equal(awayTeam.totalPenalties, 1);
     assert.equal(awayTeam.totalPenaltyYards, -15);
+    assert.equal(awayTeam.totalPenaltySide, 'DEFENSE');
+    assert.equal(homeTeam.totalPenaltySide, 'NONE');
     assert.equal(homeTeam.totalFirstDowns, 1); //automatic first down still credits the offense
 });
 
@@ -322,6 +325,7 @@ test('recordGameStats charges an offensive holding foul to the offense with no r
     assert.equal(homeTeam.totalYardsRushing, 0);
     assert.equal(homeTeam.totalPenalties, 1);
     assert.equal(homeTeam.totalPenaltyYards, -10);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
 });
 
 test('recordGameStats counts both flags on a repeated delay of game', () => {
@@ -338,6 +342,120 @@ test('recordGameStats counts both flags on a repeated delay of game', () => {
 
     assert.equal(homeTeam.totalPenalties, 2);
     assert.equal(homeTeam.totalPenaltyYards, -20);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
+});
+
+test('recordGameStats records the penalty side for offense and defense penalties', () => {
+    const game = createGameContext();
+    const homeTeam = game.gamePlayStats()[0];
+    const awayTeam = game.gamePlayStats()[1];
+
+    //an offensive flag is drawn by the offense - counted against the offense
+    const offensePenalty = new game.MODULES.Constructors.PlayResult(
+        -10, 'Run - PENALTY: Holding (10 YARDS)', false, game.GAME_PLAY_TYPES.RUN, false, '', false, false, false, false, false, false, false, true
+    );
+    offensePenalty.penalty = { name: 'Holding', yards: 10, penaltySideOfBall: 'OFFENSE', automaticFirstDown: false };
+    game.playMaker.recordGameStats(game.homeTeamInfo(), offensePenalty);
+
+    assert.equal(homeTeam.totalPenalties, 1);
+    assert.equal(homeTeam.totalPenaltyYards, -10);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
+    assert.equal(awayTeam.totalPenalties, 0);
+    assert.equal(awayTeam.totalPenaltySide, 'NONE');
+
+    //a defensive flag is drawn by the offense but committed by the defense - counted against the defense
+    const defensePenalty = new game.MODULES.Constructors.PlayResult(
+        15, 'Roughing the Passer - PENALTY: Roughing the Passer (15 YARDS)', false, game.GAME_PLAY_TYPES.PASS, true, '', false, false, false, false, false, false, false, true
+    );
+    defensePenalty.penalty = { name: 'Roughing the Passer', yards: 15, penaltySideOfBall: 'DEFENSE', automaticFirstDown: true };
+    game.playMaker.recordGameStats(game.homeTeamInfo(), defensePenalty);
+
+    //the offense's own holding penalty is cumulative, the defense's defensive foul is reported separately
+    assert.equal(homeTeam.totalPenalties, 1);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
+    assert.equal(awayTeam.totalPenalties, 1);
+    assert.equal(awayTeam.totalPenaltyYards, -15);
+    assert.equal(awayTeam.totalPenaltySide, 'DEFENSE');
+});
+
+for (const offenseId of [10, 20]) {
+    for (const playType of ['run', 'pass']) {
+        for (const gain of [8, 0, -12]) {
+            test(`defensive penalty preserves ${gain} ${playType} yards for team ${offenseId}`, () => {
+                const game = createGameContext();
+                const offenseInfo = offenseId === 10 ? game.homeTeamInfo() : game.awayTeamInfo();
+                const offense = game.gamePlayStats().find(team => team.teamId === offenseId);
+                const defense = game.gamePlayStats().find(team => team.teamId !== offenseId);
+                const result = new game.MODULES.Constructors.PlayResult(
+                    gain + 10, 'Defensive Holding', false, playType
+                );
+                result.isPenalty = true;
+                result.penalty = { yards: 10, penaltySideOfBall: 'DEFENSE' };
+
+                game.playMaker.recordGameStats(offenseInfo, result);
+
+                assert.equal(offense.totalYardsRushing, playType === 'run' ? gain : 0);
+                assert.equal(offense.totalYardsPassing, playType === 'pass' ? gain : 0);
+                assert.equal(offense.totalPenaltyYards, 0);
+                assert.equal(offense.totalPenalties, 0);
+                assert.equal(defense.totalPenaltyYards, -10);
+                assert.equal(defense.totalPenalties, 1);
+                assert.equal(defense.totalPlayCount, 0);
+                assert.equal(defense.totalTimePossession, 0);
+                assert.equal(defense.penaltySideLabel(), 'Defense');
+            });
+        }
+    }
+}
+
+test('penalty side retains both units across possession changes and clean plays', () => {
+    const game = createGameContext();
+    const home = game.gamePlayStats()[0];
+    assert.equal(home.penaltySideLabel(), '-');
+
+    const offensiveFlag = new game.MODULES.Constructors.PlayResult(-5, 'False Start');
+    offensiveFlag.isPenalty = true;
+    offensiveFlag.penalty = { yards: 5, penaltySideOfBall: 'OFFENSE' };
+    game.playMaker.recordGameStats(game.homeTeamInfo(), offensiveFlag);
+    assert.equal(home.penaltySideLabel(), 'Offense');
+
+    game.currentTeamWithBall(20);
+    const defensiveFlag = new game.MODULES.Constructors.PlayResult(10, 'Defensive Holding');
+    defensiveFlag.isPenalty = true;
+    defensiveFlag.penalty = { yards: 10, penaltySideOfBall: 'DEFENSE' };
+    game.playMaker.recordGameStats(game.awayTeamInfo(), defensiveFlag);
+
+    game.currentTeamWithBall(10);
+    const cleanPlay = new game.MODULES.Constructors.PlayResult(8, 'Run', false, game.GAME_PLAY_TYPES.RUN);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), cleanPlay);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), offensiveFlag);
+
+    assert.equal(home.totalPenaltySide, 'BOTH');
+    assert.equal(home.penaltySideLabel(), 'Offense & Defense');
+    assert.equal(home.totalPenalties, 3);
+    assert.equal(home.totalPenaltyYards, -20);
+    assert.equal(home.totalYardsRushing, 8);
+});
+
+test('both stats tables have matching columns and valid stat bindings', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const tables = [...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/g)]
+        .map(match => match[0])
+        .filter(table => table.includes('foreach: gamePlayStats'));
+    const stat = createGameContext().gamePlayStats()[0];
+
+    assert.equal(tables.length, 2);
+    for (const table of tables) {
+        assert.equal((table.match(/<th>/g) || []).length, (table.match(/<td\b/g) || []).length);
+        assert.match(table, /Penalty Yards Against/);
+        assert.match(table, /Penalties Committed On/);
+        for (const match of table.matchAll(/data-bind="text: ([^"]+)"/g)) {
+            const property = match[1].replace(/^\$data\./, '').replace(/\(\)$/, '');
+            assert.ok(property in stat, `unknown stats binding: ${property}`);
+        }
+        assert.equal((table.match(/text: totalPenaltyYards/g) || []).length, 1);
+        assert.equal((table.match(/text: \$data.penaltySideLabel\(\)/g) || []).length, 1);
+    }
 });
 
 test('getPlayResult correctly identifies 3rd down conversion on 3rd down gain reaching first down marker', () => {
