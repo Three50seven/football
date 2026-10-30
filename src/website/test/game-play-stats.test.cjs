@@ -455,6 +455,62 @@ test('both stats tables share a three-column template with team logos and row he
     assert.equal((html.match(/class="scroller stats-comparison-scroller"/g) || []).length, 2);
 });
 
+test('play history shares a responsive card template and retains every play detail', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const template = html.match(/<script type="text\/html" id="playHistoryTemplate">([\s\S]*?)<\/script>/)[1];
+    assert.equal((html.match(/name: 'playHistoryTemplate'/g) || []).length, 2);
+    assert.match(html, /id="playHistoryScroller" class="scroller play-history-scroller"/);
+    assert.match(html, /id="pauseHistory" class="scroller play-history-scroller"/);
+    assert.match(template, /<ol[^>]+foreach: teamPlayHistory/);
+    assert.match(template, /teamPlayHistory\(\)\.length === 0/);
+    assert.match(template, /UTILITIES\.getTeamImagePath\(teamId\)/);
+    for (const property of [
+        'fullTeamName', 'gameClock', 'playResult', 'down', 'playCount', 'playYards',
+        'ballSpot', 'timeOfPossessionDisplay', 'score'
+    ])
+        assert.match(template, new RegExp(`text: ${property}`));
+    assert.match(template, /quarter <= 4/);
+    assert.match(template, /quarter - 4/);
+    assert.equal((template.match(/<dt>/g) || []).length, 6);
+});
+
+test('additional game information starts collapsed and toggles without nested scrollers', () => {
+    const game = createGameContext();
+    assert.equal(game.otherGameInfoExpanded(), false);
+    game.ShowOtherGameInfo();
+    assert.equal(game.otherGameInfoExpanded(), true);
+    game.ShowOtherGameInfo();
+    assert.equal(game.otherGameInfoExpanded(), false);
+
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const panel = html.match(/<section class="game-info-panel"[\s\S]*?<\/section>/)[0];
+    assert.match(panel, /<button type="button" id="gameInfoBoxSwitch"/);
+    assert.match(panel, /aria-controls="gameInfoBox" aria-expanded="false"/);
+    assert.match(panel, /'aria-expanded': otherGameInfoExpanded\(\)/);
+    assert.match(panel, /style="display: none;" data-bind="visible: otherGameInfoExpanded"/);
+    assert.equal((panel.match(/class="scroller /g) || []).length, 1);
+    assert.match(panel, /id="gameStats"/);
+});
+
+test('game and simulation box scores share accessible branding and all scoring columns', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const template = html.match(/<script type="text\/html" id="boxScoreTemplate">([\s\S]*?)<\/script>/)[1];
+    assert.equal((html.match(/name: 'boxScoreTemplate'/g) || []).length, 2);
+    assert.match(html, /scores: gameBoxScore/);
+    assert.match(html, /scores: simBoxScore/);
+    assert.equal((template.match(/scope="col"/g) || []).length, 7);
+    assert.equal((template.match(/scope="row"/g) || []).length, 1);
+    assert.match(template, /<caption data-bind="text: title">/);
+    assert.match(template, /src: teamImagePath/);
+    assert.match(template, /text: fullTeamName/);
+    const game = createGameContext();
+    const score = new game.MODULES.Constructors.GameBoxScoreRecord(10, 'HOME', 7, 3, 0, 7, 6, 23);
+    for (const property of ['firstQuarterScore', 'secondQuarterScore', 'thirdQuarterScore', 'fourthQuarterScore', 'overtimeScore', 'totalScore']) {
+        assert.match(template, new RegExp(`text: ${property}`));
+        assert.equal(typeof score[property], 'number');
+    }
+});
+
 test('stat rows include every displayed stat and match teams by ID regardless of array order', () => {
     const game = createGameContext();
     const [home, away] = game.gamePlayStats();

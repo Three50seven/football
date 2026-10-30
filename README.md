@@ -19,6 +19,18 @@ The pause menu and gameplay stats use the same vertically scrolling comparison:
 one row per stat, with home and away columns showing team names and logos in a
 sticky header.
 
+Other Game Info starts collapsed. Its keyboard-accessible Expand/Collapse control
+reveals the team comparison in a single scroll area, with no nested scrollbars.
+
+Game and simulation box scores share a responsive card layout with team logos,
+quarter-by-quarter scoring, overtime, and highlighted totals. All scoring columns
+remain visible on mobile, with team names wrapping to fit.
+
+Play history uses vertically scrolling cards in gameplay and the pause menu.
+Each card shows the team logo, quarter and clock, full play result, and a
+responsive detail grid for down, drive play, yardage, ball spot, possession time,
+and score. Plays remain newest first.
+
 Both stats tables include fumbles lost and interceptions thrown by each team,
 and sacks and tackles credited to its defense. Lost muffed punts count as fumbles
 lost; turnovers on downs, missed kicks, and two-point tries do not count as

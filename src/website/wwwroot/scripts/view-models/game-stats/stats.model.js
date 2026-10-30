@@ -87,14 +87,8 @@
             self.UpdateGameStat(teamStatUpdates);
         }
     };
+    self.otherGameInfoExpanded = ko.observable(false);
     self.ShowOtherGameInfo = function () {
-        if ($("#gameInfoBox").is(":hidden")) {
-            $("#gameInfoBox").show("slow");
-        } else {
-            $("#gameInfoBox").slideUp();
-        }
+        self.otherGameInfoExpanded(!self.otherGameInfoExpanded());
     };
-
-    //initially set game info to hidden
-    $("#gameInfoBox").slideUp();
 })(jQuery);
