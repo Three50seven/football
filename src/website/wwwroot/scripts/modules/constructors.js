@@ -7,6 +7,11 @@ MODULES.Constructors = (function () {
             this.totalPlayCount = totalPlayCount;
             this.totalYardsRushing = totalYardsRushing;
             this.totalYardsPassing = totalYardsPassing;
+            this.totalYards = totalYardsRushing + totalYardsPassing;
+            this.totalFumblesLost = 0;
+            this.totalInterceptionsThrown = 0;
+            this.totalSacks = 0;
+            this.totalTackles = 0;
             this.totalTimePossession = totalTimePossession;
             this.totalTurnovers = totalTurnovers;
             this.totalFirstDowns = totalFirstDowns;
@@ -53,6 +58,10 @@ MODULES.Constructors = (function () {
             this.isFieldGoalAttempt = isFieldGoalAttempt;
             this.isFieldGoalMade = isFieldGoalMade;
             this.isPenalty = isPenalty;
+            this.isFumbleLost = false;
+            this.isInterception = false;
+            this.isSack = false;
+            this.isTackle = false;
             this.getTurnoverType = function () {
                 if (this.isTurnover) {
                     console.log(`inside the PlayResult`,this.playResultText);

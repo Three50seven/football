@@ -455,6 +455,8 @@ test('both stats tables have matching columns and valid stat bindings', () => {
         }
         assert.equal((table.match(/text: totalPenaltyYards/g) || []).length, 1);
         assert.equal((table.match(/text: \$data.penaltySideLabel\(\)/g) || []).length, 1);
+        for (const property of ['totalYards', 'totalFumblesLost', 'totalInterceptionsThrown', 'totalSacks', 'totalTackles'])
+            assert.equal((table.match(new RegExp(`text: ${property}"`, 'g')) || []).length, 1);
     }
 });
 

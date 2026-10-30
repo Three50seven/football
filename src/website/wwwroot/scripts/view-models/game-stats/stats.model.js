@@ -24,6 +24,11 @@
             team.totalPlayCount += teamStatUpdates.totalPlayCount;
             team.totalYardsRushing += teamStatUpdates.totalYardsRushing;
             team.totalYardsPassing += teamStatUpdates.totalYardsPassing;
+            team.totalYards = team.totalYardsRushing + team.totalYardsPassing;
+            team.totalFumblesLost += teamStatUpdates.totalFumblesLost;
+            team.totalInterceptionsThrown += teamStatUpdates.totalInterceptionsThrown;
+            team.totalSacks += teamStatUpdates.totalSacks;
+            team.totalTackles += teamStatUpdates.totalTackles;
             team.totalTimePossession += teamStatUpdates.totalTimePossession;
             team.totalTurnovers += teamStatUpdates.totalTurnovers;
             team.totalFirstDowns += teamStatUpdates.totalFirstDowns;

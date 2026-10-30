@@ -511,6 +511,14 @@ var playMaker = {
         //to infer it from the yardage; a live-ball turnover (interception/fumble) means the ball was caught or stripped
         let playResult = new MODULES.Constructors.PlayResult(_yards, _playResultText, turnover, playSelected, isFirstDown, '', (isIncompletePass || isOutOfBounds) && !isLiveBallTurnover, false, false, isThirdDownConversion, isFourthDownConversion);
         playResult.isPenalty = isPenalty;
+        playResult.isFumbleLost = isLiveBallTurnover && liveBallTurnoverType === 'FUMBLE';
+        playResult.isInterception = isLiveBallTurnover && liveBallTurnoverType === 'INTERCEPTION';
+        //accepted fouls and negated recoveries do not credit the defense with a stop
+        let isDefensiveStop = !isPenalty && !isTurnoverNegatedByPenalty && !isLiveBallTurnover &&
+            !isTouchdown && !isIncompletePass && !isOutOfBounds &&
+            (playSelected === GAME_PLAY_TYPES.RUN || playSelected === GAME_PLAY_TYPES.PASS);
+        playResult.isSack = isDefensiveStop && playSelected === GAME_PLAY_TYPES.PASS && _negativeYards;
+        playResult.isTackle = isDefensiveStop;
         //attach the drawn Penalties-table entry (already resolved to the committing
         //side with enforced post-cap yards) so recordGameStats can attribute it as-is
         if (chosenPenalty) {
@@ -875,6 +883,7 @@ var playMaker = {
 
             //create a play result and record it in the play history
             let returnResult = new MODULES.Constructors.PlayResult(_returnYards, _returnPlayText, isMuffedPunt, '', false, returnDisplayText, false, kickResultStopsClock, kickResultNoPlayTime);
+            returnResult.isFumbleLost = isMuffedPunt;
             self.currentTeamWithBall(receivingTeam); //set back to receiving team for proper team in play history
 
             if (isReturnTouchdown) {
@@ -1385,6 +1394,21 @@ var playMaker = {
 
         if (thisPlaysResult.isTurnover)
             playStatsRecord.totalTurnovers = 1;
+
+        if (thisPlaysResult.isTurnover && thisPlaysResult.isFumbleLost)
+            playStatsRecord.totalFumblesLost = 1;
+
+        if (thisPlaysResult.isTurnover && thisPlaysResult.isInterception)
+            playStatsRecord.totalInterceptionsThrown = 1;
+
+        if (!thisPlaysResult.isPenalty && (thisPlaysResult.isSack || thisPlaysResult.isTackle)) {
+            let defenseTeamId = team.teamId === self.homeTeamID() ? self.awayTeamID() : self.homeTeamID();
+            let defenseInfo = HELPERS.getTeamInfo(defenseTeamId);
+            let defenseRecord = new MODULES.Constructors.GamePlayStatRecord(defenseTeamId, defenseInfo.teamName(), 0, 0, 0, 0, 0, 0);
+            defenseRecord.totalSacks = thisPlaysResult.isSack ? 1 : 0;
+            defenseRecord.totalTackles = thisPlaysResult.isTackle ? 1 : 0;
+            self.UpdateGameStat(defenseRecord);
+        }
 
         if (thisPlaysResult.isFirstDown)
             playStatsRecord.totalFirstDowns = 1;

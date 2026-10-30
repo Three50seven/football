@@ -88,6 +88,10 @@ test('a defensive flag sends an intercepted ball back to the offense', () => {
     const home = game.gamePlayStats()[0];
     const away = game.gamePlayStats()[1];
     assert.equal(home.totalTurnovers, 0);
+    assert.equal(home.totalInterceptionsThrown, 0);
+    assert.equal(home.totalYardsPassing, 0);
+    assert.equal(away.totalTackles, 0);
+    assert.equal(away.totalSacks, 0);
     assert.equal(home.totalPenalties, 0);
     assert.equal(away.totalPenalties, 1);
     assert.equal(away.totalPenaltyYards, -10);
@@ -307,4 +311,3 @@ test('an interception left in the end zone the offense was attacking is a touchb
     assert.equal(game.currentDown(), 1);
     assert.equal(game.yardsToFirst(), 10);
 });
-
