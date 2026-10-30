@@ -418,53 +418,8 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div id="pauseStats" class="scroller">
-                                <table class="football-stats">
-                                    <thead>
-                                        <tr>
-                                            <th>Team</th>
-                                            <th># of Plays Total</th>
-                                            <th>Total Yards Rushing</th>
-                                            <th>Total Yards Passing</th>
-                                            <th>Total Yards</th>
-                                            <th>Penalty Yards Against</th>
-                                            <th>Penalties Committed On</th>
-                                            <th>Total Time of Possession</th>
-                                            <th>Turnovers</th>
-                                            <th>Fumbles Lost</th>
-                                            <th>Interceptions Thrown</th>
-                                            <th>Sacks (Defense)</th>
-                                            <th>Tackles (Defense)</th>
-                                            <th>1<sup>st</sup> Downs</th>
-                                            <th>3<sup>rd</sup> Downs Conv</th>
-                                            <th>4<sup>th</sup> Downs Conv</th>
-                                            <th>FG Att</th>
-                                            <th>FG Made</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-bind="foreach: gamePlayStats">
-                                        <tr>
-                                            <td data-bind="text: fullTeamName"></td>
-                                            <td data-bind="text: totalPlayCount"></td>
-                                            <td data-bind="text: totalYardsRushing"></td>
-                                            <td data-bind="text: totalYardsPassing"></td>
-                                            <td data-bind="text: totalYards"></td>
-                                            <td data-bind="text: totalPenaltyYards"></td>
-                                            <td data-bind="text: $data.penaltySideLabel()"></td>
-                                            <td data-bind="text: totalTimePossessionDisplay"></td>
-                                            <td data-bind="text: totalTurnovers"></td>
-                                            <td data-bind="text: totalFumblesLost"></td>
-                                            <td data-bind="text: totalInterceptionsThrown"></td>
-                                            <td data-bind="text: totalSacks"></td>
-                                            <td data-bind="text: totalTackles"></td>
-                                            <td data-bind="text: totalFirstDowns"></td>
-                                            <td data-bind="text: totalThirdDownConversions"></td>
-                                            <td data-bind="text: totalFourthDownConversions"></td>
-                                            <td data-bind="text: totalFieldGoalAttempts"></td>
-                                            <td data-bind="text: totalFieldGoalsMade"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div id="pauseStats" class="scroller stats-comparison-scroller" role="region" aria-label="Pause menu team statistics" tabindex="0">
+                                <table class="football-stats stats-comparison" aria-label="Team statistics" data-bind="template: { name: 'teamStatsTemplate' }"></table>
                             </div>
                             <button type="button" class="btn-default" data-bind="click: ResumeGame">Resume Game</button>
                         </div>
@@ -674,52 +629,9 @@
                             <div>
                                 <div style="text-align: center;"> 
                                     <span class="white">Game Stats:</span>
-                                    <table id="gameStats" class="football-stats">
-                                        <thead>
-                                            <tr>
-                                                <th>Team</th>
-                                                <th># of Plays Total</th>
-                                                <th>Total Yards Rushing</th>
-                                                <th>Total Yards Passing</th>
-                                                <th>Total Yards</th>
-                                                <th>Penalty Yards Against</th>
-                                                <th>Penalties Committed On</th>
-                                                <th>Total Time of Possession</th>
-                                                <th>Turnovers</th>
-                                                <th>Fumbles Lost</th>
-                                                <th>Interceptions Thrown</th>
-                                                <th>Sacks (Defense)</th>
-                                                <th>Tackles (Defense)</th>
-                                                <th>1<sup>st</sup> Downs</th>
-                                                <th>3<sup>rd</sup> Downs Conv</th>
-                                                <th>4<sup>th</sup> Downs Conv</th>
-                                                <th>FG Att</th>
-                                                <th>FG Made</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody data-bind="foreach: gamePlayStats">
-                                            <tr>
-                                                <td><span data-bind="text: fullTeamName"></span></td>
-                                                <td><span data-bind="text: totalPlayCount"></span></td>
-                                                <td><span data-bind="text: totalYardsRushing"></span></td>
-                                                <td><span data-bind="text: totalYardsPassing"></span></td>
-                                                <td><span data-bind="text: totalYards"></span></td>
-                                                <td><span data-bind="text: totalPenaltyYards"></span></td>
-                                                <td><span data-bind="text: $data.penaltySideLabel()"></span></td>
-                                                <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
-                                                <td><span data-bind="text: totalTurnovers"></span></td>
-                                                <td><span data-bind="text: totalFumblesLost"></span></td>
-                                                <td><span data-bind="text: totalInterceptionsThrown"></span></td>
-                                                <td><span data-bind="text: totalSacks"></span></td>
-                                                <td><span data-bind="text: totalTackles"></span></td>
-                                                <td><span data-bind="text: totalFirstDowns"></span></td>
-                                                <td><span data-bind="text: totalThirdDownConversions"></span></td>
-                                                <td><span data-bind="text: totalFourthDownConversions"></span></td>
-                                                <td><span data-bind="text: totalFieldGoalAttempts"></span></td>
-                                                <td><span data-bind="text: totalFieldGoalsMade"></span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="scroller stats-comparison-scroller" role="region" aria-label="Gameplay team statistics" tabindex="0">
+                                        <table id="gameStats" class="football-stats stats-comparison" aria-label="Team statistics" data-bind="template: { name: 'teamStatsTemplate' }"></table>
+                                    </div>
                                     <span class="white">Box Score:</span>
                                     <table id="boxScore" class="football-stats">
                                         <thead>
@@ -782,6 +694,32 @@
                 a training/testing web application with no intention to sell this product.
             </div>
         </div>        
+        <script type="text/html" id="teamStatsTemplate">
+            <thead>
+                <tr>
+                    <th scope="col">Stat</th>
+                    <th scope="col">
+                        <span class="stats-team">
+                            <img class="stats-team-image" alt="" data-bind="attr: { src: homeTeamInfo().teamImage() }" />
+                            <span><span data-bind="text: homeTeamInfo().teamCityAndName()"></span><small>Home</small></span>
+                        </span>
+                    </th>
+                    <th scope="col">
+                        <span class="stats-team">
+                            <img class="stats-team-image" alt="" data-bind="attr: { src: awayTeamInfo().teamImage() }" />
+                            <span><span data-bind="text: awayTeamInfo().teamCityAndName()"></span><small>Away</small></span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: gameStatRows()">
+                <tr>
+                    <th scope="row" data-bind="text: label"></th>
+                    <td data-bind="text: home"></td>
+                    <td data-bind="text: away"></td>
+                </tr>
+            </tbody>
+        </script>
         <script src="/wwwroot/content/js/lib/jquery.min.js"></script>
         <script src="/wwwroot/content/js/lib/knockout-bundle.min.js"></script>
         <script src="/wwwroot/content/js/utilities/utilities-bundle.min.js"></script>

@@ -36,7 +36,7 @@ function observableArray(initial = []) {
     return fn;
 }
 
-function createGameContext() {
+function createGameContext(knockout = { observable, observableArray }) {
     const teams = [
         { teamId: 10, teamName: () => 'HOME', teamCityAndName: () => 'Home City HOME', teamImage: () => '' },
         { teamId: 20, teamName: () => 'AWAY', teamCityAndName: () => 'Away City AWAY', teamImage: () => '' }
@@ -68,10 +68,7 @@ function createGameContext() {
         console: { log() {} },
         $,
         jQuery: $,
-        ko: {
-            observable,
-            observableArray
-        },
+        ko: knockout,
         MODULES: {
             Constants: {
                 END_ZONE_YARDS: 10,
@@ -437,27 +434,83 @@ test('penalty side retains both units across possession changes and clean plays'
     assert.equal(home.totalYardsRushing, 8);
 });
 
-test('both stats tables have matching columns and valid stat bindings', () => {
+test('both stats tables share a three-column template with team logos and row headers', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
     const tables = [...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/g)]
         .map(match => match[0])
-        .filter(table => table.includes('foreach: gamePlayStats'));
-    const stat = createGameContext().gamePlayStats()[0];
+        .filter(table => table.includes("name: 'teamStatsTemplate'"));
+    const template = html.match(/<script type="text\/html" id="teamStatsTemplate">([\s\S]*?)<\/script>/)[1];
 
     assert.equal(tables.length, 2);
-    for (const table of tables) {
-        assert.equal((table.match(/<th>/g) || []).length, (table.match(/<td\b/g) || []).length);
-        assert.match(table, /Penalty Yards Against/);
-        assert.match(table, /Penalties Committed On/);
-        for (const match of table.matchAll(/data-bind="text: ([^"]+)"/g)) {
-            const property = match[1].replace(/^\$data\./, '').replace(/\(\)$/, '');
-            assert.ok(property in stat, `unknown stats binding: ${property}`);
+    assert.equal((template.match(/scope="col"/g) || []).length, 3);
+    assert.equal((template.match(/scope="row"/g) || []).length, 1);
+    assert.equal((template.match(/<td\b/g) || []).length, 2);
+    assert.match(template, /homeTeamInfo\(\)\.teamImage\(\)/);
+    assert.match(template, /awayTeamInfo\(\)\.teamImage\(\)/);
+    assert.match(template, /homeTeamInfo\(\)\.teamCityAndName\(\)/);
+    assert.match(template, /awayTeamInfo\(\)\.teamCityAndName\(\)/);
+    assert.match(template, /foreach: gameStatRows\(\)/);
+    assert.match(template, /text: home/);
+    assert.match(template, /text: away/);
+    assert.equal((html.match(/class="scroller stats-comparison-scroller"/g) || []).length, 2);
+});
+
+test('stat rows include every displayed stat and match teams by ID regardless of array order', () => {
+    const game = createGameContext();
+    const [home, away] = game.gamePlayStats();
+    const properties = [
+        'totalPlayCount', 'totalYardsRushing', 'totalYardsPassing', 'totalYards',
+        'totalPenaltyYards', 'penaltySideLabel', 'totalTimePossessionDisplay',
+        'totalTurnovers', 'totalFumblesLost', 'totalInterceptionsThrown', 'totalSacks',
+        'totalTackles', 'totalFirstDowns', 'totalThirdDownConversions',
+        'totalFourthDownConversions', 'totalFieldGoalAttempts', 'totalFieldGoalsMade'
+    ];
+    properties.forEach((property, index) => {
+        if (property === 'penaltySideLabel') {
+            home.totalPenaltySide = 'OFFENSE';
+            away.totalPenaltySide = 'DEFENSE';
         }
-        assert.equal((table.match(/text: totalPenaltyYards/g) || []).length, 1);
-        assert.equal((table.match(/text: \$data.penaltySideLabel\(\)/g) || []).length, 1);
-        for (const property of ['totalYards', 'totalFumblesLost', 'totalInterceptionsThrown', 'totalSacks', 'totalTackles'])
-            assert.equal((table.match(new RegExp(`text: ${property}"`, 'g')) || []).length, 1);
-    }
+        else {
+            home[property] = index + 10;
+            away[property] = index + 100;
+        }
+    });
+    game.gamePlayStats([away, home]);
+    const rows = game.gameStatRows();
+    assert.equal(rows.length, properties.length);
+    assert.equal(new Set(rows.map(row => row.label)).size, properties.length);
+    properties.forEach((property, index) => {
+        assert.equal(rows[index].home, typeof home[property] === 'function' ? home[property]() : home[property]);
+        assert.equal(rows[index].away, typeof away[property] === 'function' ? away[property]() : away[property]);
+    });
+});
+
+test('stat rows update after a play and clear with a new game', () => {
+    const game = createGameContext();
+    const result = new game.MODULES.Constructors.PlayResult(8, 'Run', false, game.GAME_PLAY_TYPES.RUN);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), result);
+    assert.equal(game.gameStatRows().find(row => row.label === 'Total Yards').home, 8);
+    assert.equal(game.gameStatRows().find(row => row.label === 'Total Yards').away, 0);
+    game.gamePlayStats([]);
+    assert.equal(game.gameStatRows().length, 0);
+    game.InitializeGameStats();
+    assert.equal(game.gameStatRows().find(row => row.label === 'Total Yards').home, 0);
+});
+
+test('real Knockout bindings always receive both teams during initialization and updates', () => {
+    const knockout = require('../wwwroot/scripts/libraries/Knockout/knockout-3.4.2.js');
+    const game = createGameContext(knockout);
+    game.gamePlayStats([]);
+    const rows = knockout.computed(() => game.gameStatRows());
+    const notifications = [];
+    game.gamePlayStats.subscribe(stats => notifications.push(stats.length));
+    game.InitializeGameStats();
+    assert.equal(rows().length, 17);
+    const result = new game.MODULES.Constructors.PlayResult(8, 'Run', false, game.GAME_PLAY_TYPES.RUN);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), result);
+    assert.equal(rows().find(row => row.label === 'Total Yards').home, 8);
+    assert.deepEqual(notifications, [2, 2]);
+    rows.dispose();
 });
 
 test('getPlayResult correctly identifies 3rd down conversion on 3rd down gain reaching first down marker', () => {

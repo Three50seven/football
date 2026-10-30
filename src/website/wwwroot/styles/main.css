@@ -1441,8 +1441,69 @@ input[type="submit"].btn-default:hover {
     min-width: 760px;
 }
 
-#gameStats {
-    min-width: 720px;
+.stats-comparison-scroller {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.stats-comparison {
+    table-layout: fixed;
+    overflow: visible;
+    margin: 0;
+}
+
+.stats-comparison th,
+.stats-comparison td {
+    overflow-wrap: anywhere;
+}
+
+.stats-comparison thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    width: 30%;
+    text-align: center;
+}
+
+.stats-comparison thead th:first-child {
+    width: 40%;
+    text-align: left;
+}
+
+.stats-comparison tbody th {
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: left;
+}
+
+.stats-comparison td {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-team {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.stats-team-image {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.stats-team small {
+    display: block;
+    margin-top: 3px;
+    color: var(--broadcast-muted);
 }
 
 #boxScore {

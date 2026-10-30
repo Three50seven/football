@@ -15,6 +15,10 @@ counts or yards.
 
 ## Team statistics
 
+The pause menu and gameplay stats use the same vertically scrolling comparison:
+one row per stat, with home and away columns showing team names and logos in a
+sticky header.
+
 Both stats tables include fumbles lost and interceptions thrown by each team,
 and sacks and tackles credited to its defense. Lost muffed punts count as fumbles
 lost; turnovers on downs, missed kicks, and two-point tries do not count as
