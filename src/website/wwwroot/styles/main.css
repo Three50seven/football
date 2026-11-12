@@ -2153,7 +2153,7 @@ input[type="submit"].btn-default:hover {
 }
 
 .pause-dialog {
-    width: min(100%, 360px);
+    width: min(100%, 460px);
     padding: 28px;
     border: 1px solid var(--broadcast-line);
     border-top: 3px solid var(--broadcast-accent);
@@ -2204,15 +2204,15 @@ input[type="submit"].btn-default:hover {
     margin-bottom: 20px;
 }
 
-#pauseHistory, #pauseStats, .football-stats {
+.football-stats {
     min-width: 0;
     margin: 0;
     font-size: 0.72rem;
 }
 
-#pauseHistory, #pauseStats, .football-stats td,
-#pauseHistory, #pauseStats, .football-stats th {
-    padding: 7px;
+.football-stats td,
+.football-stats th {
+    padding: 5px;
 }
 
 /* Alert dialog - the in-page stand-in for the native window.alert().
