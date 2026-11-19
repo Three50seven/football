@@ -26,15 +26,17 @@ MODULES.Constants = (function () {
         MAX_CONSECUTIVE_DELAY_OF_GAME_PENALTIES: 3, //a 3rd straight delay of game by the same team without a snap results in a forfeit
         SPIKE_YARDS_LOST: 2,
         INTERCEPTION_CHANCE_PERCENT: 3,
+        INTERCEPTION_RETURN_TOUCHDOWN_CHANCE_PERCENT: 5, //chance an interception is taken all the way back by the defense (a pick 6)
         FACE_MASK_CHANCE_PERCENT: 1,
         FUMBLE_CHANCE_PERCENT: 2,
+        FUMBLE_RECOVERY_RETURN_TOUCHDOWN_CHANCE_PERCENT: 3, //chance a recovered fumble is returned for a touchdown
         PUNT_BLOCK_CHANCE_PERCENT: 5,
         PUNT_MUFF_CHANCE_PERCENT: 5,
         ONSIDE_RECOVERY_CHANCE_PERCENT: 20,
         BLOCKED_FIELD_GOAL_RETURN_CHANCE_PERCENT: 65,
         BLOCKED_FIELD_GOAL_TOUCHDOWN_CHANCE_PERCENT: 1,
         MAIN_PENALTY_PERCENT: 5, //chance a penalty occurs, then the following are chances or how often the penalty occurs for each specific type
-        FALSE_START_CHANCE_PERCENT: 5,
+        FALSE_START_CHANCE_PERCENT: 5, //This and the following penalty chances need to be increased as well as MAIN_PENALTY_PERCENT if penalties are too rare
         OFFSIDE_CHANCE_PERCENT: 2,
         DEFENSIVE_PASS_INTERFERENCE_CHANCE_PERCENT: 5,
         OFFENSIVE_PASS_INTERFERENCE_CHANCE_PERCENT: 5,

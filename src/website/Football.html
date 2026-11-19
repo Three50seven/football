@@ -96,54 +96,9 @@
                                 </div>
                             </div>
                             <div data-bind="visible: simHistory().length > 0">
-                                <span class="white">Sim Box Score:</span>
-                                <table class="football-stats">
-                                    <thead>
-                                        <tr>
-                                            <th>Team</th>
-                                            <th>
-                                                1<sup>st</sup>
-                                            </th>
-                                            <th>
-                                                2<sup>nd</sup>
-                                            </th>
-                                            <th>
-                                                3<sup>rd</sup>
-                                            </th>
-                                            <th>
-                                                4<sup>th</sup>
-                                            </th>
-                                            <th>OT</th>
-                                            <th>TOTAL SCORE</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-bind="foreach: simBoxScore">
-                                        <tr>
-                                            <td>
-                                                <img class="team-tiny-img" data-bind="attr:{src: teamImagePath}" />
-                                                <span data-bind="text: fullTeamName"></span>
-                                            </td>
-                                            <td>
-                                                <span data-bind="text: firstQuarterScore"></span>
-                                            </td>
-                                            <td>
-                                                <span data-bind="text: secondQuarterScore"></span>
-                                            </td>
-                                            <td>
-                                                <span data-bind="text: thirdQuarterScore"></span>
-                                            </td>
-                                            <td>
-                                                <span data-bind="text: fourthQuarterScore"></span>
-                                            </td>
-                                            <td>
-                                                <span data-bind="text: overtimeScore"></span>
-                                            </td>
-                                            <td>
-                                                <span data-bind="text: totalScore"></span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="box-score-card">
+                                    <table class="football-stats box-score" data-bind="template: { name: 'boxScoreTemplate', data: { scores: simBoxScore, title: 'Simulation Box Score' } }"></table>
+                                </div>
                                 <br />
                                 
                                 <br />
@@ -398,61 +353,11 @@
                                 <div data-bind="text: HELPERS.getDownText(self.currentDown(), self.yardsToFirst())"></div>
                                 <div data-bind="text: HELPERS.getYardText()"></div>
                             </div>
-                            <div id="pauseHistory" class="scroller">
-                                <table class="football-stats">
-                                    <thead>
-                                        <tr>
-                                            <th>Team</th>
-                                            <th>Play</th>
-                                            <th>Score</th>
-                                            <th>Clock</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-bind="foreach: teamPlayHistory">
-                                        <tr>
-                                            <td data-bind="text: fullTeamName"></td>
-                                            <td data-bind="text: playResult"></td>
-                                            <td data-bind="text: score"></td>
-                                            <td data-bind="text: gameClock"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div id="pauseHistory" class="scroller play-history-scroller" role="region" aria-label="Paused play history, newest first" tabindex="0">
+                                <div data-bind="template: { name: 'playHistoryTemplate' }"></div>
                             </div>
-                            <div id="pauseStats" class="scroller">
-                                <table class="football-stats">
-                                    <thead>
-                                        <tr>
-                                            <th>Team</th>
-                                            <th># of Plays Total</th>
-                                            <th>Total Yards Rushing</th>
-                                            <th>Total Yards Passing</th>
-                                            <th>Penalty Yards</th>
-                                            <th>Total Time of Possession</th>
-                                            <th>Turnovers</th>
-                                            <th>1<sup>st</sup> Downs</th>
-                                            <th>3<sup>rd</sup> Downs Conv</th>
-                                            <th>4<sup>th</sup> Downs Conv</th>
-                                            <th>FG Att</th>
-                                            <th>FG Made</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-bind="foreach: gamePlayStats">
-                                        <tr>
-                                            <td data-bind="text: fullTeamName"></td>
-                                            <td data-bind="text: totalPlayCount"></td>
-                                            <td data-bind="text: totalYardsRushing"></td>
-                                            <td data-bind="text: totalYardsPassing"></td>
-                                            <td data-bind="text: totalPenaltyYards"></td>
-                                            <td data-bind="text: totalTimePossessionDisplay"></td>
-                                            <td data-bind="text: totalTurnovers"></td>
-                                            <td data-bind="text: totalFirstDowns"></td>
-                                            <td data-bind="text: totalThirdDownConversions"></td>
-                                            <td data-bind="text: totalFourthDownConversions"></td>
-                                            <td data-bind="text: totalFieldGoalAttempts"></td>
-                                            <td data-bind="text: totalFieldGoalsMade"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div id="pauseStats" class="scroller stats-comparison-scroller" role="region" aria-label="Pause menu team statistics" tabindex="0">
+                                <table class="football-stats stats-comparison" aria-label="Team statistics" data-bind="template: { name: 'teamStatsTemplate' }"></table>
                             </div>
                             <button type="button" class="btn-default" data-bind="click: ResumeGame">Resume Game</button>
                         </div>
@@ -603,140 +508,31 @@
                     </div>
 
                     <div id="game-info-container" style="text-align: center;"> 
-                        <h3 class="white">Play History:</h3>
-                        <div id="playHistoryScroller" class="scroller">
-                            <table id="playHistory" class="football-stats alt-color-tr">
-                                <thead>
-                                    <tr>
-                                        <th>Quarter</th>
-                                        <th>Team</th>
-                                        <th>Down</th>
-                                        <th># of Plays in Drive</th>
-                                        <th>Total Yards for Play</th>
-                                        <th>Play Result</th>
-                                        <th>Spot of Ball</th>
-                                        <th>Time of Possession</th>
-                                        <th>Score</th>
-                                        <th>Game Clock</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: teamPlayHistory">
-                                    <tr>
-                                        <td>
-                                            <span data-bind="text: quarter"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: fullTeamName"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: down"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: playCount"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: playYards"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: playResult"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: ballSpot"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: timeOfPossessionDisplay"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: score"></span>
-                                        </td>
-                                        <td>
-                                            <span data-bind="text: gameClock"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="box-score-card">
+                            <table id="boxScore" class="football-stats box-score" data-bind="template: { name: 'boxScoreTemplate', data: { scores: gameBoxScore, title: 'Game Box Score' } }"></table>
+                        </div>
+                        <div class="play-history-heading">
+                            <h3 id="playHistoryTitle">Play History</h3>
+                            <span>Newest plays first</span>
+                        </div>
+                        <div id="playHistoryScroller" class="scroller play-history-scroller" role="region" aria-labelledby="playHistoryTitle" tabindex="0">
+                            <div id="playHistory" data-bind="template: { name: 'playHistoryTemplate' }"></div>
                         </div>
 
-                        <h3 id="gameInfoBoxSwitch" data-bind="click: ShowOtherGameInfo"> Click for Other Game Info</h3>
-                        <div id="gameInfoBox" class="scroller">
-                            <div>
-                                <div style="text-align: center;"> 
-                                    <span class="white">Game Stats:</span>
-                                    <table id="gameStats" class="football-stats">
-                                        <thead>
-                                            <tr>
-                                                <th>Team</th>
-                                                <th># of Plays Total</th>
-                                                <th>Total Yards Rushing</th>
-                                                <th>Total Yards Passing</th>
-                                                <th>Penalty Yards</th>
-                                                <th>Total Time of Possession</th>
-                                                <th>Turnovers</th>
-                                                <th>1<sup>st</sup> Downs</th>
-                                                <th>3<sup>rd</sup> Downs Conv</th>
-                                                <th>4<sup>th</sup> Downs Conv</th>
-                                                <th>FG Att</th>
-                                                <th>FG Made</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody data-bind="foreach: gamePlayStats">
-                                            <tr>
-                                                <td><span data-bind="text: fullTeamName"></span></td>
-                                                <td><span data-bind="text: totalPlayCount"></span></td>
-                                                <td><span data-bind="text: totalYardsRushing"></span></td>
-                                                <td><span data-bind="text: totalYardsPassing"></span></td>
-                                                <td><span data-bind="text: totalPenaltyYards"></span></td>
-                                                <td><span data-bind="text: totalTimePossessionDisplay"></span></td>
-                                                <td><span data-bind="text: totalTurnovers"></span></td>
-                                                <td><span data-bind="text: totalFirstDowns"></span></td>
-                                                <td><span data-bind="text: totalThirdDownConversions"></span></td>
-                                                <td><span data-bind="text: totalFourthDownConversions"></span></td>
-                                                <td><span data-bind="text: totalFieldGoalAttempts"></span></td>
-                                                <td><span data-bind="text: totalFieldGoalsMade"></span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <span class="white">Box Score:</span>
-                                    <table id="boxScore" class="football-stats">
-                                        <thead>
-                                            <tr>
-                                                <th>Team</th>
-                                                <th>1<sup>st</sup>
-                                                </th>
-                                                <th>2<sup>nd</sup>
-                                                </th>
-                                                <th>3<sup>rd</sup>
-                                                </th>
-                                                <th>4<sup>th</sup>
-                                                </th>
-                                                <th>OT</th>
-                                                <th>TOTAL SCORE</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody data-bind="foreach: gameBoxScore">
-                                            <tr>
-                                                <td><span data-bind="text: fullTeamName"></span>
-                                                </td>
-                                                <td><span data-bind="text: firstQuarterScore"></span>
-                                                </td>
-                                                <td><span data-bind="text: secondQuarterScore"></span>
-                                                </td>
-                                                <td><span data-bind="text: thirdQuarterScore"></span>
-                                                </td>
-                                                <td><span data-bind="text: fourthQuarterScore"></span>
-                                                </td>
-                                                <td><span data-bind="text: overtimeScore"></span>
-                                                </td>
-                                                <td><span data-bind="text: totalScore"></span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                        <section class="game-info-panel" aria-label="Additional game information">
+                            <button type="button" id="gameInfoBoxSwitch" aria-controls="gameInfoBox" aria-expanded="false"
+                                data-bind="click: ShowOtherGameInfo, attr: { 'aria-expanded': otherGameInfoExpanded() ? 'true' : 'false' }">
+                                <span>
+                                    <strong>Other Game Info</strong>
+                                    <small>Team stats and game details</small>
+                                </span>
+                                <span class="game-info-toggle-label" data-bind="text: otherGameInfoExpanded() ? 'Collapse -' : 'Expand +'"></span>
+                            </button>
+                            <div id="gameInfoBox" class="scroller stats-comparison-scroller" role="region" aria-label="Gameplay team statistics" tabindex="0"
+                                style="display: none;" data-bind="visible: otherGameInfoExpanded">
+                                <table id="gameStats" class="football-stats stats-comparison" aria-label="Team statistics" data-bind="template: { name: 'teamStatsTemplate' }"></table>
                             </div>
-                            <br />
-                            <br />
-                        </div>
+                        </section>
                     </div>
                 </div>        
 <!--Alert modal: a calmer, in-page replacement for the native alert(). The tone is set by
@@ -758,6 +554,88 @@
                 a training/testing web application with no intention to sell this product.
             </div>
         </div>        
+        <script type="text/html" id="playHistoryTemplate">
+            <p class="play-history-empty" data-bind="visible: teamPlayHistory().length === 0">No plays yet. The latest plays will appear here.</p>
+            <ol class="play-history-list" aria-label="Plays, newest first" data-bind="foreach: teamPlayHistory">
+                <li class="play-history-card">
+                    <div class="play-history-card-header">
+                        <span class="play-history-team">
+                            <img alt="" data-bind="attr: { src: UTILITIES.getTeamImagePath(teamId) }" />
+                            <strong data-bind="text: fullTeamName"></strong>
+                        </span>
+                        <span class="play-history-clock">
+                            <span data-bind="text: quarter <= 4 ? 'Q' + quarter : 'OT' + (quarter > 5 ? ' ' + (quarter - 4) : '')"></span>
+                            <strong data-bind="text: gameClock"></strong>
+                        </span>
+                    </div>
+                    <p class="play-history-result" data-bind="text: playResult"></p>
+                    <dl class="play-history-details">
+                        <div><dt>Down</dt><dd data-bind="text: down"></dd></div>
+                        <div><dt>Drive Play</dt><dd data-bind="text: playCount"></dd></div>
+                        <div><dt>Yards</dt><dd data-bind="text: playYards"></dd></div>
+                        <div><dt>Ball Spot</dt><dd data-bind="text: ballSpot"></dd></div>
+                        <div><dt>Possession</dt><dd data-bind="text: timeOfPossessionDisplay"></dd></div>
+                        <div><dt>Score</dt><dd data-bind="text: score"></dd></div>
+                    </dl>
+                </li>
+            </ol>
+        </script>
+        <script type="text/html" id="boxScoreTemplate">
+            <caption data-bind="text: title"></caption>
+            <thead>
+                <tr>
+                    <th scope="col">Team</th>
+                    <th scope="col" aria-label="First quarter">Q1</th>
+                    <th scope="col" aria-label="Second quarter">Q2</th>
+                    <th scope="col" aria-label="Third quarter">Q3</th>
+                    <th scope="col" aria-label="Fourth quarter">Q4</th>
+                    <th scope="col" aria-label="Overtime">OT</th>
+                    <th scope="col" class="box-score-total">Total</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: scores">
+                <tr>
+                    <th scope="row">
+                        <span class="box-score-team">
+                            <img alt="" data-bind="attr: { src: teamImagePath }" />
+                            <span data-bind="text: fullTeamName"></span>
+                        </span>
+                    </th>
+                    <td data-bind="text: firstQuarterScore"></td>
+                    <td data-bind="text: secondQuarterScore"></td>
+                    <td data-bind="text: thirdQuarterScore"></td>
+                    <td data-bind="text: fourthQuarterScore"></td>
+                    <td data-bind="text: overtimeScore"></td>
+                    <td class="box-score-total" data-bind="text: totalScore"></td>
+                </tr>
+            </tbody>
+        </script>
+        <script type="text/html" id="teamStatsTemplate">
+            <thead>
+                <tr>
+                    <th scope="col">Stat</th>
+                    <th scope="col">
+                        <span class="stats-team">
+                            <img class="stats-team-image" alt="" data-bind="attr: { src: homeTeamInfo().teamImage() }" />
+                            <span><span data-bind="text: homeTeamInfo().teamCityAndName()"></span><small>Home</small></span>
+                        </span>
+                    </th>
+                    <th scope="col">
+                        <span class="stats-team">
+                            <img class="stats-team-image" alt="" data-bind="attr: { src: awayTeamInfo().teamImage() }" />
+                            <span><span data-bind="text: awayTeamInfo().teamCityAndName()"></span><small>Away</small></span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: gameStatRows()">
+                <tr>
+                    <th scope="row" data-bind="text: label"></th>
+                    <td data-bind="text: home"></td>
+                    <td data-bind="text: away"></td>
+                </tr>
+            </tbody>
+        </script>
         <script src="/wwwroot/content/js/lib/jquery.min.js"></script>
         <script src="/wwwroot/content/js/lib/knockout-bundle.min.js"></script>
         <script src="/wwwroot/content/js/utilities/utilities-bundle.min.js"></script>

@@ -1088,14 +1088,6 @@ input[type="radio"][name="selectCoinTossWinner"] {
 }
 /*End Coin Flip Styles*/
 
-/*Show/Hide Div with transition, Source: http://api.jquery.com/slideup/ */
-#gameInfoBoxSwitch {
-    background: #5E5E5E;
-    cursor: pointer;
-    height: 70px;
-}
-/*End Show/Hide Div with transition*/
-
 /* Broadcast presentation layer. Existing game bindings and motion stay intact. */
 :root {
     --broadcast-ink: #f4f7fb;
@@ -1438,26 +1430,347 @@ input[type="submit"].btn-default:hover {
 }
 
 #playHistory {
-    min-width: 760px;
+    min-width: 0;
 }
 
-#gameStats {
-    min-width: 720px;
+.play-history-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0 10px;
+    text-align: left;
 }
 
-#boxScore {
-    min-width: 560px;
+.play-history-heading h3 {
+    margin: 0;
+    color: var(--broadcast-ink);
+}
+
+.play-history-heading > span,
+.play-history-empty {
+    color: var(--broadcast-muted);
+    font-size: 0.8rem;
+}
+
+.scroller.play-history-scroller {
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 1px solid var(--broadcast-line);
+    background: var(--broadcast-panel);
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.play-history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.play-history-card {
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid var(--broadcast-line);
+    border-left: 3px solid var(--broadcast-accent);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--broadcast-ink);
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.play-history-card:last-child {
+    margin-bottom: 0;
+}
+
+.play-history-card-header,
+.play-history-team,
+.play-history-clock {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.play-history-card-header {
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.play-history-team {
+    min-width: 0;
+    flex: 1 1 140px;
+}
+
+.play-history-team img {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.play-history-clock {
+    color: var(--broadcast-muted);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.play-history-clock strong {
+    color: var(--broadcast-accent);
+}
+
+.play-history-card .play-history-result {
+    margin: 12px 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.play-history-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--broadcast-line);
+}
+
+.play-history-details > div {
+    min-width: 0;
+}
+
+.play-history-details dt {
+    color: var(--broadcast-muted);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.play-history-details dd {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-comparison-scroller {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.stats-comparison {
+    table-layout: fixed;
+    overflow: visible;
+    margin: 0;
+}
+
+.stats-comparison th,
+.stats-comparison td {
+    overflow-wrap: anywhere;
+}
+
+.stats-comparison thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    width: 30%;
+    text-align: center;
+}
+
+.stats-comparison thead th:first-child {
+    width: 40%;
+    text-align: left;
+}
+
+.stats-comparison tbody th {
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: left;
+}
+
+.stats-comparison td {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-team {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.stats-team-image {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.stats-team small {
+    display: block;
+    margin-top: 3px;
+    color: var(--broadcast-muted);
+}
+
+.box-score-card {
+    margin: 18px 0;
+    border: 1px solid var(--broadcast-line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--broadcast-panel);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.football-stats.box-score {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    table-layout: fixed;
+    border: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.box-score caption {
+    padding: 14px 12px;
+    background: var(--broadcast-blue-dark);
+    color: var(--broadcast-ink);
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.football-stats.box-score th,
+.football-stats.box-score td {
+    padding: 12px 4px;
+    text-align: center;
+    letter-spacing: normal;
+}
+
+.box-score thead th:first-child {
+    width: 34%;
+    text-align: left;
+    padding-left: 12px;
+}
+
+.box-score thead th:last-child {
+    width: 16%;
+}
+
+.box-score tbody th {
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    text-transform: none;
+}
+
+.box-score-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.box-score-team img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.football-stats.box-score .box-score-total {
+    background: rgba(244, 185, 66, 0.12);
+    color: var(--broadcast-accent);
+    border-left: 1px solid var(--broadcast-line);
+    font-weight: 800;
+}
+
+.box-score tbody .box-score-total {
+    font-size: 1.15rem;
+}
+
+@media (max-width: 480px) {
+    .football-stats.box-score th,
+    .football-stats.box-score td {
+        padding: 10px 2px;
+        font-size: 0.68rem;
+    }
+
+    .box-score-team {
+        gap: 4px;
+    }
+
+    .box-score-team img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .box-score tbody .box-score-total {
+        font-size: 0.95rem;
+    }
+}
+
+.game-info-panel {
+    margin: 26px 0 0;
+    border: 1px solid var(--broadcast-line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--broadcast-panel);
 }
 
 #gameInfoBoxSwitch {
-    height: auto;
-    margin: 26px 0 0;
-    padding: 16px 18px;
-    border: 1px solid var(--broadcast-line);
-    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 64px;
+    padding: 16px;
+    border: 0;
     background: var(--broadcast-panel-raised);
     color: var(--broadcast-ink);
+    font-family: inherit;
     font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+#gameInfoBoxSwitch small {
+    display: block;
+    margin-top: 5px;
+    color: var(--broadcast-muted);
+    font-size: 0.75rem;
+}
+
+.game-info-toggle-label {
+    flex-shrink: 0;
+    color: var(--broadcast-accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+#gameInfoBoxSwitch:hover,
+#gameInfoBoxSwitch[aria-expanded="true"] {
+    background: var(--broadcast-blue-dark);
+}
+
+#gameInfoBoxSwitch:focus-visible,
+#gameInfoBox:focus-visible {
+    outline: 2px solid var(--broadcast-accent);
+    outline-offset: -3px;
+}
+
+#gameInfoBox {
+    height: auto;
+    max-height: 340px;
+    max-height: min(60vh, 480px);
+    border-radius: 0;
 }
 
 #footer {
@@ -1840,7 +2153,7 @@ input[type="submit"].btn-default:hover {
 }
 
 .pause-dialog {
-    width: min(100%, 360px);
+    width: min(100%, 460px);
     padding: 28px;
     border: 1px solid var(--broadcast-line);
     border-top: 3px solid var(--broadcast-accent);
@@ -1891,15 +2204,15 @@ input[type="submit"].btn-default:hover {
     margin-bottom: 20px;
 }
 
-#pauseHistory, #pauseStats, .football-stats {
+.football-stats {
     min-width: 0;
     margin: 0;
     font-size: 0.72rem;
 }
 
-#pauseHistory, #pauseStats, .football-stats td,
-#pauseHistory, #pauseStats, .football-stats th {
-    padding: 7px;
+.football-stats td,
+.football-stats th {
+    padding: 5px;
 }
 
 /* Alert dialog - the in-page stand-in for the native window.alert().

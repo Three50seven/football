@@ -1,17 +1,29 @@
 //CONSTRUCTORS
 MODULES.Constructors = (function () {
     return {
-        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenalties = 0, totalPenaltyYards = 0, totalThirdDownConversions = 0, totalFourthDownConversions = 0, totalFieldGoalAttempts = 0, totalFieldGoalsMade = 0) {
+        GamePlayStatRecord: function (teamId, teamName, totalPlayCount, totalYardsRushing, totalYardsPassing, totalTimePossession, totalTurnovers, totalFirstDowns, totalPenalties = 0, totalPenaltyYards = 0, totalThirdDownConversions = 0, totalFourthDownConversions = 0, totalFieldGoalAttempts = 0, totalFieldGoalsMade = 0, totalPenaltySide = 'NONE') {
             this.teamId = teamId;
             this.teamName = teamName;
             this.totalPlayCount = totalPlayCount;
             this.totalYardsRushing = totalYardsRushing;
             this.totalYardsPassing = totalYardsPassing;
+            this.totalYards = totalYardsRushing + totalYardsPassing;
+            this.totalFumblesLost = 0;
+            this.totalInterceptionsThrown = 0;
+            this.totalSacks = 0;
+            this.totalTackles = 0;
             this.totalTimePossession = totalTimePossession;
             this.totalTurnovers = totalTurnovers;
             this.totalFirstDowns = totalFirstDowns;
             this.totalPenalties = totalPenalties;
             this.totalPenaltyYards = totalPenaltyYards;
+            this.totalPenaltySide = totalPenaltySide;
+            this.penaltySideLabel = function () {
+                if (this.totalPenaltySide === 'OFFENSE') return 'Offense';
+                if (this.totalPenaltySide === 'DEFENSE') return 'Defense';
+                if (this.totalPenaltySide === 'BOTH') return 'Offense & Defense';
+                return '-';
+            };
             this.totalThirdDownConversions = totalThirdDownConversions;
             this.totalFourthDownConversions = totalFourthDownConversions;
             this.totalFieldGoalAttempts = totalFieldGoalAttempts;
@@ -46,6 +58,10 @@ MODULES.Constructors = (function () {
             this.isFieldGoalAttempt = isFieldGoalAttempt;
             this.isFieldGoalMade = isFieldGoalMade;
             this.isPenalty = isPenalty;
+            this.isFumbleLost = false;
+            this.isInterception = false;
+            this.isSack = false;
+            this.isTackle = false;
             this.getTurnoverType = function () {
                 if (this.isTurnover) {
                     console.log(`inside the PlayResult`,this.playResultText);

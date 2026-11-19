@@ -36,7 +36,7 @@ function observableArray(initial = []) {
     return fn;
 }
 
-function createGameContext() {
+function createGameContext(knockout = { observable, observableArray }) {
     const teams = [
         { teamId: 10, teamName: () => 'HOME', teamCityAndName: () => 'Home City HOME', teamImage: () => '' },
         { teamId: 20, teamName: () => 'AWAY', teamCityAndName: () => 'Away City AWAY', teamImage: () => '' }
@@ -68,10 +68,7 @@ function createGameContext() {
         console: { log() {} },
         $,
         jQuery: $,
-        ko: {
-            observable,
-            observableArray
-        },
+        ko: knockout,
         MODULES: {
             Constants: {
                 END_ZONE_YARDS: 10,
@@ -286,6 +283,7 @@ test('recordGameStats records penalty count and penalty yards for an isPenalty p
 
     assert.equal(homeTeam.totalPenalties, 1);
     assert.equal(homeTeam.totalPenaltyYards, -5);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
 });
 
 test('recordGameStats charges a defensive foul to the defending team, not the offense', () => {
@@ -300,11 +298,13 @@ test('recordGameStats charges a defensive foul to the defending team, not the of
 
     game.playMaker.recordGameStats(game.homeTeamInfo(), playResult);
 
-    assert.equal(homeTeam.totalYardsPassing, 0); //the acceptance wipes the pass gain
+    assert.equal(homeTeam.totalYardsPassing, 0); //this result contains only penalty yardage
     assert.equal(homeTeam.totalPenalties, 0);
     assert.equal(homeTeam.totalPenaltyYards, 0);
     assert.equal(awayTeam.totalPenalties, 1);
     assert.equal(awayTeam.totalPenaltyYards, -15);
+    assert.equal(awayTeam.totalPenaltySide, 'DEFENSE');
+    assert.equal(homeTeam.totalPenaltySide, 'NONE');
     assert.equal(homeTeam.totalFirstDowns, 1); //automatic first down still credits the offense
 });
 
@@ -322,6 +322,7 @@ test('recordGameStats charges an offensive holding foul to the offense with no r
     assert.equal(homeTeam.totalYardsRushing, 0);
     assert.equal(homeTeam.totalPenalties, 1);
     assert.equal(homeTeam.totalPenaltyYards, -10);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
 });
 
 test('recordGameStats counts both flags on a repeated delay of game', () => {
@@ -338,6 +339,234 @@ test('recordGameStats counts both flags on a repeated delay of game', () => {
 
     assert.equal(homeTeam.totalPenalties, 2);
     assert.equal(homeTeam.totalPenaltyYards, -20);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
+});
+
+test('recordGameStats records the penalty side for offense and defense penalties', () => {
+    const game = createGameContext();
+    const homeTeam = game.gamePlayStats()[0];
+    const awayTeam = game.gamePlayStats()[1];
+
+    //an offensive flag is drawn by the offense - counted against the offense
+    const offensePenalty = new game.MODULES.Constructors.PlayResult(
+        -10, 'Run - PENALTY: Holding (10 YARDS)', false, game.GAME_PLAY_TYPES.RUN, false, '', false, false, false, false, false, false, false, true
+    );
+    offensePenalty.penalty = { name: 'Holding', yards: 10, penaltySideOfBall: 'OFFENSE', automaticFirstDown: false };
+    game.playMaker.recordGameStats(game.homeTeamInfo(), offensePenalty);
+
+    assert.equal(homeTeam.totalPenalties, 1);
+    assert.equal(homeTeam.totalPenaltyYards, -10);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
+    assert.equal(awayTeam.totalPenalties, 0);
+    assert.equal(awayTeam.totalPenaltySide, 'NONE');
+
+    //a defensive flag is drawn by the offense but committed by the defense - counted against the defense
+    const defensePenalty = new game.MODULES.Constructors.PlayResult(
+        15, 'Roughing the Passer - PENALTY: Roughing the Passer (15 YARDS)', false, game.GAME_PLAY_TYPES.PASS, true, '', false, false, false, false, false, false, false, true
+    );
+    defensePenalty.penalty = { name: 'Roughing the Passer', yards: 15, penaltySideOfBall: 'DEFENSE', automaticFirstDown: true };
+    game.playMaker.recordGameStats(game.homeTeamInfo(), defensePenalty);
+
+    //the offense's own holding penalty is cumulative, the defense's defensive foul is reported separately
+    assert.equal(homeTeam.totalPenalties, 1);
+    assert.equal(homeTeam.totalPenaltySide, 'OFFENSE');
+    assert.equal(awayTeam.totalPenalties, 1);
+    assert.equal(awayTeam.totalPenaltyYards, -15);
+    assert.equal(awayTeam.totalPenaltySide, 'DEFENSE');
+});
+
+for (const offenseId of [10, 20]) {
+    for (const playType of ['run', 'pass']) {
+        for (const gain of [8, 0, -12]) {
+            test(`defensive penalty preserves ${gain} ${playType} yards for team ${offenseId}`, () => {
+                const game = createGameContext();
+                const offenseInfo = offenseId === 10 ? game.homeTeamInfo() : game.awayTeamInfo();
+                const offense = game.gamePlayStats().find(team => team.teamId === offenseId);
+                const defense = game.gamePlayStats().find(team => team.teamId !== offenseId);
+                const result = new game.MODULES.Constructors.PlayResult(
+                    gain + 10, 'Defensive Holding', false, playType
+                );
+                result.isPenalty = true;
+                result.penalty = { yards: 10, penaltySideOfBall: 'DEFENSE' };
+
+                game.playMaker.recordGameStats(offenseInfo, result);
+
+                assert.equal(offense.totalYardsRushing, playType === 'run' ? gain : 0);
+                assert.equal(offense.totalYardsPassing, playType === 'pass' ? gain : 0);
+                assert.equal(offense.totalPenaltyYards, 0);
+                assert.equal(offense.totalPenalties, 0);
+                assert.equal(defense.totalPenaltyYards, -10);
+                assert.equal(defense.totalPenalties, 1);
+                assert.equal(defense.totalPlayCount, 0);
+                assert.equal(defense.totalTimePossession, 0);
+                assert.equal(defense.penaltySideLabel(), 'Defense');
+            });
+        }
+    }
+}
+
+test('penalty side retains both units across possession changes and clean plays', () => {
+    const game = createGameContext();
+    const home = game.gamePlayStats()[0];
+    assert.equal(home.penaltySideLabel(), '-');
+
+    const offensiveFlag = new game.MODULES.Constructors.PlayResult(-5, 'False Start');
+    offensiveFlag.isPenalty = true;
+    offensiveFlag.penalty = { yards: 5, penaltySideOfBall: 'OFFENSE' };
+    game.playMaker.recordGameStats(game.homeTeamInfo(), offensiveFlag);
+    assert.equal(home.penaltySideLabel(), 'Offense');
+
+    game.currentTeamWithBall(20);
+    const defensiveFlag = new game.MODULES.Constructors.PlayResult(10, 'Defensive Holding');
+    defensiveFlag.isPenalty = true;
+    defensiveFlag.penalty = { yards: 10, penaltySideOfBall: 'DEFENSE' };
+    game.playMaker.recordGameStats(game.awayTeamInfo(), defensiveFlag);
+
+    game.currentTeamWithBall(10);
+    const cleanPlay = new game.MODULES.Constructors.PlayResult(8, 'Run', false, game.GAME_PLAY_TYPES.RUN);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), cleanPlay);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), offensiveFlag);
+
+    assert.equal(home.totalPenaltySide, 'BOTH');
+    assert.equal(home.penaltySideLabel(), 'Offense & Defense');
+    assert.equal(home.totalPenalties, 3);
+    assert.equal(home.totalPenaltyYards, -20);
+    assert.equal(home.totalYardsRushing, 8);
+});
+
+test('both stats tables share a three-column template with team logos and row headers', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const tables = [...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/g)]
+        .map(match => match[0])
+        .filter(table => table.includes("name: 'teamStatsTemplate'"));
+    const template = html.match(/<script type="text\/html" id="teamStatsTemplate">([\s\S]*?)<\/script>/)[1];
+
+    assert.equal(tables.length, 2);
+    assert.equal((template.match(/scope="col"/g) || []).length, 3);
+    assert.equal((template.match(/scope="row"/g) || []).length, 1);
+    assert.equal((template.match(/<td\b/g) || []).length, 2);
+    assert.match(template, /homeTeamInfo\(\)\.teamImage\(\)/);
+    assert.match(template, /awayTeamInfo\(\)\.teamImage\(\)/);
+    assert.match(template, /homeTeamInfo\(\)\.teamCityAndName\(\)/);
+    assert.match(template, /awayTeamInfo\(\)\.teamCityAndName\(\)/);
+    assert.match(template, /foreach: gameStatRows\(\)/);
+    assert.match(template, /text: home/);
+    assert.match(template, /text: away/);
+    assert.equal((html.match(/class="scroller stats-comparison-scroller"/g) || []).length, 2);
+});
+
+test('play history shares a responsive card template and retains every play detail', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const template = html.match(/<script type="text\/html" id="playHistoryTemplate">([\s\S]*?)<\/script>/)[1];
+    assert.equal((html.match(/name: 'playHistoryTemplate'/g) || []).length, 2);
+    assert.match(html, /id="playHistoryScroller" class="scroller play-history-scroller"/);
+    assert.match(html, /id="pauseHistory" class="scroller play-history-scroller"/);
+    assert.match(template, /<ol[^>]+foreach: teamPlayHistory/);
+    assert.match(template, /teamPlayHistory\(\)\.length === 0/);
+    assert.match(template, /UTILITIES\.getTeamImagePath\(teamId\)/);
+    for (const property of [
+        'fullTeamName', 'gameClock', 'playResult', 'down', 'playCount', 'playYards',
+        'ballSpot', 'timeOfPossessionDisplay', 'score'
+    ])
+        assert.match(template, new RegExp(`text: ${property}`));
+    assert.match(template, /quarter <= 4/);
+    assert.match(template, /quarter - 4/);
+    assert.equal((template.match(/<dt>/g) || []).length, 6);
+});
+
+test('additional game information starts collapsed and toggles without nested scrollers', () => {
+    const game = createGameContext();
+    assert.equal(game.otherGameInfoExpanded(), false);
+    game.ShowOtherGameInfo();
+    assert.equal(game.otherGameInfoExpanded(), true);
+    game.ShowOtherGameInfo();
+    assert.equal(game.otherGameInfoExpanded(), false);
+
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const panel = html.match(/<section class="game-info-panel"[\s\S]*?<\/section>/)[0];
+    assert.match(panel, /<button type="button" id="gameInfoBoxSwitch"/);
+    assert.match(panel, /aria-controls="gameInfoBox" aria-expanded="false"/);
+    assert.match(panel, /'aria-expanded': otherGameInfoExpanded\(\)/);
+    assert.match(panel, /style="display: none;" data-bind="visible: otherGameInfoExpanded"/);
+    assert.equal((panel.match(/class="scroller /g) || []).length, 1);
+    assert.match(panel, /id="gameStats"/);
+});
+
+test('game and simulation box scores share accessible branding and all scoring columns', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'Football.html'), 'utf8');
+    const template = html.match(/<script type="text\/html" id="boxScoreTemplate">([\s\S]*?)<\/script>/)[1];
+    assert.equal((html.match(/name: 'boxScoreTemplate'/g) || []).length, 2);
+    assert.match(html, /scores: gameBoxScore/);
+    assert.match(html, /scores: simBoxScore/);
+    assert.equal((template.match(/scope="col"/g) || []).length, 7);
+    assert.equal((template.match(/scope="row"/g) || []).length, 1);
+    assert.match(template, /<caption data-bind="text: title">/);
+    assert.match(template, /src: teamImagePath/);
+    assert.match(template, /text: fullTeamName/);
+    const game = createGameContext();
+    const score = new game.MODULES.Constructors.GameBoxScoreRecord(10, 'HOME', 7, 3, 0, 7, 6, 23);
+    for (const property of ['firstQuarterScore', 'secondQuarterScore', 'thirdQuarterScore', 'fourthQuarterScore', 'overtimeScore', 'totalScore']) {
+        assert.match(template, new RegExp(`text: ${property}`));
+        assert.equal(typeof score[property], 'number');
+    }
+});
+
+test('stat rows include every displayed stat and match teams by ID regardless of array order', () => {
+    const game = createGameContext();
+    const [home, away] = game.gamePlayStats();
+    const properties = [
+        'totalPlayCount', 'totalYardsRushing', 'totalYardsPassing', 'totalYards',
+        'totalPenaltyYards', 'penaltySideLabel', 'totalTimePossessionDisplay',
+        'totalTurnovers', 'totalFumblesLost', 'totalInterceptionsThrown', 'totalSacks',
+        'totalTackles', 'totalFirstDowns', 'totalThirdDownConversions',
+        'totalFourthDownConversions', 'totalFieldGoalAttempts', 'totalFieldGoalsMade'
+    ];
+    properties.forEach((property, index) => {
+        if (property === 'penaltySideLabel') {
+            home.totalPenaltySide = 'OFFENSE';
+            away.totalPenaltySide = 'DEFENSE';
+        }
+        else {
+            home[property] = index + 10;
+            away[property] = index + 100;
+        }
+    });
+    game.gamePlayStats([away, home]);
+    const rows = game.gameStatRows();
+    assert.equal(rows.length, properties.length);
+    assert.equal(new Set(rows.map(row => row.label)).size, properties.length);
+    properties.forEach((property, index) => {
+        assert.equal(rows[index].home, typeof home[property] === 'function' ? home[property]() : home[property]);
+        assert.equal(rows[index].away, typeof away[property] === 'function' ? away[property]() : away[property]);
+    });
+});
+
+test('stat rows update after a play and clear with a new game', () => {
+    const game = createGameContext();
+    const result = new game.MODULES.Constructors.PlayResult(8, 'Run', false, game.GAME_PLAY_TYPES.RUN);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), result);
+    assert.equal(game.gameStatRows().find(row => row.label === 'Total Yards').home, 8);
+    assert.equal(game.gameStatRows().find(row => row.label === 'Total Yards').away, 0);
+    game.gamePlayStats([]);
+    assert.equal(game.gameStatRows().length, 0);
+    game.InitializeGameStats();
+    assert.equal(game.gameStatRows().find(row => row.label === 'Total Yards').home, 0);
+});
+
+test('real Knockout bindings always receive both teams during initialization and updates', () => {
+    const knockout = require('../wwwroot/scripts/libraries/Knockout/knockout-3.4.2.js');
+    const game = createGameContext(knockout);
+    game.gamePlayStats([]);
+    const rows = knockout.computed(() => game.gameStatRows());
+    const notifications = [];
+    game.gamePlayStats.subscribe(stats => notifications.push(stats.length));
+    game.InitializeGameStats();
+    assert.equal(rows().length, 17);
+    const result = new game.MODULES.Constructors.PlayResult(8, 'Run', false, game.GAME_PLAY_TYPES.RUN);
+    game.playMaker.recordGameStats(game.homeTeamInfo(), result);
+    assert.equal(rows().find(row => row.label === 'Total Yards').home, 8);
+    assert.deepEqual(notifications, [2, 2]);
+    rows.dispose();
 });
 
 test('getPlayResult correctly identifies 3rd down conversion on 3rd down gain reaching first down marker', () => {
